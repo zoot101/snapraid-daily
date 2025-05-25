@@ -408,9 +408,9 @@ systemctl daemon-reload
 ```
 
 Further example drop-in files and unit files for systemd and some
-notes are included here:
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
+notes are included here:      
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
 
 # Return Codes
 
@@ -635,6 +635,21 @@ config for emails, or to use cron instead of systemd have a look here.
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
+
+# Credits
+
+Most of the script is entirely from the author, but a lot of inspiration was
+got from the following similar scripts:
+
+Original Bash Script (from Zack Reed):   
+https://zackreed.me/snapraid-split-parity-sync-script/
+
+Snapraid-Runner:   
+https://github.com/Chronial/snapraid-runner
+
+Also a bit thank you to Andrea Mazzoleni for this excellent software:    
+https://github.com/amadvance/snapraid     
+https://www.snapraid.it    
 
 # Author
 
