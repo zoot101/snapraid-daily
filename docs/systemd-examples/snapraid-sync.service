@@ -1,0 +1,60 @@
+[Unit]
+Description=Syncs the SnapRAID periodically to protect files
+
+# If the service fails, wait 15 minutes and restart
+# it again up to a maximum of 3 times within a
+# 1 hour period. Note that StartLimitIntervalSec needs
+# to be greater than RestartSec * ( StartLimitBurst+1 ) to guarantee
+# that the Limit gets reached. Otherwise the service will be
+# restarted indefinitely.
+StartLimitIntervalSec=1h 5m
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=username
+UMask=002
+Group=groupname
+ExecStart=/usr/bin/snapraid-daily --sync-only
+
+#############################################
+# Restart Options
+#############################################
+# This is mainly intended to account for situations
+# where files change while a sync is taking place.
+# If an Exit Code of 3 is obtained, wait 15 minutes and restart
+# the service again up to a max of 3 times in a 1h 5m period (see
+# notes above). It's a bit weird to have return code 1 considered
+# success, but it serves the purpose of triggering the restart
+# on anything other than 0, 1 & 5 codes. The RestartForceExitStatus
+# option would be a much better way of doing it.
+RestartSec=15m
+Restart=on-failure
+SuccessExitStatus=0 1 5 TERM
+
+# Annoyingly doesn't work for oneshot type services, at least on
+# this version of systemd. I believe future versions will support
+# this though. This allows a restart to be triggered only on a
+# specific error code, in this case 3 (Files modified during sync)
+#RestartForceExitStatus=3
+
+#############################################
+# Isolate the Service from as much as possible
+#############################################
+ProtectHome=true
+ReadWritePaths=/Appdata/snapraid/content-file /Media1 /Media2 /Media3 /Media4 /Media5 /Media6 /Media7 /Media8 /Parity1 /Parity2
+ProtectSystem=strict
+PrivateTmp=true
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+PrivateDevices=true
+NoNewPrivileges=true
+#RestrictSUIDSGID=true
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_DAC_READ_SEARCH
+RestrictNamespaces=uts ipc pid user cgroup
+
+[Install]
+WantedBy=multi-user.target
+
+

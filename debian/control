@@ -1,0 +1,35 @@
+Source: snapraid-daily
+Section: misc
+Priority: optional
+Maintainer: Mark Finnan <mfinnan101@gmail.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-exec,
+Standards-Version: 4.6.2
+Homepage: https://github.com/zoot101/snapraid-daily
+
+Package: snapraid-daily
+Architecture: any
+Depends:
+ coreutils (>=8.3),
+ snapraid (>=11.0),
+ bash (>=5.0),
+ findutils (>=4.8),
+ ${misc:Depends},
+Recommends:
+ mutt (>=2.0),
+Description: Bash Script to automate SnapRAID with email notifications
+ * Automate the running of snapraid. Contains everything one
+   needs to fully automate the sync and scrub process of SnapRAID.
+ * Runs sync to update the array for changes, then runs scrub 
+   to check the array for silent corruption.
+ * The number of deletions is monitored and if the number exceeds
+   a user defined threshold, then the sync is stopped and the user
+   is notified.
+ * Can also be set to run either sync only or scrub only if one
+   wants to seperate the sync and scrub operations.
+ * If at any point, errors are encountered, then the user
+   is notified via email.
+ * Mutt is used for sending emails.
+

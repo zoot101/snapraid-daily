@@ -1,0 +1,18 @@
+# NOTE: This file should not be edited directly.
+# To make changes it is recommended to create a drop-in file
+# instead by using:
+# $ systemctl edit
+# This will preserve customisations between updates
+
+[Unit]
+Description=Uses SnapRAID-Daily to Sync the SnapRAID Array
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+OnCalendar=*-*-* 18:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+
+
