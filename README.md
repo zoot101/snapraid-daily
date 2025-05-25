@@ -183,7 +183,7 @@ are present in this file.
 6. Scrub Age     
 
 See the sample here:
-https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
+https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
 
 If installed via the debian package, a sample configuration
 file is already placed at the 1st location above that can be
@@ -244,7 +244,7 @@ The default is empty, whereby no emails are sent.
 See the example here to set up the email notifications. A sample config
 is provided for gmail along with instructions to set it up. It should be
 simple to adapt for other email providers also:    
-https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
+https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples/muttrc
 
 ### email\_address
 
