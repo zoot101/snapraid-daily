@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Detect if it's a 1st time installation, if so the
+# systemd-unit files are copied into the /etc/systemd/system
+# directory
+
+# Recommended by debian policy manual
+set -e
+
+# Reload systemd if its a 1st time system install
+# Here the script is called with the configure argument
+# but not provided with a version like so:
+# postinst configure
+# For upgrades, reconfigures, and everything else its:
+# postinst configure 1.2-1
+
+if [ "${1}" == "configure" ] && [ -z "${2}" ]
+then
+  systemctl daemon-reload
+
+  # Print a Get Started Message
+  echo ""
+  echo "################################"
+  echo "# SnapRAID-Daily: SnapRAID Automation Bash Script"
+  echo "################################"
+  echo ""
+  echo "  To get started have a look at the following man pages:"
+  echo "  1: snapraid-daily(1)      : $ man snapraid-daily"
+  echo "  2: snapraid-daily.conf(1) : $ man snapraid-daily.conf"
+  echo ""
+  exit 0
+else
+  exit 0
+fi
+
+

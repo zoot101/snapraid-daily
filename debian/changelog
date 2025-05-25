@@ -1,0 +1,560 @@
+snapraid-daily (1.2.6-5) stable; urgency=medium
+
+  * Completed a big cleanup of the changelog.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 25 May 2025 09:51:33 +0100
+
+snapraid-daily (1.2.6-4) stable; urgency=medium
+
+  * Compressed manual entries using gzip to prevent github picking up
+    GNU roff in the code that was used.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 24 May 2025 20:21:19 +0100
+
+snapraid-daily (1.2.6-3) stable; urgency=medium
+
+  * Updated debian/control and debian/copyright to add link to github
+    repository.
+
+  * Re-worded descriptions in debian/control.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 24 May 2025 20:14:11 +0100
+
+snapraid-daily (1.2.6-2) stable; urgency=medium
+
+  * Added build dependency for dh-exec.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 24 May 2025 10:16:41 +0100
+
+snapraid-daily (1.2.6-1) stable; urgency=medium
+
+  * Changed top line to "#!/usr/bin/env bash".
+
+  * Tidied up checks on output of scrub and sync commands into nested
+    if/elif/else statements.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Thu, 22 May 2025 22:36:11 +0100
+
+snapraid-daily (1.2.5-1) stable; urgency=medium
+
+  * Fixed man page formatting problems.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Wed, 21 May 2025 17:12:09 +0100
+
+snapraid-daily (1.2.4-1) stable; urgency=medium
+
+  * Updates to main manpage. No change in functionality.
+
+  * Added a new return code for the situation where snapraid is
+    already in use.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 20 May 2025 15:48:29 +0100
+
+snapraid-daily (1.2.3-1) stable; urgency=medium
+
+  * Minor change to manpage - mention "cut" is a dependency.
+
+  * Moved all snapraid commands to their own function to allow more
+    graceful adding or tweaking of options in the future.
+
+  * Added a sanity check to see if /tmp is writable.
+
+  * Other minor code improvements - no change in functionality.
+
+  * Improvements to print outs for quiet option.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 20 May 2025 10:40:09 +0100
+
+snapraid-daily (1.2.2-1) stable; urgency=medium
+
+  * Minor changes to finding the 1st content file location by parsing
+    /etc/snapraid.conf - changed the grep statement to the start of the
+    line only.
+
+  * Tidied up initial status check section with an if, elif, else clause.
+    Simplified syntax of checks for error strings in the status logfile.
+
+  * Added some examples for running the script via cron.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 19 May 2025 19:29:53 +0100
+
+snapraid-daily (1.2.1-2) stable; urgency=medium
+
+  * Previously, detail was omitted in the manpage about the array being
+    checked that it is up-to-date before a scrub is carried out, this has
+    been included and is explicity mentioned in the main manpage now.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 14 Apr 2025 17:04:19 +0100
+
+snapraid-daily (1.2.1-1) stable; urgency=medium
+
+  * Added a -q, --quiet option to suppress the output of the touch, diff,
+    sync and scrub operations.
+
+  * Cleaned up print outs when default conditions are being used in the
+    absense of a config file.
+
+  * Added check for mktemp in the script. The script will exit if the mktemp
+    binary can't be found.
+
+  * Update to man page to include the -q option and update the list of
+    dependencies.
+
+  * Added further examples for systemd drop-in files in the docs directory:
+    /usr/share/doc/snapraid-daily/systemd-drop-ins/
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 17 Feb 2025 16:21:33 +0100
+
+snapraid-daily (1.2.0-1) stable; urgency=medium
+
+  * Removed /usr/share/doc/snapraid-daily/ from the possible config file
+    locations.
+
+  * Updated manpage to mention the above and also the check for the lockfile
+    added in version 1.1.0
+
+  * Other refinements to man pages to make explanations more clear.
+
+  * Changed check for the snapraid-content file being writable, because
+    previously it would fail if the file path had spaces in its name.
+
+  * This has been fixed and changed to a method using sed only, previously
+    xargs was used.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 10 Feb 2025 10:00:57 +0100
+
+snapraid-daily (1.1.1-1) stable; urgency=medium
+
+  * Added ".txt" to the end of the logfile names so they don't cause
+    problems for any systems downloading them from email logs.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 05 Jan 2025 11:19:03 +0100
+
+snapraid-daily (1.1.0-1) stable; urgency=medium
+
+  * Code improvements in how messages are logged to the email body
+    logfile.
+
+  * Minor changes in banners printed in logs.
+
+  * Added ability to check whether SnapRAID is already in use or not,
+    and to exit and send an email with this in the subject.
+
+  * Fixed incorrect print out of number of files needing touch for newer
+    versions of SnapRAID.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 04 Jan 2025 21:22:10 +0100
+
+snapraid-daily (1.0.9-1) stable; urgency=medium
+
+  * Switched to using mktemp to create logfiles.
+
+  * Changed postinst script to output a message on clean installs.
+
+  * Bundled an elementary config file into the default location, so
+    the script should run out of the box with default settings.
+
+  * Syntax improvements in manpages.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Wed, 14 Nov 2024 10:15:19 +0100
+
+snapraid-daily (1.0.8-1) stable; urgency=medium
+
+  * Changed to a while loop in the parse_arguments function, as found
+    this to be a more reliable way of looping through the arguments than
+    the for loop that was previously being used.
+
+  * Added the ability to override the default config by the usage of
+    an argument to the script. (-f or --config) This is mainly intended for
+    the case where one might have multiple snapraid arrays on the same
+    system.
+
+  * Streamlined the picking of the config file using an if-elif-else statement,
+    instead of the messy nested if that was used previously.
+
+  * Also changed the order of preference to look for the config file to
+    the below. Previously the sample config file in the docs folder was
+    looked for directly after the default location.
+    1: Custom Config supplied via -f or --config
+    2: /etc/snapraid-daily.conf
+    3: Same Directory as script
+    4: /usr/share/doc/snapraid-daily/sample-config/snapraid-daily.conf
+
+  * Minor improvements to output messages to make them more readable.
+
+  * Added sample systemd drop-in files and some notes about using them in
+    the docs directory.
+
+  * Updated the manual pages to reflect the ability to specify a custom
+    config file, and mention the included systemd drop-in files.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Wed, 07 Nov 2024 10:53:41 +0100
+
+snapraid-daily (1.0.7-2) stable; urgency=medium
+
+  * Corrected prerm maintainer script exit status to 0 instead of 1!
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 05 Nov 2024 20:07:17 +0100
+
+snapraid-daily (1.0.7-1) stable; urgency=medium
+
+  * Corrected prerm maintainer script to also interpret "activating" as
+    a valid output to systemctl is-active to correctly stop a service 
+    if it is currently running upon running apt purge or apt remove.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 04 Nov 2024 20:01:07 +0100
+
+snapraid-daily (1.0.6-1) stable; urgency=medium
+
+  * Added template systemd timer and service files into the package,
+    to be installed to /etc/systemd/system but these are not enabled
+    by default.
+
+  * Updated manpages and documentation to reflect this and encourage
+    the user to use overrides through systemctl edit.
+
+  * Added a postinst script to detect a 1st time installation and
+    reload systemd (may prompt the user for a user and group name to
+    run snapraid-daily here on future releases)
+
+  * Added a prerm script to check if the timers/services are either
+    active or enabled and stop/disable them accordingly followed by
+    a reload of systemd. 
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Thu, 24 Oct 2024 08:05:38 +0100
+
+snapraid-daily (1.0.5-1) stable; urgency=medium
+
+  * Script would exit if mutt was not installed. Changed functionality
+    to run to the end but disable emails if mutt is not installed.
+    This is the expected behaviour as mutt is recommended instead
+    of a standard dependency.
+
+  * Removed version and date from manual pages so changing them is no
+    longer necessary for new revisions.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Wed, 16 Oct 2024 11:32:51 +0100
+
+snapraid-daily (1.0.4-1) stable; urgency=medium
+
+  * Added dependency on coreutils for /usr/bin/tee.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 15 Oct 2024 15:01:38 +0100
+
+snapraid-daily (1.0.3-1) stable; urgency=medium
+
+  * Changed default config file location to /etc/snapraid-daily.conf.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 07 Oct 2025 11:27:00 +0100
+
+snapraid-daily (1.0.2-1) stable; urgency=medium
+
+  * Improved manpage documentation, and error output messages.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 07 Oct 2024 11:27:00 +0100
+
+snapraid-daily (1.0.1-1) stable; urgency=medium
+
+  * Fixed missing manpage for snapraid-daily.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 06 Oct 2024 21:37:06 +0100
+
+snapraid-daily (1.0.0) stable; urgency=medium
+
+  * Removed ability to force sync after a certain number of times where
+    the script would exit after the thresholds were found to have been
+    exceeded.
+  * Created man pages - snapraid-daily(1) and snapraid-daily.conf(1)
+  
+  * Added dependencies to debian package.
+  
+  * Changed the script to run in the complete absense of the config file
+    and assume a range of defaults that should be good enough for the
+    vast majority of users.
+
+  * Note that the emails are disabled in this case.
+
+  * Added a -h, --help argument to print out a quick help message.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 06 Oct 2024 15:17:06 +0100
+
+snapraid-daily (0.9.7-1) stable; urgency=medium
+
+  * Added check for dependencies - snapraid, mutt etc.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 19 Jan 2023 19:07:49 +0100
+
+snapraid-daily (0.9.7-1) stable; urgency=medium
+
+  * Improved email prints - refined headings and time print outs. Also
+    added a printout of the input options at the start of the email.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 15 Sept 2023 19:07:49 +0100
+
+snapraid-daily (0.9.6-1) stable; urgency=medium
+
+  * Added the ability to pass -s, -c, -o arguments into the script
+    for sync, scrub and override thresholds respectively as shorter
+    versions of the previous accepted arguments.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 22 Jul 2023 06:39:24 +0100
+
+snapraid-daily (0.9.5-1) stable; urgency=medium
+
+  * Added comments for additional explanation in the config file.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 11 Jun 2023 17:31:40 +0100
+
+snapraid-daily (0.9.4-1) stable; urgency=medium
+
+  * Added some hardening configuration in the systemd service files.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 11 Jun 2023 07:01:48 +0100
+
+snapraid-daily (0.9.3-1) stable; urgency=medium
+
+  * Refined grep statements in the threshold check to a more reliable version
+    using cut and sed also.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 14 Apr 2023 21:01:56 +0100
+
+snapraid-daily (0.9.2-1) stable; urgency=medium
+
+  * Fixed a typo in the delete log files function.
+  
+  * Added a number of long comments at the start of the script to explain
+    operation.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 23 Jan 2023 21:01:56 +0100
+
+snapraid-daily (0.9.1-1) stable; urgency=medium
+
+  * Fixed an issue where the script would not continue after detecting the
+    right amount of tries in the file that records the number of failed
+    syncs due to the thresholds being exceed in certain conditions.
+
+  * Reduced deletion of log files to 30 days old.
+ 
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 22 Jan 2023 19:47:43 +0100
+
+snapraid-daily (0.9.0-1) stable; urgency=medium
+
+  * Added the ability to set a number of tries before forcing a sync in the
+    config file. This way a sync will be forced after the thresholds have
+    been found to be exceeded after a certain number of times.
+
+  * This removes the need of the user to have to interact with the system
+    in this case. However this does assume the files deleted/moved are
+    not important.
+
+  * Re-structred parts of the script to operate out of its own directory,
+    for example /opt/snapraid-daily/.
+
+  * Added systemd unit files a .timer file and a .service file for a
+    standalone sync job, a standalone scrub job or a combined default
+    of sync, then scrub.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 07 Jan 2023 12:37:43 +0100
+
+snapraid-daily (0.8.5-1) stable; urgency=medium
+
+  * Changed the name of the config file from config.sh to snapraid-daily.conf.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 06 Nov 2022 09:07:59 +0100
+
+snapraid-daily (0.8.4-1) stable; urgency=medium
+
+  * Added a check on the number of moved files in addition to the deleted
+    files since the last sync.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 11 Oct 2022 10:01:29 +0100
+
+snapraid-daily (0.8.2-1) stable; urgency=medium
+
+  * Added improved headings in email printouts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 10 Oct 2022 07:41:23 +0100
+
+snapraid-daily (0.8.1-1) stable; urgency=medium
+
+  * Added a check for --scrub-only and --sync-only being specified at the
+    same time - the script will now exit if this is done.
+
+  * Added a warning printout if one specifies --override-thresholds while
+    --scrub-only is active to mention the former has no effect in this
+    case.
+
+  * Fixed a problem in the if-elif-else statement in the function that
+    determines the arguments.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 09 Oct 2022 17:11:34 +0100
+
+snapraid-daily (0.8.0-1) stable; urgency=medium
+
+  * Combined snapraid-sync and snapraid-scrub scripts into one master
+    script.
+
+  * By default the script will now do a check on the initial status
+    via "snapraid status", then move on to running touch if required.
+
+  * After that the script will run sync, finally followed by scrub.
+  
+  * Added the ability to pass arguments to the script: --scrub-only,
+    --sync-only and --override-thresholds.
+
+  * This allows one to run sync only or run scrub only which is useful
+    if somebody wants to seperate the sync and scrub operations.
+
+  * The script will now attach the command log if an error was detected.
+  
+  * This allows the user to know the issue by just looking at the
+    notification emails alone.
+
+  * Changed subject of notification email to "SnapRAID-Scrub" or 
+    "SnapRAID-Sync" from "SnapRAID-Daily" if sync-only or
+    scrub-only arguments are being used.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 08 Oct 2022 11:32:09 +0100
+
+snapraid-daily (0.7.5-1) stable; urgency=medium
+
+  * Corrected issue whereby the touch check would not correctly pick the
+    the number of files needing touch in some occasions.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 09 Apr 2022 12:41:07 +0100
+
+snapraid-daily (0.7.4-1) stable; urgency=medium
+
+  * Added a check on the number of files needing "snapraid touch", and
+    added the number to the email printouts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 03 Apr 2022 08:43:19 +0100
+
+snapraid-daily (0.7.3-1) stable; urgency=medium
+
+  * Improved checking of errors/omissions in config file.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 13 Feb 2022 05:57:32 +0100
+
+snapraid-daily (0.7.2-1) stable; urgency=medium
+
+  * Improved grep commands on snapraid diff output to more accurately
+    and reliably determine the changes since the last sync.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 05 Feb 2022 17:51:45 +0100
+
+snapraid-daily (0.7.1-1) stable; urgency=medium
+
+  * Completed if/elif/else statement in Diff command to add error
+    reporting ability for the snapraid diff command also.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Thu, 27 Jan 2022 06:59:01 +0100
+
+snapraid-daily (0.7.0-1) stable; urgency=medium
+
+  * Moved all user configurable settings out of main scripts and into a
+    dedicated config file (config.sh). Both scripts will now read this
+    config file upon startup.
+
+  * Added detailed checking for errors in this config file.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 18 Jan 2022 09:51:45 +0100
+
+snapraid-daily (0.6.1-1) stable; urgency=medium
+
+  * Refined detection of errors in sync and scrub scripts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 18 Dec 2021 06:59:01 +0100
+
+snapraid-daily (0.6.0-1) stable; urgency=medium
+
+  * Added ability to pass in an "--override-thresholds" argument to the
+    sync/touch script to override the deletion thresholds and force a sync.
+
+  * Previously a sync had to be ran manually.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 05 Dec 2021 09:14:47 +0100
+
+snapraid-daily (0.5.1-1) stable; urgency=medium
+
+  * Further improvments to email printout/logs. Added headings to Sync
+    and scrub script.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 27 Nov 2021 16:54:37 +0100
+
+snapraid-daily (0.5.0-1) stable; urgency=medium
+
+  * Combined Sync and Touch scripts. Touch will now only be invoked if
+    the output of "snapraid status" says it is required.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 29 Oct 2021 20:13:10 +0100
+
+snapraid-daily (0.4.2-1) stable; urgency=medium
+
+  * Corrected typo in email printouts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 22 Oct 2021 22:17:47 +0100
+
+snapraid-daily (0.4.1-1) stable; urgency=medium
+
+  * Improved email outputs - added time.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 15 Oct 2021 19:13:10 +0100
+
+snapraid-daily (0.4.0-1) stable; urgency=medium
+
+  * Added output of snapraid status to sync and scrub script email outputs.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Thu, 07 Oct 2021 11:52:18 +0100
+  
+snapraid-daily (0.3.1-1) stable; urgency=medium
+
+  * Improved email printout of snapraid-sync and snapraid-scrub scripts.
+  
+  * Duration calculation now runs correctly if the start time and stop
+    time are on different days.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 14 Sept 2021 07:12:09 +0100
+ 
+snapraid-daily (0.3.0-1) stable; urgency=medium
+
+  * Added deletion monitoring to snapraid-sync script, and included in
+    email output.
+
+  * Snapraid-Sync Script will now exit if too many deletions are detected.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 11 Sept 2021 10:37:10 +0100
+ 
+snapraid-daily (0.2.1-1) stable; urgency=medium
+
+  * Added ability to detect errors in touch script.
+  
+  * Added email notifications to touch script.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 05 Sept 2021 17:47:23 +0100
+ 
+snapraid-daily (0.2.0-1) stable; urgency=medium
+
+  * Created seperate snapraid-touch script.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 03 Sept 2021 19:04:19 +0100
+ 
+snapraid-daily (0.1.2-1) stable; urgency=medium
+
+  * Fixed typos in printouts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 16 Aug 2021 10:30:23 +0100
+ 
+snapraid-daily (0.1.1-1) stable; urgency=medium
+
+  * Improved print out in email messages. Added duration calculation.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 09 Aug 2021 17:37:09 +0100
+ 
+ snapraid-daily (0.1.0-1) stable; urgency=medium
+
+  * Initial release.
+  
+  * Creation of snapraid-scrub and snapraid-sync scripts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 08 Aug 2021 11:20:01 +0100

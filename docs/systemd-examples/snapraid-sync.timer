@@ -1,0 +1,12 @@
+[Unit]
+Description=Runs Snapraid via a Custom Bash Script
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+OnCalendar=*-*-* 18:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+
+

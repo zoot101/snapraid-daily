@@ -1,0 +1,135 @@
+#!/bin/bash
+
+############################
+# MF PRE REMOVE SCRIPT
+############################
+# Copyright (C) Mark Finnan 2025
+############################
+# Intended to be used across multiple packages as
+# a script that is called after the removal of a
+# package
+#
+# Simply checks if both the service/timer are running/enabled 
+# and stops/disables them accordingly.
+#
+# Ensures we don't have lingering enabled services with their
+# unit and timer file already deleted.
+###########################
+
+# Recommended from Debian Policy Manual
+# https://www.debian.org/doc/debian-policy/index.html 
+set -e
+
+############################
+# Functions
+############################
+# Check if the Service is running and stop it if so
+function stop-service-if-running() {
+
+  # Check if the service is enabled, for this script
+  # the service shouldn't be enabled as its just a oneshot
+  # service - stop it if it's running
+  if systemctl is-active "${1}"".service" | grep -qw "active"
+  then
+    echo "Stopping" "${1}"".service"
+    systemctl stop "${1}"".service"
+  elif systemctl is-active "${1}"".service" | grep -qw "activating"
+  then
+    echo "Stopping" "${1}"".service"
+    systemctl stop "${1}"".service"
+  fi
+}
+
+# Check if the Service is enabled and disable it if so
+function disable-service-if-enabled() {
+
+  # Disable the service if it's enabled
+  if systemctl is-enabled "${1}"".service" | grep -qw "enabled"
+  then
+    # Stop and Disable the Service
+    echo "Disabling" "${1}"".service"
+    systemctl disable "${1}"".service"
+  fi
+}
+
+# Check if the Timer is running and stop it if so
+function stop-timer-if-running() {
+
+  # Check if the timer is started, if so - stop it
+  if systemctl is-active "${1}"".timer" | grep -qw "active"
+  then
+    echo "Stopping" "${1}"".timer"
+    systemctl stop "${1}"".timer"
+  fi
+}
+
+# Check if the Timer is enabled and disable it if so
+function disable-timer-if-enabled() {
+
+  # Now check if the timer is enabled, if it is - disable it
+  if systemctl is-enabled "${1}"".timer" | grep -qw "enabled"
+  then
+    # Stop and Disable the Service
+    echo "Disabling" "${1}"".timer"
+    systemctl disable "${1}"".timer"
+  fi
+}
+
+############################
+# Script Start
+############################
+
+############################
+# Initialize Variables
+############################
+# Package Name and Bin Path
+package_name="snapraid-daily"
+
+# Determine action
+action="${1}"
+
+# If doing an upgrade, we don't need to do anything
+# Leaving this if statement empty throws up an error, no
+# idea why... but exiting with success is definitely better
+if [ "${action}" == "upgrade" ]
+then
+  exit 0
+fi
+
+# Check if the service/timer are either active or enabled
+# then disable them or stop them accordingly
+if [ "${action}" == "purge" ] || [ "${action}" == "remove" ]
+then
+
+  # Check if the services and timers are either enabled or
+  # running and stop/disable them accordingly
+
+  # Snapraid-Daily
+  stop-service-if-running "snapraid-daily"
+  disable-service-if-enabled "snapraid-daily"
+  stop-timer-if-running "snapraid-daily"
+  disable-timer-if-enabled "snapraid-daily"
+
+  # Snapraid-sync
+  stop-service-if-running "snapraid-sync"
+  disable-service-if-enabled "snapraid-sync"
+  stop-timer-if-running "snapraid-sync"
+  disable-timer-if-enabled "snapraid-sync"
+
+  # Snapraid-scrub
+  stop-service-if-running "snapraid-scrub"
+  disable-service-if-enabled "snapraid-scrub"
+  stop-timer-if-running "snapraid-scrub"
+  disable-timer-if-enabled "snapraid-scrub"
+
+  # Reload systemd
+  systemctl daemon-reload
+
+  # Exit with success
+  exit 0
+
+fi 
+
+# Exit with Success for all other actions
+exit 0
+
