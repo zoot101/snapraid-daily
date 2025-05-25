@@ -138,28 +138,22 @@ automatically installed.
 sudo apt install ./snapraid-daily_1.2.6-5_amd64.deb
 ```
 
-Alternatively to install manually, install git and do the following:
+Alternatively to install manually, do the following:
 
 ```bash
 sudo apt install git # (On Debian based distros)
-
 git clone https://github.com/zoot101/snapraid-daily
-
 cd snapraid-daily
-
 chmod +x snapraid-daily
-
 sudo cp snapraid-daily /usr/bin/
-
 sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
-
 sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 ```
 
 Next ensure all dependencies are installed:
 
 * grep,awk,sed,mktemp,cut - Available on pretty much every linux based system
-* SnapRAID
+* SnapRAID (This is left up to the user and not considered here)
 
 Next, create the config file as discussed below.
 
@@ -658,7 +652,8 @@ cd snapraid-daily
 dpkg-buildpackage -uc -us
 ```
 
-A new debian package should be created in the parent directory.
+A new debian package should be created in the parent directory that can be installed
+with **dpkg** or with **apt** as shown above.
 
 # Credits
 
