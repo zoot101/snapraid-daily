@@ -168,6 +168,9 @@ To be placed in either:
 * **/etc/snapraid-daily.conf**    
 * Same directory as the main script    
 
+A sample is provided here:
+https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
+
 If installed via the debian package, a sample configuration
 file is already placed at the 1st location above that can be
 edited by the user.
@@ -277,12 +280,15 @@ scrub_age=7
 A valid muttrc configuration is required to send email notifications.
 A sample that works for Gmail can be found here. It should be simple to
 adapt to another email provider also.    
+https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc
 
 # Automation with Systemd
 
-By default the following systemd files are bundled with the package
+By default the below systemd files are bundled with the package
 installation, but are not enabled by default. If installing manually the
-unit files can be found in the docs folder here.
+unit files can be found in the docs folder here, copy them to the
+**/etc/systemd/system/** location.
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 
 * **/etc/systemd/system/snapraid-daily.service**    
 * **/etc/systemd/system/snapraid-daily.timer**    
@@ -315,7 +321,7 @@ necessary to edit them directly.
 Some further examples are provided in the docs directory for both the
 main service/timer file and also drop-in files that can be generated
 (see below).    
-**/usr/share/doc/snapraid-daily/systemd-examples/**
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
 
 Note that some examples are also provided in the docs for using **cron**
 to run the script.
@@ -352,9 +358,8 @@ systemctl daemon-reload
 
 Further example drop-in files and unit files for systemd and some
 notes are included here:
-
-* **/usr/share/doc/snapraid-daily/systemd-drop-ins/**     
-* **/usr/share/doc/snapraid-daily/systemd-examples/**     
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
+https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 
 # Return Codes
 
