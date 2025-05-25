@@ -219,7 +219,7 @@ email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
 See the example here to set up the email notifications:    
-**/usr/share/doc/snapraid-daily/muttrc-sample/muttrc**
+https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ### email\_address
 
