@@ -580,9 +580,9 @@ No error detected
 For examples on how to automate via systemd timers, set up a valid muttrc
 config for emails, or to use cron instead of systemd have a look here.
 
-*  **/usr/share/doc/snapraid-daily/systemd-examples/**    
-*  **/usr/share/doc/snapraid-daily/systemd-drop-ins/**    
-*  **/usr/snare/doc/snapraid-daily/muttrc-example/**    
-*  **/usr/share/doc/snapraid-daily/sample-config/**    
-*  **/usr/share/doc/snapraid-daily/cron/**  
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
 
