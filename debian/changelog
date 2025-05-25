@@ -1,3 +1,13 @@
+snapraid-daily (1.2.7-1) stable; urgency=medium
+
+  * Specified all return codes up at the top instead.
+
+  * Fixed a minor issue whereby if nothing was found to scrub and the
+    scrub only argument (-c, --scrub-only) was being used, the email
+    subject was not changed to reflect this.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 25 May 2025 16:22:17 +0100
+
 snapraid-daily (1.2.6-5) stable; urgency=medium
 
   * Completed a big cleanup of the changelog.
@@ -289,7 +299,7 @@ snapraid-daily (0.9.7-1) stable; urgency=medium
   * Improved email prints - refined headings and time print outs. Also
     added a printout of the input options at the start of the email.
  
- -- Mark Finnan <mfinnan101@gmail.com>  Fri, 15 Sept 2023 19:07:49 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 15 Sep 2023 19:07:49 +0100
 
 snapraid-daily (0.9.6-1) stable; urgency=medium
 
@@ -514,7 +524,7 @@ snapraid-daily (0.3.1-1) stable; urgency=medium
   * Duration calculation now runs correctly if the start time and stop
     time are on different days.
 
- -- Mark Finnan <mfinnan101@gmail.com>  Tue, 14 Sept 2021 07:12:09 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 14 Sep 2021 07:12:09 +0100
  
 snapraid-daily (0.3.0-1) stable; urgency=medium
 
@@ -523,7 +533,7 @@ snapraid-daily (0.3.0-1) stable; urgency=medium
 
   * Snapraid-Sync Script will now exit if too many deletions are detected.
 
- -- Mark Finnan <mfinnan101@gmail.com>  Sat, 11 Sept 2021 10:37:10 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Sat, 11 Sep 2021 10:37:10 +0100
  
 snapraid-daily (0.2.1-1) stable; urgency=medium
 
@@ -531,13 +541,13 @@ snapraid-daily (0.2.1-1) stable; urgency=medium
   
   * Added email notifications to touch script.
 
- -- Mark Finnan <mfinnan101@gmail.com>  Sun, 05 Sept 2021 17:47:23 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 05 Sep 2021 17:47:23 +0100
  
 snapraid-daily (0.2.0-1) stable; urgency=medium
 
   * Created seperate snapraid-touch script.
 
- -- Mark Finnan <mfinnan101@gmail.com>  Fri, 03 Sept 2021 19:04:19 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 03 Sep 2021 19:04:19 +0100
  
 snapraid-daily (0.1.2-1) stable; urgency=medium
 

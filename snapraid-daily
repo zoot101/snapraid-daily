@@ -5,17 +5,26 @@
 # COOYRIGHT (C) Mark Finnan 2021
 ###################################################
 
+# VERSION
+version=1.2.7
+
 ###################################################
 # RETURN CODES
 ###################################################
-# 0 - Success
-# 1 - All Errors
-# 2 - Snapraid already in use
-# 3 - Files Modified During Sync
-# 5 - Thresholds Exceeded
-#
-# VERSION
-version=1.2.6
+# Success
+success_code=0
+
+# All Errors
+error_code=1
+
+# SnapRAID Already in use
+already_in_use_code=2
+
+# Files Modified During Sync
+files_modified_during_sync_code=3
+
+# Deletion/Moved Threshold(s) exceeded
+thresholds_exceeded_code=5
 
 ###################################################
 # FUNCTIONS
@@ -43,7 +52,7 @@ function generate_logfiles {
   if [ ! -w "/tmp/" ]
   then
     echo "ERROR: /tmp directory is not writable - Exiting"
-    exit 1
+    exit $error_code
   fi
 
   # Tmp file Prefix - ".txt" added at the end so they don't cause
@@ -156,7 +165,7 @@ function read_config_file {
     echo "ERROR: /tmp directory not writable for logfiles - Exiting"
 
     # Exit with Status 1 to flag an error
-    exit 1
+    exit $error_code
   fi
 
   # Configuration Files are read in the following order of preference
@@ -210,7 +219,7 @@ function read_config_file {
     then
       echo "ERROR: snapraid_config_file_path missing in snapraid-daily.conf and /etc/snapraid.conf not found - Exiting"
       echo ""
-      exit 1
+      exit $error_code
     else
       echo "WARNING: snapraid_config_file_path not defined in snapraid-daily.conf - Using /etc/snapraid.conf"
       snapraid_config_file_path="/etc/snapraid.conf"
@@ -244,7 +253,7 @@ function read_config_file {
     then
       echo "ERROR: deletion_threshold can't be set to a negative number - Exiting"
       echo ""
-      exit 1
+      exit $error_code
     fi
   fi
 
@@ -259,7 +268,7 @@ function read_config_file {
     then
       echo "ERROR: moved_threshold can't be set to a negative number - Exiting"
       echo ""
-      exit 1
+      exit $error_code
     fi
   fi
 
@@ -274,7 +283,7 @@ function read_config_file {
     then
       echo "ERROR: scrub_percent should be a number between 0 & 100 - Exiting"
       echo ""
-      exit 1
+      exit $error_code
     fi
   fi
 
@@ -289,7 +298,7 @@ function read_config_file {
     then
       echo "ERROR: scrub_age cannot be a negative number - Exiting"
       echo ""
-      exit 1
+      exit $error_code
     fi
   fi
 }
@@ -303,43 +312,43 @@ function sanity_check {
   if [ -z $(which snapraid) ]
   then
     echo "ERROR: SnapRAID is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check if grep is Installed
   elif [ -z $(which grep) ]
   then
     echo "ERROR: grep is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check if awk is Installed
   elif [ -z $(which awk) ]
   then
     echo "ERROR: awk is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check if sed is Installed
   elif [ -z $(which sed) ]
   then
     echo "ERROR: sed is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check if cut is Installed
   elif [ -z $(which cut) ]
   then
     echo "ERROR: cut is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check if mktemp is Installed
   elif [ -z $(which mktemp) ]
   then
     echo "ERROR: mktemp is not installed - Exiting..."
-    exit 1
+    exit $error_code
 
   # Check for the SnapRAID Config File
   elif [ ! -r "$snapraid_config_file_path" ]
   then
     echo "ERROR: Snapraid Config File does not exist or is not readable - Exiting..."
-    exit 1
+    exit $error_code
 
   else
     # Find 1st Content File Location - Sed command picks out the 1st line
@@ -351,7 +360,7 @@ function sanity_check {
     then
       echo "ERROR: SnapRAID Content File does not exist or is not writable"
       echo "       Possible permissions problem?"
-      exit 1
+      exit $error_code
     fi
   fi
 
@@ -388,7 +397,7 @@ function print_help {
   echo "  Main Script:                snapraid-daily(1)      $ man snapraid-daily"
   echo "  Config File:                snapraid-daily.conf(1) $ man snapraid-daily.conf"
   echo ""
-  exit 0
+  exit $success_code
 }
 
 # Function to Parse Input Arguments to the Script, and correctly initalize
@@ -492,7 +501,7 @@ function parse_arguments() {
     echo "ERROR: -s|--sync-only & -c|--scrub-only arguments can't both be specified at the same time - Exiting"
     echo ""
     print_help
-    exit 1
+    exit $error_code
   fi
 
   # Check if --override-thresholds and --scrub-only were specified at the same
@@ -584,7 +593,7 @@ function initial_status_check {
 
     # Delete the logfiles and exit with Status 1 to Flag an Error in Logs
     clean_up_logfiles
-    exit 2
+    exit $already_in_use_code
   
   # Scenario 2 - Check for errors. These could be bad blocks or something else
   # If detected - exit and notify the user via email
@@ -602,7 +611,7 @@ function initial_status_check {
 
     # Delete the logfiles and exit with Status 1 to Flag an Error in Logs
     clean_up_logfiles
-    exit 1
+    exit $error_code
 
   # Scenario 3 - Check if a ReHash is needed.
   # If so - exit and notify the user via email
@@ -620,7 +629,7 @@ function initial_status_check {
 
     # Delete the logfiles and exit with Status 1 to Flag an Error in the Logs
     clean_up_logfiles
-    exit 1
+    exit $error_code
 
   # Scenario 4 - Check if a Sync was previously stopped while in progress
   elif ! grep -qw "No sync is in progress." $status_logfile
@@ -649,7 +658,7 @@ function initial_status_check {
 
       # Delete the logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
-      exit 1
+      exit $error_code
     fi
 
   # Scenario 5 - None of the above checks found anything - Continue to Sync/Scrub
@@ -708,7 +717,7 @@ function run_touch_if_needed {
 
       # Delete the Logfiles and exit with Status 1 to flag an error
       clean_up_logfiles
-      exit 1
+      exit $error_code
 
     else
       log_to_email_time "Touch Completed"
@@ -773,7 +782,7 @@ function check_array_for_changes_and_thresholds {
 
       # Delete the Logfiles and exit with Status 5 to Flag the Threshold has been exceeded
       clean_up_logfiles
-      exit 5
+      exit $thresholds_exceeded_code
 
     elif [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
     then
@@ -787,7 +796,7 @@ function check_array_for_changes_and_thresholds {
 
       # Delete the Logfiles and exit with Status 5 to flag the threshold has been exceeded
       clean_up_logfiles
-      exit 5
+      exit $thresholds_exceeded_code
     fi
 
   # If all of the above are equal to zero, then we know no changes have occured since the last sync
@@ -823,7 +832,7 @@ function check_array_for_changes_and_thresholds {
 
     # Delete the logfiles and exit with Status 1 to Flag an Error
     clean_up_logfiles
-    exit 1
+    exit $error_code
   fi
 }
 
@@ -883,7 +892,7 @@ function sync_array {
       # Delete the Logfiles and exit with Status 3 to Highlight that a Modification Took Place in the
       # middle of the sync operation
       clean_up_logfiles
-      exit 3
+      exit $files_modified_during_sync_code
 
     # Otherwise check if the Sync was Successful or Not
     elif grep -qw "Everything OK" $sync_command_logfile  
@@ -924,7 +933,7 @@ function sync_array {
 
       # Delete Logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
-      exit 1
+      exit $error_code
     fi
   fi
 }
@@ -995,6 +1004,10 @@ function scrub_array {
       log_to_email_time "Scrubbed" $scrub_percent"% older than" $scrub_age "days"
       log_to_email ""
 
+      # This variable is used later to avoid having to grep the scrub command
+      # logfile again. This is to change the email subject.
+      nothing_to_scrub=0
+
     # Otherwise check if nothing was found to scrub
     elif grep -qw "Nothing to do" $scrub_logfile 
     then
@@ -1002,6 +1015,10 @@ function scrub_array {
       # the specified scrub age to scrub
       log_to_email_time "Found Nothing to Scrub"
       log_to_email ""
+
+      # This variable is used later to avoid having to grep the logfile above
+      # again. This is to change the email subject later
+      nothing_to_scrub=1
 
     # Otherwise the scrub happened but was not successful. Could be a forced
     # interruption or another error like I/O errors etc. Exit and send warning
@@ -1020,7 +1037,7 @@ function scrub_array {
 
       # Delete the logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
-      exit 1
+      exit $error_code
     fi
   else
     # Array is not up to date - Exit the Script if --scrub-only was given
@@ -1050,7 +1067,7 @@ function scrub_array {
 
       # Delete the Logfiles and Exit with Status 1 to Flag an Error
       clean_up_logfiles
-      exit 1
+      exit $error_code
 
     else
       log_to_email_time "Array not up-to-date - Sync Required 1st..."
@@ -1088,7 +1105,7 @@ function send_final_notification_email {
   elif [ $scrub_only -eq 1 ]
   then
     # Refine Email subject if Nothing was found to scrub
-    if [ ! -z "$scrub_no_need_check" ]
+    if [ $nothing_to_scrub == 1 ]
     then
       # Nothing was found to Scrub - Put this in the email title
       send_email "SnapRAID-Scrub: Nothing to Scrub"
@@ -1232,5 +1249,5 @@ send_final_notification_email
 clean_up_logfiles
 
 # Exit with Status 0 to Flag Success if all Steps Completed
-exit 0
+exit $success_code
 
