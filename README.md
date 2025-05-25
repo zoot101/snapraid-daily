@@ -374,10 +374,6 @@ further return codes the future.
 * 3: Files Modified During Sync    
 * 5: Thresholds Exceeded    
 
-# Author
-
-Mark Finnan (mfinnan101@gmail.com)
-
 # Sample Output
 ```bash
 mark : server @ ~ $ snapraid-daily -s -q
@@ -585,4 +581,8 @@ config for emails, or to use cron instead of systemd have a look here.
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
+
+# Author
+
+Mark Finnan (mfinnan101@gmail.com)
 
