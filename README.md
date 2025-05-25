@@ -2,7 +2,7 @@
 Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
 
-# Description
+# Introduction 
 Thank you for your interest in this script. Snapraid is very good software,
 but lacks any default automation or notification ability.
 
@@ -10,26 +10,33 @@ That is where this script comes in, it is intended to be an all-in-one
 script for the automation of snapraid.
 
 There are many other scripts out there that essentially do the same thing,
-and are probably better than this one. However, none of them had exactly
+and some are probably better than this one. However, none of them had exactly
 the features the author wanted or were more complex than desired.
 
 This led to this script being created by the author. It has worked quite well
-for the author up to this date, and hopefully prove useful to others.
+for the author for many years up to this date, and hopefully prove useful to others.
 
-All possible scenarios were attempted to be covered. It was decided to keep
-the approach simple, and only to focus on snapraid operations and simple
-email notifications rather than adding many different features.
+The broad goal here is to be an all-in-one script to automate the necessary
+snapraid functions that can be scheduled accordingly.
 
-It is intended to be ran as a scheduled task via cronjob or systemd timers
-(some examples are provided in the docs - see near the end of this manual
-entry\), but can also easily be ran manually if need be.
+# Scope
+This script is intended to focus just on SnapRAID and simple email notifications,
+t was decided to keep the approach simple, and only to focus on snapraid operations
+and simple email notifications rather than adding many different features.
+
+This is keeping in the traditional unix philosophy of do one thing and do it well.
+
+# Description
+
+It is intended to be ran as a scheduled task via cronjob or systemd timers, but 
+can also easily be installed and ran manually if need be.
 
 If errors are detected, the user is notified by email and the script will
 exit. Note that no attempts are made here to automate the correction of
 errors automatically, the user will have to intervene in each case if they
 are detected.
 
-Before attempting to use this script, one should ensure that snapraid is
+Before attempting to use this script, one should ensure that **SnapRAID** is
 normally functioning. That is one can run the following commands without
 any error being encountered. See the snapraid documentation.
 
@@ -37,32 +44,9 @@ any error being encountered. See the snapraid documentation.
 2. **snapraid sync**   
 3. **snapraid scrub**   
 
-The broad goal here is to be an all-in-one script to automate the necessary
-snapraid functions that can be scheduled accordingly.
-
 While the script will run out of the box with the default config, for best
-operation, a config file is required.
+operation, a config file is required - see below.
 
-The location for the config file **(snapraid-daily.conf)** is tried in the
-following order of preference:
-
-1. **Via the -f or \--config option if specified**    
-2. **/etc/snapraid-daily.conf**    
-3. **snapraid-daily.conf** in the script directory    
-
-If the config file is not found in any of the above locations, the defaults
-will be used. Note that this will disable the email functionality.
-
-The contents of **snapraid-daily.conf** should contain the following and the
-syntax should be correct as per bash. The script will again exit if errors
-are present in this file. A sample is provided here in the docs folder.
-
-1. MuttRC File Path for Notification Emails    
-2. Email Address for Notification Emails    
-3. Deletion Threshold    
-4. Move Threshold    
-5. Scrub Percentage     
-6. Scrub Age     
 
 The number of files deleted and moved are monitored and if either exceed
 the threshold values specified in **snapraid-daily.conf**, the script will
@@ -136,20 +120,27 @@ snapraid-daily -f /path/to/user.conf
 
 If an invalid argument is specified, the script will exit.
 
-# Installation
-To install the package do:
+# Installation and Setup
+A pack is provided for Debian and its derivatives. Note that the author
+has mainly tested this just on Debian itself, but it should work on other
+Debian based distros.
+
+To install the package do the following. It's better to use **apt**
+rather than **dpkg** so the dependencies will be automatically installed.
 
 ```bash
 sudo apt install ./snapraid-daily_1.2.6-5_amd64.deb
 ```
 
-This will install the dependencies automatically.
-
-Alternatively to install manually, download the script
-and make it executable.
+Alternatively to install manually, do the following:
 
 ```bash
+git clone https://github.com/zoot101/snapraid-daily
+cd snapraid-daily
 chmod +x snapraid-daily
+sudo cp snapraid-daily /usr/bin/
+sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
+sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 ```
 
 Next ensure all dependencies are installed:
@@ -157,38 +148,62 @@ Next ensure all dependencies are installed:
 * grep,awk,sed,mktemp,cut - Available on pretty much every linux based system
 * SnapRAID
 
-Then create the config file as discussed below, an example is provided
+Next, create the config file as discussed below, an example is provided
 here in the docs folder.
 
 # Config File (snapraid-daily.conf)
-Main configuration file for the snapraid-daily script.
 
-To be placed in either:
+As mentioned above, the script will run out of the box without a config file
+but its functionality is somewhat limited as a result.
 
-* **/etc/snapraid-daily.conf**    
-* Same directory as the main script    
+The location for the config file **(snapraid-daily.conf)** is tried in the
+following order of preference:
 
-A sample is provided here:
+1. **Via the -f or \--config option if specified**    
+2. **/etc/snapraid-daily.conf**    
+3. **snapraid-daily.conf** in the script directory    
+
+If the config file is not found in any of the above locations, the defaults
+will be used. Note that this will disable the email functionality.
+
+The contents of **snapraid-daily.conf** should contain the following and the
+syntax should be correct as per bash. The script will again exit if errors
+are present in this file.
+
+1. MuttRC File Path for Notification Emails    
+2. Email Address for Notification Emails    
+3. Deletion Threshold    
+4. Move Threshold    
+5. Scrub Percentage     
+6. Scrub Age     
+
+See the sample here:
 https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
 
 If installed via the debian package, a sample configuration
 file is already placed at the 1st location above that can be
-edited by the user.
+edited directly by the user.
 
-Overriding the default config file can also be accomplished by
+If installing manually do and then manually edit it using the above
+example.
+```bash
+sudo cp ./config/snapraid-daily.conf /etc/
+```
+
+Note that overriding the default config file can also be accomplished by
 using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
 to the script.
 
-The package installation will also place a sample file in the docs
+The debian package installation will also place a sample file in the docs
 location below.    
 **/usr/share/doc/snapraid-daily/sample-configs/snapraid-daily.conf**
 
-This can be used as a template to generate the
-optimum config file in the default location:    
+This can also be used as a template to generate the optimum config file in 
+the default location:    
 **/etc/snapraid-daily.conf**
 
 Finally if the script cannot find any configuration file it will
-continue with the defaults (See below **CONTENTS** section)
+continue with the defaults - see the below:
 
 ## Config File Contents
 
@@ -202,8 +217,7 @@ The main parameters included in the file are:
 * **scrub_percent**    
 * **scrub_age**    
 
-If any of the above are missing, defaults are loaded,
-see below:
+If any of the above are missing, defaults are loaded, see below:
 
 ### snapraid\_config\_file\_path
 
@@ -213,7 +227,8 @@ but in the event that it is at a different location, it
 can be specified here. The default is **/etc/snapraid.conf**
 
 This is useful for the situation where the user may be running
-multiple SnapRAID arrays on the same system.
+multiple SnapRAID arrays on the same system, but for the vast
+majority of users it'll be **/etc/snapraid.conf**.
 
 ### muttrc\_path
 
@@ -221,7 +236,9 @@ This is the path for the muttrc file that is used for sending
 email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
-See the example here to set up the email notifications:    
+See the example here to set up the email notifications. A sample config
+is provided for gmail along with instructions to set it up. It should be
+simple to adapt for other email providers also:    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ### email\_address
@@ -262,12 +279,13 @@ comments using **\#** accordingly.
 snapraid_config_file_path="/etc/snapraid.conf"    
 
 # Email Notification Parameters
-# Muttrc File and Email Address
+# Muttrc File and Email Address to send notification
+# emails to
 muttrc_path="/opt/email_notifications/mutt/muttrc"   
 email_address="server@example.com"  
 
 # Deletion and Moved Thresholds
-deletion_threshold=200* 
+deletion_threshold=200 
 moved_threshold=200
 
 # Scrub Age and Percent
@@ -284,11 +302,8 @@ https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc
 
 # Automation with Systemd
 
-By default the below systemd files are bundled with the package
-installation, but are not enabled by default. If installing manually the
-unit files can be found in the docs folder here, copy them to the
-**/etc/systemd/system/** location.
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
+By default the below systemd files are bundled with the debian package
+installation, but are not enabled by default. 
 
 * **/etc/systemd/system/snapraid-daily.service**    
 * **/etc/systemd/system/snapraid-daily.timer**    
@@ -297,14 +312,30 @@ https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 * **/etc/systemd/system/snapraid-scrub.service**    
 * **/etc/systemd/system/snapraid-scrub.timer**    
 
+These files do the following:
+
 1. **snapraid-daily** does a sync,then a scrub (the default).    
 2. **snapraid-sync** syncs the array only.    
 3. **snapraid-scrub** scrubs the array only.    
 
+If installing manually copy the above files to the
+**/etc/systemd/system/** location from the cloned directory above. Note
+that this is not required if installing via the debian package.
+
+```bash
+sudo cp ./systemd-files/snapraid-*.service /etc/systemd/system/
+sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
+
+# Then Reload Systemd
+systemctl daemon-reload
+```
+
 This is intended to cover the case where the user wishes to automate
 the **sync** and **scrub** operations together, or run them seperately.
+Note that the default is to run both a **sync** and **scrub** each time
+the script is called.
 
-To enable any one of the timers do: 
+To enable any one of the timers do - enabling the services is not required. 
 ```bash
 systemctl enable snapraid-daily.timer
 ```
