@@ -138,14 +138,21 @@ automatically installed.
 sudo apt install ./snapraid-daily_1.2.6-5_amd64.deb
 ```
 
-Alternatively to install manually, do the following:
+Alternatively to install manually, install git and do the following:
 
 ```bash
+sudo apt install git # (On Debian based distros)
+
 git clone https://github.com/zoot101/snapraid-daily
+
 cd snapraid-daily
+
 chmod +x snapraid-daily
+
 sudo cp snapraid-daily /usr/bin/
+
 sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
+
 sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 ```
 
@@ -635,6 +642,23 @@ config for emails, or to use cron instead of systemd have a look here.
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
+
+# Creating your own Debian Package
+
+Given the author uses debian as their daily driver, a debian directory containing
+what is required to build a debian package is included here.
+
+While it's not necessary, if one wants to build their own debian package, they can
+do the following if they are running a debian based distribution.
+
+```bash
+sudo apt install debhelper dh-exec
+git clone https://github.com/zoot101/snapraid-daily
+cd snapraid-daily
+dpkg-buildpackage -uc -us
+```
+
+A new debian package should be created in the parent directory.
 
 # Credits
 
