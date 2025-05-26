@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.0
+version=1.3.1
 
 ###################################################
 # RETURN CODES
@@ -984,8 +984,73 @@ function sync_array {
       clean_up_logfiles
       exit $files_modified_during_sync_code
 
-    # Otherwise check if the Sync was Successful or Not
-    elif grep -qw "Everything OK" $sync_command_logfile  
+    # Otherwise check if the Sync was Successful or Not. Note that now -h is
+    # being used it's no longer goo enough to just look for "Everything OK", since
+    # there are now 2 "Everything OK" lines - one for the hashing operation, and
+    # another for the data.
+
+    # The sync log reports 4 lines of interest, search for each one of them
+    # summary:error_file:0
+    # summary:error_io:0
+    # summary:error_data:0
+    # summary:exit:ok
+
+    # 1: Check for File Errors - Exit if found
+    elif ! grep -qw "summary:error_file:0" $sync_command_logfile
+    then
+      log_to_email_time "Sync Log Reports File Error(s) - Please Investigate"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send the Notification Email and attach the output of the Sync Command
+      send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
+
+      # Delete Logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 2: Check for I/O Errors - Exit if found
+    elif ! grep -qw "summary:error_io:0" $sync_command_logfile
+    then
+      log_to_email_time "Sync Log Reports I/O Error(s) - Please Investigate"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send the Notification Email and attach the output of the Sync Command
+      send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
+
+      # Delete Logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 3: Check for Data Errors - Exit if Found
+    elif ! grep -qw "summary:error_data:0" $sync_command_logfile
+    then
+      log_to_email_time "Sync Log Reports Data Error(s) - Please Investigate"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send the Notification Email and attach the output of the Sync Command
+      send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
+
+      # Delete Logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 4: Check for a Successful Exit
+    elif grep -qw "summary:exit:ok" $sync_command_logfile  
     then
       # Print Out the Changes to Email Output
       log_to_email_time "Sync was Successful"
@@ -998,17 +1063,8 @@ function sync_array {
       log_to_email "Restored:" $number_restored
       log_to_email ""
 
-    # Otherwise check if nothing was found to sync. The difference check function
-    # should ensure we don't get to this point though...
-    elif grep -qw "Nothing to do" $sync_command_logfile  
-    then
-      # Print Out the Changes to Email Output
-      log_to_email_time "Found nothing to Sync"
-      log_to_email ""
-
-    # Otherwise the sync was not successful. This means there were errors. This
-    # could be a forced interruption or I/O errors etc. Exit and send warning
-    # email.
+    # Otherwise something else has gone wrong with the sync. Print a generic
+    # error message in the email instead
     else
       log_to_email_time "Sync Encountered Issues - Please Investigate"
       log_to_email_time "Sync Output Log is attached..."
@@ -1083,23 +1139,14 @@ function scrub_array {
     scrub_runtime_hours=$((scrub_runtime / 3600))
     scrub_runtime_minutes=$(( (scrub_runtime % 3600) / 60 ))
     scrub_runtime_seconds=$(( (scrub_runtime % 3600) % 60 ))
-
     log_to_email_time "Scrub Completed at "$(date +%d/%m/%Y)
     log_to_email_time "Duration: "$scrub_runtime_hours" hours, "$scrub_runtime_minutes "minutes, "$scrub_runtime_seconds" seconds"
 
-    # Check for a successful scrub 
-    if grep -qw "Everything OK" $scrub_logfile 
-    then
-      log_to_email_time "Scrub was successful"
-      log_to_email_time "Scrubbed" $scrub_percent"% older than" $scrub_age "days"
-      log_to_email ""
-
-      # This variable is used later to avoid having to grep the scrub command
-      # logfile again. This is to change the email subject.
-      nothing_to_scrub=0
-
-    # Otherwise check if nothing was found to scrub
-    elif grep -qw "Nothing to do" $scrub_logfile 
+    # Check if Nothing was found to scrub - "Nothing to do" is in
+    # the output. This means there are no blocks newer than the age specifed in
+    # snapraid-daily.conf to scrub. Do this by looking at the logfile of the
+    # standard output
+    if grep -qw "Nothing to do" $scrub_logfile 
     then
       # Nothing to scrub - Maybe there is nothing older than
       # the specified scrub age to scrub
@@ -1110,9 +1157,77 @@ function scrub_array {
       # again. This is to change the email subject later
       nothing_to_scrub=1
 
-    # Otherwise the scrub happened but was not successful. Could be a forced
-    # interruption or another error like I/O errors etc. Exit and send warning
-    # email to user.
+    # The scrub log reports 4 lines of interest, search for each one of them
+    # 1: summary:error_file:0  2: summary:error_io:0
+    # 3: summary:error_data:0  4: summary:exit:ok
+
+    # 1: Check for File Errors - Exit if any were found in scrub command log
+    elif ! grep -qw "summary:error_file:0" $scrub_command_logfile
+    then
+      log_to_email_time "Scrub Log Reports File Error(s) - Please Investigate"
+      log_to_email_time "Scrub Log is Attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send Email and Exit Script
+      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
+
+      # Delete the logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 2: Check for I/O Errors - Exit if any were found in scrub command log
+    elif ! grep -qw "summary:error_io:0" $scrub_command_logfile
+    then
+      log_to_email_time "Scrub Log Reports I/O Error(s) - Please Investigate"
+      log_to_email_time "Scrub Log is Attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send Email and Exit Script
+      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
+
+      # Delete the logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 3: Check for Data Errors - Exit if any were found in scrub command log
+    elif ! grep -qw "summary:error_data:0" $scrub_command_logfile
+    then
+      log_to_email_time "Scrub Log Reports File Error(s) - Please Investigate"
+      log_to_email_time "Scrub Log is Attached..."
+      log_to_email_time "Current status of the Array is as below:"
+      log_to_email ""
+
+      # Call Snapraid Status to Put the Final Array Status into the Email
+      snapraid_status_to_email
+
+      # Send Email and Exit Script
+      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
+
+      # Delete the logfiles and exit with Status 1 to Flag an Error
+      clean_up_logfiles
+      exit $error_code
+
+    # 4: If none of the above checks found anything - check for Successful Exit
+    elif grep -qw "summary:exit:ok" $scrub_command_logfile
+    then
+      log_to_email_time "Scrub was successful"
+      log_to_email_time "Scrubbed" $scrub_percent"% older than" $scrub_age "days"
+      log_to_email ""
+
+      # This variable is used later to avoid having to grep the scrub command
+      # logfile again. This is to change the email subject.
+      nothing_to_scrub=0
+
+    # Otherwise, something else has gone wrong with the scrub, print a generic
+    # error message in the email and exit
     else
       log_to_email_time "Scrub Encountered Issues - Please Investigate"
       log_to_email_time "Scrub Log is Attached..."
