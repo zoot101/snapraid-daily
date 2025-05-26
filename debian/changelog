@@ -1,3 +1,23 @@
+snapraid-daily (1.3.1-1) stable; urgency=medium
+
+  * Using the "-h" option means that it is no longer good enough to
+    just look for "Everything OK" in the output of the sync operation.
+
+  * Switched to looking at the summary messages within the sync output
+    log instead. The script will now report if there are File Errors,
+    I/O Errors or Data Errors to give a better more descriptive output.
+
+  * This unfortunately looses the ability to specifically detect if the
+    sync command runs and finds nothing to sync, but by default the
+    check for changes should ensure that sync is not called if there
+    are no changes, so this probably doesn't matter.
+
+  * Added similar checking of the scrub command log for scrub operations,
+    the same granularity should now be reported if the scrub operation
+    does not run successfully.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 25 May 2025 14:40:10 +0100
+
 snapraid-daily (1.3.0-1) stable; urgency=medium
 
   * Added support for --force-zero, --force-empty, and --force-uuid
