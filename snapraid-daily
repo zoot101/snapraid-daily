@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.2.7
+version=1.3.0
 
 ###################################################
 # RETURN CODES
@@ -120,15 +120,40 @@ function snapraid_sync_cmd() {
   ###################################################
   # 1. Verbose Mode
   # 2. Utilize Snapraid's logging function to allow for debugging
-  # if need be, and to include in the email logfile if an error
-  # is detected
+  #    if need be, and to include in the email logfile if an error
+  #    is detected
+  # 3. Read data a 2nd time during sync to verify it, serves
+  #    as an extra safeguard against errors.
   ###################################################
+  snapraid_sync_args=( -c "$snapraid_config_file_path" -v -l $sync_command_logfile -h)
+
+  # Check for force_zero
+  if [ "${force_zero}" == "yes" ];
+  then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-zero )
+    log_to_email_time "SYNC WARNING: --force-zero is enabled."
+  fi 
+
+  # Check for force_empty
+  if [ "${force_empty}" == "yes" ]
+  then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-empty )
+    log_to_email_time "SYNC WARNING: --force-empty is enabled."
+  fi
+
+  # Check for force_uuid
+  if [ "${force_uuid}" == "yes" ]
+  then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-uuid )
+    log_to_email_time "SYNC WARNING: --force-uuid is enabled."
+  fi 
+
   # Suppress all output if the -q, --quiet option is set
   if [ $quiet_option == 1 ]
   then
-    snapraid -c "$snapraid_config_file_path" -v sync -l $sync_command_logfile | tee $sync_logfile &> /dev/null
+    snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile &> /dev/null
   else
-    snapraid -c "$snapraid_config_file_path" -v sync -l $sync_command_logfile | tee $sync_logfile
+    snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile
   fi
 }
 
@@ -298,6 +323,58 @@ function read_config_file {
     then
       echo "ERROR: scrub_age cannot be a negative number - Exiting"
       echo ""
+      exit $error_code
+    fi
+  fi
+
+  # Check for disable_emails_on_success parameter in config file
+  # If defined and doesn't have a value of "yes" or "no" - exit,
+  # Otherwise set its value to "no" explicitly
+  if [ ! -z "${disable_emails_on_success}" ]
+  then
+    if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]
+    then
+      echo "ERROR: Specified disable_emails_on_success in config file, but its value is invalid"
+      echo "       It should be either \"yes\" or \"no\" - Comment out if not using - Exiting"
+      exit $error_code
+    else
+      echo "INFO: Notification Emails disabled on Success"
+    fi
+  else
+    disable_emails_on_success="no"
+  fi
+
+  # Check for the Extra (Not Recommended) Options to Force Syncs are defined,
+  # and if they are that there value is valid - Exit if not
+  # force_zero
+  if [ ! -z "${force_zero}" ]
+  then
+    if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]
+    then
+      echo "ERROR: Specified force_zero in config file, but its value is invalid"
+      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
+      exit $error_code
+    fi
+  fi
+
+  # force_empty
+  if [ ! -z "${force_empty}" ]
+  then
+    if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]
+    then
+      echo "ERROR: Specified force_empty in config file, but its value is invalid"
+      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
+      exit $error_code
+    fi
+  fi
+
+  # force_uuid
+  if [ ! -z "${force_uuid}" ]
+  then
+    if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]
+    then
+      echo "ERROR: Specified force_uuid in config file, but its value is invalid"
+      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
       exit $error_code
     fi
   fi
@@ -563,6 +640,19 @@ function print_greeting {
     log_to_email "Deletion Threshold:" $deletion_threshold
     log_to_email "Moved Threshold:" $moved_threshold
   fi
+
+  # Check for Extra Non-Recommended Parameters for the Sync
+  if [ "${force_zero}" == "yes" ]; then 
+    log_to_email "Force Sync on Zero Size: YES"
+  fi 
+
+  if [ "${force_empty}" == "yes" ]; then
+    log_to_email "Force Sync on Empty: YES"
+  fi
+
+  if [ "${force_uuid}" == "yes" ]; then
+    log_to_email "Force Sync on UUID Change: YES"
+  fi 
 
   log_to_email "Run-Log is Below:"
   log_to_email ""
@@ -1079,8 +1169,17 @@ function scrub_array {
 # Send Final Email Log
 function send_final_notification_email {
 
-  echo "Sending Final Notification Email..."
-  echo ""
+  # Print out that the Email will be sent or not
+  if [ "${disable_emails_on_success}" == "no" ]
+  then
+    echo "Sending Final Notification Email..."
+    echo ""
+  else
+    echo "Notification emails disabled on Success.."
+    echo ""
+  fi
+
+  # Print banner again
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY: Array Status"
   log_to_email "##############################"
@@ -1091,31 +1190,38 @@ function send_final_notification_email {
   snapraid_status_to_email
 
   # Send Final Notification Email if Script Ran all the way to the End,
+  # and disable_emails_on_success is set to no.
   # also change the email subject depending on whether sync-only or
   # scrub-only was input by the user.
-  if [ $sync_only -eq 1 ]
+  if [ "${disable_emails_on_success}" == "no" ]
   then
-    if [ $sync_required -eq 1 ]
+    # Change Subject to "SnapRAID-Sync"
+    if [ $sync_only -eq 1 ]
     then
-      send_email "SnapRAID-Sync: Success"
-    else
-      send_email "SnapRAID-Sync: Nothing to Sync"
-    fi
+      if [ $sync_required -eq 1 ]
+      then
+        send_email "SnapRAID-Sync: Success"
+      else
+        send_email "SnapRAID-Sync: Nothing to Sync"
+      fi
 
-  elif [ $scrub_only -eq 1 ]
-  then
-    # Refine Email subject if Nothing was found to scrub
-    if [ $nothing_to_scrub == 1 ]
+    # Change Subject to "SnapRAID-Scrub"
+    elif [ $scrub_only -eq 1 ]
     then
-      # Nothing was found to Scrub - Put this in the email title
-      send_email "SnapRAID-Scrub: Nothing to Scrub"
-    else
-      # Otherwise, we know scrub ran as normal
-      send_email "SnapRAID-Scrub: Success"
-    fi
+      # Refine Email subject if Nothing was found to scrub
+      if [ $nothing_to_scrub == 1 ]
+      then
+        # Nothing was found to Scrub - Put this in the email title
+        send_email "SnapRAID-Scrub: Nothing to Scrub"
+      else
+        # Otherwise, we know scrub ran as normal
+        send_email "SnapRAID-Scrub: Success"
+      fi
 
-  else
-    send_email "SnapRAID-DAILY: Success"
+    # Otherwise pick default subject  
+    else
+      send_email "SnapRAID-DAILY: Success"
+    fi
   fi
 }
 
