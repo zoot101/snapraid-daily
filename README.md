@@ -274,6 +274,59 @@ The default is **8** (or 8%).
 The age of files in days to scrub. Should be a standard posive number.
 The default is **21** (or 21 days).
 
+## Additional Options
+
+A number of additional options are provided to address some potential
+edge cases. None of these are required to be specified and can be omitted.
+
+### disable\_emails\_on\_success
+
+Disable the notification emails on successful runs. It is the
+preference of the author to always have emails sent on success
+so one always knows the script is running and doing its job without
+explicity checking it.
+
+Note that this does not effect any emails sent to notify the user
+about an error during sync/touch/scrub or exceeded thresholds,
+those are still sent as normal.
+
+Set to \"yes\" to use, leave commented out or set to \"no\" to
+disable.
+
+### force\_zero
+
+By default during **sync**, if Snapraid encounters a file of zero
+size that was not previously of zero size, it will report this as
+an error and exit the sync. This is possible to happen during a
+system crash in Linux systems, so is **NOT RECOMMENDED**. This option
+causes SnapRAID to continue to sync anyway in this condition.
+
+Set to \"yes\" to use, leave commented out or set to \"no\" to
+disable.
+
+### force\_empty
+
+If one or more of the disks are found to now be empty whereby in
+the past they were not SnapRAID will report this as an error and
+stop the sync. This is **NOT RECOMMENDED** but is included for
+certain edge conditions that may require it. This option causes
+SnapRAID to continue to sync anyway in this condition.
+
+Set to \"yes\" to use, leave commented out or set to \"no\" to
+disable.
+
+### force\_uuid
+
+If the UUID of one or more disks is found to change, usually
+SnapRAID will report this as an error and not complete a sync unless
+another option (--force-empty) is specified. This option causes
+SnapRAID to continue to sync anyway in this condition. This is also
+**NOT RECOMMENDED** but is again included for certain edge conditions
+that may require it.
+
+Set to \"yes\" to use, leave commented out or set to \"no\" to
+disable.
+
 # Sample File Contents (snapraid-daily.conf)
 
 Shown below is the bare minimum that is required in
@@ -412,6 +465,21 @@ Further example drop-in files and unit files for systemd and some
 notes are included here:      
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
+
+# SnapRAID Sync/Scrub Options
+
+SnapRAID sync is invoked with the following options:   
+* -c : To specify the config file for snapraid itself
+* -v : Verbose Mode   
+* -l : Use SnapRAID's logging function   
+* -h : Read data twice during sync, as an additional safeguard against silent errors.   
+
+SnapRAID scrub is invoked with the following options:
+* -c : To specify the config file for snapraid itself
+* -p : To scrub the percentage in snapraid-daily.conf
+* -o : To only consider the age from snapraid-daily.conf   
+* -v : Verbose Mode
+* -l : Use SnapRAID's logging function
 
 # Return Codes
 
