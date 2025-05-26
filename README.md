@@ -390,18 +390,18 @@ sudo cp ./systemd-files/snapraid-*.service /etc/systemd/system/
 sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
 
 # Then Reload Systemd
-systemctl daemon-reload
+sudo systemctl daemon-reload
 ```
 
 It's a good idea to test the service works correctly by starting the desired
 one manually.
 ```bash
-systemctl start snapraid-daily.service
+sudo systemctl start snapraid-daily.service
 ```
 
 To get detailed information one can use **journalctl**.
 ```bash
-journalctl -u snapraid-daily.service --since today
+sudo journalctl -u snapraid-daily.service --since today
 ```
 
 If the service runs without issue, the next step is to enable the timers to
@@ -411,13 +411,13 @@ To enable any one of the timers do the below - enabling the services is not requ
 since they are configured as oneshots and are not intended to be ran at start up. 
 
 ```bash
-systemctl enable snapraid-daily.timer
+sudo systemctl enable snapraid-daily.timer
 ```
 
 It is not recommended to edit any of the service files directly. It is instead better
 to create drop-in files by using:    
 ```bash
-systemctl edit snapraid-daily.service
+sudo systemctl edit snapraid-daily.service
 ```
 
 Although to get the expected results with the timer files, it might be
@@ -458,7 +458,7 @@ installed by the script, or any services with a name of the structure:
 
 Lastly, reload systemd:     
 ```bash
-systemctl daemon-reload
+sudo systemctl daemon-reload
 ```
 
 Further example drop-in files and unit files for systemd and some
