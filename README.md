@@ -738,7 +738,3 @@ Also a bit thank you to Andrea Mazzoleni for this excellent software:
 https://github.com/amadvance/snapraid     
 https://www.snapraid.it    
 
-# Author
-
-Mark Finnan (mfinnan101@gmail.com)
-
