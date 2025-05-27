@@ -352,6 +352,15 @@ moved_threshold=200
 # Scrub Age and Percent
 scrub_percent=10  
 scrub_age=7
+
+# Extra Options
+#disable_emails_on_success="no"
+
+# Not Recommended Options
+#force_zero="no"
+#force_empty="no"
+#force_uuid="no"
+
 ```
 
 # Setting up Email Notifications
