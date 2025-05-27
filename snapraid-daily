@@ -2,33 +2,31 @@
 ###################################################
 # SnapRAID DAILY
 ###################################################
-# COOYRIGHT (C) Mark Finnan 2021
+# COPYRIGHT (C) Mark Finnan 2021
 ###################################################
 
 # VERSION
-version=1.3.3
+version=1.3.4
 
 ###################################################
 # RETURN CODES
 ###################################################
-# Success
-success_code=0
-
-# All Errors
-error_code=1
-
-# SnapRAID Already in use
-already_in_use_code=2
-
-# Files Modified During Sync
-files_modified_during_sync_code=3
-
-# Deletion/Moved Threshold(s) exceeded
-thresholds_exceeded_code=5
+success_code=0                      # Success
+error_code=1                        # All Errors
+already_in_use_code=2               # SnapRAID Already in use
+files_modified_during_sync_code=3   # Files Modified During Sync
+thresholds_exceeded_code=5          # Deletion/Moved Thresholds exceeded
 
 ###################################################
 # FUNCTIONS
 ###################################################
+
+# ERROR FUNCTION
+function error() {
+  echo "ERROR:" "$@"
+  echo ""
+  exit $error_code
+}
 
 ###################################################
 # LOGGING FUNCTIONS
@@ -46,8 +44,7 @@ function generate_logfiles {
 
   # Do a quick cursory check to see if /tmp is writable
   if [ ! -w "/tmp/" ]; then
-    echo "ERROR: /tmp directory is not writable - Exiting"
-    exit $error_code
+    error "/tmp directory is not writable - Exiting"
   fi
 
   # Tmp file Prefix - ".txt" added at the end for email attachments
@@ -84,23 +81,29 @@ function snapraid_status_to_email() {
 }
 
 function snapraid_touch_cmd() {
+  # Specify SnapRAID Touch arguments
+  snapraid_touch_args=( -c "$snapraid_config_file_path" -v -l $touch_command_logfile )
+
   # Call snapraid touch to update timestamps. Suppress all output if --quiet option is set
-  if [ $quiet_option == 1 ]
-  then
-    snapraid -c "$snapraid_config_file_path" touch -v -l $touch_command_logfile | tee $touch_logfile &> /dev/null
-  else
-    snapraid -c "$snapraid_config_file_path" touch -v -l $touch_command_logfile | tee $touch_logfile
+  if [ $quiet_option == 1 ]; then
+    snapraid_touch_args=$( "${snapraid_touch_args[@]}" -qqqq )
   fi
+
+  # Call SnapRAID Touch
+  snapraid "${snapraid_touch_args[@]}" touch | tee $touch_logfile
 }
 
 function snapraid_diff_cmd() {
+  # Define snapraid diff arguments
+  snapraid_diff_args=( -c "$snapraid_config_file_path" -v -l $diff_command_logfile ) 
+
   # Call snapraid diff - Suppress all output if the -q, --quiet option is set
-  if [ $quiet_option == 1 ]
-  then
-    snapraid -c "$snapraid_config_file_path" -v -l $diff_command_logfile diff | tee $diff_logfile &> /dev/null
-  else
-    snapraid -c "$snapraid_config_file_path" -v -l $diff_command_logfile diff | tee $diff_logfile
+  if [ $quiet_option == 1 ]; then
+    snapraid_diff_args=( "${snapraid_diff_args[@]}" -qqqq)
   fi
+
+  # Call SnapRAID diff
+  snapraid "${snapraid_diff_args[@]}" diff | tee $diff_logfile
 
   # Get the numbers and exit status from analyzing the command logfile
   number_equal=$( grep -w "^summary:equal" $diff_command_logfile | awk -F ":" '{print $3}')
@@ -113,7 +116,7 @@ function snapraid_diff_cmd() {
   diff_exit_status=$( grep -w "^summary:exit" $diff_command_logfile | awk -F ":" '{print $3}')
 
   # Check if any of the above are undefined, or if the exit status is not
-  # "equal" or "diff" as this indiciates something unexpected with the diff command
+  # "equal" or "diff" as this indicates something unexpected with the diff command
   if [ -z $number_equal ] || [ -z $number_added ] || [ -z $number_removed ] || \
      [ -z $number_updated ] || [ -z $number_moved ] || [ -z $number_copied ] || \
      [ -z $number_copied ] || [ -z $number_restored ] || [ -z "${diff_exit_status}" ]
@@ -151,28 +154,28 @@ function snapraid_sync_cmd() {
   if [ "${force_uuid}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-uuid )
     log_to_email_time "SYNC WARNING: --force-uuid is enabled."
-  fi 
-
-  # Suppress all output if the -q, --quiet option is set
-  if [ $quiet_option == 1 ]
-  then
-    snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile &> /dev/null
-  else
-    snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile
   fi
+ 
+  # Suppress all output if the -q, --quiet option is set
+  if [ $quiet_option == 1 ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" -qqqq )
+  fi
+
+  # Call SnapRAID Sync
+  snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile
 }
 
 function snapraid_scrub_cmd() {
-  ###################################################
-  # SnapRAID Scrub
-  ###################################################
+  # Define snapraid scrub arguments
+  snapraid_scrub_args=( -c "$snapraid_config_file_path" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile ) 
+ 
   # Call Scrub Command with parameters from config file. Suppress all output --quiet option is selected.
-  if [ $quiet_option == 1 ]
-  then
-    snapraid -c "$snapraid_config_file_path" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile scrub | tee -a $scrub_logfile &> /dev/null
-  else
-    snapraid -c "$snapraid_config_file_path" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile scrub | tee -a $scrub_logfile
-  fi 
+  if [ $quiet_option == 1 ]; then
+    snapraid_scrub_args=( "${snapraid_scrub_args[@]}" -qqqq )
+  fi
+
+  # Call SnapRAID Scrub
+  snapraid "${snapraid_scrub_args[@]}" scrub | tee -a $scrub_logfile
 }
 
 ##################################################
@@ -225,9 +228,7 @@ function read_config_file {
   then
     if [ ! -r "/etc/snapraid.conf" ]
     then
-      echo "ERROR: snapraid_config_file_path missing in snapraid-daily.conf and /etc/snapraid.conf not found - Exiting"
-      echo ""
-      exit $error_code
+      error "snapraid_config_file_path missing in snapraid-daily.conf and /etc/snapraid.conf not found - Exiting"
     else
       echo "WARNING: snapraid_config_file_path not defined in snapraid-daily.conf - Using /etc/snapraid.conf"
       snapraid_config_file_path="/etc/snapraid.conf"
@@ -258,10 +259,7 @@ function read_config_file {
   else
     if [ $deletion_threshold -lt 1 ]
     then
-      echo "ERROR: deletion_threshold can't be set to less than 1 - Exiting"
-      echo "       To disable deletion/moved thresholds use the -o argument."
-      echo ""
-      exit $error_code
+      error "deletion_threshold can't be set to less than 1 - To disable deletion/moved thresholds use the -o argument."
     fi
   fi
   if [ -z $moved_threshold ]
@@ -271,10 +269,7 @@ function read_config_file {
   else
     if [ $moved_threshold -lt 1 ]
     then
-      echo "ERROR: moved_threshold can't be set to less than one - Exiting"
-      echo "       To disable deletion/moved thresholds use the -o argument."
-      echo ""
-      exit $error_code
+      error "moved_threshold can't be set to less than one - To disable deletion/moved thresholds use the -o argument."
     fi
   fi
 
@@ -284,11 +279,9 @@ function read_config_file {
     echo "WARNING: scrub_percent is not defined snapraid-daily.conf - Using 8%"
     scrub_percent=8
   else
-    if [ $scrub_percent -ge 100 ] || [ $scrub_percent -lt 0 ]
+    if [ $scrub_percent -gt 100 ] || [ $scrub_percent -le 0 ]
     then
-      echo "ERROR: scrub_percent should be a number between 0 & 100 - Exiting"
-      echo ""
-      exit $error_code
+      error "scrub_percent should be a number greater than 0 & less than 100 - Exiting"
     fi
   fi
 
@@ -300,9 +293,7 @@ function read_config_file {
   else
     if [ $scrub_age -lt 0 ]
     then
-      echo "ERROR: scrub_age cannot be a negative number - Exiting"
-      echo ""
-      exit $error_code
+      error "scrub_age cannot be a negative number - Exiting"
     fi
   fi
 
@@ -311,9 +302,7 @@ function read_config_file {
   then
     if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]
     then
-      echo "ERROR: Specified disable_emails_on_success in config file, but its value is invalid"
-      echo "       It should be either \"yes\" or \"no\" - Comment out if not using - Exiting"
-      exit $error_code
+      error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
     else
       echo "INFO: Notification Emails disabled on Success"
     fi
@@ -323,88 +312,66 @@ function read_config_file {
 
   # Check for the Extra (Not Recommended) Options to Force Syncs are defined,
   # force_zero, force_empty, force_uuid
-  if [ ! -z "${force_zero}" ]
-  then
+  if [ ! -z "${force_zero}" ];  then
     if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]
     then
-      echo "ERROR: Specified force_zero in config file, but its value is invalid"
-      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
-      exit $error_code
+      error "Specified invalid force_zero in config - It should be either \"yes\" or \"no\""
     fi
   fi
-  if [ ! -z "${force_empty}" ]
-  then
+  if [ ! -z "${force_empty}" ]; then
     if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]
     then
-      echo "ERROR: Specified force_empty in config file, but its value is invalid"
-      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
-      exit $error_code
+      error "Specified invalid force_empty in config file - It should be either \"yes\" or \"no\""
     fi
   fi
-  if [ ! -z "${force_uuid}" ]
-  then
+  if [ ! -z "${force_uuid}" ]; then
     if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]
     then
-      echo "ERROR: Specified force_uuid in config file, but its value is invalid"
-      echo "       It should be either \"yes\" or \"no\" - Comment out or omit if not using"
-      exit $error_code
+      error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
     fi
   fi
 }
 
 # Sanity Check for Dependencies
 function sanity_check {
-
   # Check if Snapraid is Installed
-  if [ -z $(which snapraid) ]
-  then
-    echo "ERROR: SnapRAID is not installed - Exiting..."
-    exit $error_code
+  if [ -z $(which snapraid) ]; then
+    error "SnapRAID is not installed - Exiting..."
 
   # Check if grep is Installed
-  elif [ -z $(which grep) ]
-  then
-    echo "ERROR: grep is not installed - Exiting..."
-    exit $error_code
+  elif [ -z $(which grep) ]; then
+    error "grep is not installed - Exiting..."
+
+  # Check tee is installed
+  elif [ -z $(which tee) ]; then
+    error "tee is not installed - Exiting..."
 
   # Check if awk is Installed
-  elif [ -z $(which awk) ]
-  then
-    echo "ERROR: awk is not installed - Exiting..."
-    exit $error_code
+  elif [ -z $(which awk) ]; then
+    error "awk is not installed - Exiting..."
 
   # Check if sed is Installed
-  elif [ -z $(which sed) ]
-  then
-    echo "ERROR: sed is not installed - Exiting..."
-    exit $error_code
+  elif [ -z $(which sed) ]; then
+    error "sed is not installed - Exiting..."
 
   # Check if mktemp is Installed
-  elif [ -z $(which mktemp) ]
-  then
-    echo "ERROR: mktemp is not installed - Exiting..."
-    exit $error_code
+  elif [ -z $(which mktemp) ]; then
+    error "mktemp is not installed - Exiting..."
 
   # Check for the SnapRAID Config File
-  elif [ ! -r "$snapraid_config_file_path" ]
-  then
-    echo "ERROR: Snapraid Config File does not exist or is not readable - Exiting..."
-    exit $error_code
+  elif [ ! -r "$snapraid_config_file_path" ]; then
+    error "Snapraid Config File does not exist or is not readable - Exiting..."
 
   else
     # Find 1st Content File Location
     content_file=$(cat "$snapraid_config_file_path" | grep -w "^content" | sed -n 1p | sed 's/^[^\/]*\//\//' ) 
-    if [ ! -w "${content_file}" ]
-    then
-      echo "ERROR: SnapRAID Content File does not exist or is not writable"
-      echo "       Possible permissions problem?"
-      exit $error_code
+    if [ ! -w "${content_file}" ]; then
+      error "1st defined SnapRAID Content File in" "${snapraid_config_file_path}" "does not exist or is not writable"
     fi
   fi
 
   # Check if Mutt is Installed, otherwise disable emails
-  if [ -z $(which mutt) ]
-  then
+  if [ -z $(which mutt) ]; then
     echo "WARNING: Mutt is not installed - No emails will be sent"
     enable_emails=0
   fi
@@ -476,7 +443,7 @@ function parse_arguments() {
       -f|--config)
       shift 1
       if [ ! -f "${1}" ]; then
-        echo "ERROR: Specified custom config file, but given file does not exist - Exiting"
+        echo "Specified custom config file, but given file does not exist - Exiting"
         echo ""
         print_help
       else
@@ -491,7 +458,7 @@ function parse_arguments() {
 
       # Check for an Unrecognised Argument
       *)
-      echo "ERROR: Invalid Input Argument:" "${1}"
+      echo "Invalid Input Argument:" "${1}"
       echo ""
       print_help
       ;;
@@ -509,7 +476,7 @@ function parse_arguments() {
   # Check if --sync-only and --scrub-only were specified at the same time - Exit if so
   if [ $sync_only == 1 ] && [ $scrub_only == 1 ]
   then
-    echo "ERROR: -s|--sync-only & -c|--scrub-only arguments can't both be specified at the same time - Exiting"
+    echo "-s|--sync-only & -c|--scrub-only arguments can't both be specified at the same time - Exiting"
     echo ""
     print_help
     exit $error_code
@@ -1054,7 +1021,13 @@ function send_final_notification_email {
         send_email "SnapRAID-DAILY: Scrub OK"
       fi
     else
-      send_email "SnapRAID-DAILY: All OK"
+      # Change email subject if there was nothing found to sync AND scrub
+      if [ $sync_required -eq 0 ] && [ $nothing_to_scrub -eq 1 ]
+      then
+        send_email "SnapRAID-DAILY: Nothing to Sync and Scrub"
+      else
+        send_email "SnapRAID-DAILY: All OK"
+      fi
     fi
   fi
 }

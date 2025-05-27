@@ -1,37 +1,10 @@
 [Unit]
-Description=Scrubs the SnapRAID periodically to check for errors
+Description=Uses SnapRAID-DAILY to scrub the SnapRAID Array
 
 [Service]
 Type=oneshot
-User=username
 UMask=002
-Group=groupname
-ExecStart=/usr/bin/snapraid-daily --scrub-only
-
-#############################################
-# Re-Direct the StandardOutput to a file to allow some visibility
-# of where the Scrub is at while it's running.
-# Doesn't always work from my experience
-############################################# 
-#StandardOutput=file:/tmp/snapraid-scrub.log
-#StandardOutput=journal+console
-#StandardOutput=syslog+console
-
-#############################################
-# Isolate the Service from as much as possible
-#############################################
-ProtectHome=true
-ReadWritePaths=/Appdata/snapraid/content-file /Media1 /Media2 /Media3 /Media4 /Media5 /Media6 /Media7 /Media8 /Parity1 /Parity2
-ProtectSystem=strict
-PrivateTmp=true
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
-PrivateDevices=true
-NoNewPrivileges=true
-#RestrictSUIDSGID=true
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_DAC_READ_SEARCH
-RestrictNamespaces=uts ipc pid user cgroup
+ExecStart=/usr/bin/snapraid-daily -c
 
 [Install]
 WantedBy=multi-user.target

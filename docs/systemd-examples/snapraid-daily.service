@@ -1,14 +1,11 @@
 [Unit]
-Description=Syncs & Scrubs the SnapRAID periodically to protect files
+Description=Uses SnapRAID-Daily to Sync & Scrub the SnapRAID array
 
 [Service]
 Type=oneshot
-User=username
 UMask=002
-Group=groupname
 ExecStart=/usr/bin/snapraid-daily
 
 [Install]
 WantedBy=multi-user.target
-
 
