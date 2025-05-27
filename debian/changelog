@@ -1,3 +1,55 @@
+snapraid-daily (1.3.3-1) stable; urgency=medium
+
+  * Tidied up comments to bring line count down by +200!
+
+  * Removed a redundant check of /tmp being writable or not.
+
+  * Changed the analysis of snapraid diff to determine array changes to
+    the log from the output of the -l option instead of the standard output.
+    This allows a much simplier method of a simple grep and awk as
+    opposed to the more complex grep, sed then cut approach.
+
+  * Removed check for cut and updated man pages.
+
+  * Moved analysis of the number added/moved/copied etc. into the diff
+    command function and re-used it directly for sync and scrub operations.
+
+  * Simplified check for changes to just look at diff command exit status
+    as reported by the -l log file. This is much simplier as it is just
+    either "diff" or "equal".
+
+  * Refined Email Subjects on Successful Runs to Sync OK, Scrub OK or
+    all OK. All are now prefixed with "SnapRAID DAILY".
+
+  * Added an additional check for both the moved and deletion threshold
+    being exceeded at the same time to make the email output and subject
+    more specific.
+
+  * Added number of equal files found to printouts where the array is
+    checked for changes by "snapraid diff".
+
+  * Minor other improvements to code and printouts.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 27 May 2025 11:24:51 +0100
+
+snapraid-daily (1.3.2-1) stable; urgency=medium
+
+  * Refined new check for errors on sync and scrub commands to directly
+    consider the exit status and the number of io/data/file errors
+    reported by snapraid.
+
+  * Script should now handle unexpected events or interruptions to sync
+    and scrub commands more gracefully.
+
+  * New method re-gained ability to determine if the sync command is ran
+    and doesn't find anything to sync. Although as before the check with
+    snapraid diff will prevent sync being ran if there are no changes.
+
+  * Added a printout of the error counts in the email along with the
+    exit status.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 26 May 2025 20:20:31 +0100
+
 snapraid-daily (1.3.1-1) stable; urgency=medium
 
   * Using the "-h" option means that it is no longer good enough to
@@ -16,7 +68,7 @@ snapraid-daily (1.3.1-1) stable; urgency=medium
     the same granularity should now be reported if the scrub operation
     does not run successfully.
 
- -- Mark Finnan <mfinnan101@gmail.com>  Mon, 25 May 2025 14:40:10 +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 26 May 2025 14:40:10 +0100
 
 snapraid-daily (1.3.0-1) stable; urgency=medium
 

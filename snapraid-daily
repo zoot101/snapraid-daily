@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.1
+version=1.3.3
 
 ###################################################
 # RETURN CODES
@@ -33,12 +33,10 @@ thresholds_exceeded_code=5
 ###################################################
 # LOGGING FUNCTIONS
 ###################################################
-# Do Not Prefix the Time but Log to the email body log file
+# Log to Email with and without time 
 function log_to_email() {
   echo "$@" | tee -a $email_body_logfile
 }
-
-# Prefix the time and output to email body log file
 function log_to_email_time() {
   echo $(date +%H:%M:%S) ":" "$@" | tee -a $email_body_logfile
 }
@@ -46,17 +44,13 @@ function log_to_email_time() {
 # Generate the necessary logfiles in /tmp using mktemp
 function generate_logfiles {
 
-  # Do a quick cursory check to see if /tmp is writable, it should
-  # be but if something like systemd hardening is being used, then
-  # it may not be
-  if [ ! -w "/tmp/" ]
-  then
+  # Do a quick cursory check to see if /tmp is writable
+  if [ ! -w "/tmp/" ]; then
     echo "ERROR: /tmp directory is not writable - Exiting"
     exit $error_code
   fi
 
-  # Tmp file Prefix - ".txt" added at the end so they don't cause
-  # issues when they are sent on as email attachments
+  # Tmp file Prefix - ".txt" added at the end for email attachments
   tmp_file_prefix="snapraid-daily.XXXXX.txt"
 
   # Generate Logfiles
@@ -80,20 +74,17 @@ function generate_logfiles {
 ##################################################
 function snapraid_status_cmd() {
   # Call Snapraid Status and deposit the output into a logfile 
-  # for analysis. Can't use -l option here as it doesn't print out 
-  # things like "No error detected."
+  # Need to re-direct all output for SnapRAID in Use check
   snapraid -c "$snapraid_config_file_path" status &> $status_logfile
 }
 
 function snapraid_status_to_email() {
-  # Call Snapraid status and put the append the output into the email
-  # body logfile
+  # Call Snapraid status and put the output into the email
   snapraid -c "$snapraid_config_file_path" status | tee -a $email_body_logfile
 }
 
 function snapraid_touch_cmd() {
-  # Call snapraid touch to update timestamps. Suppress all output if
-  # -q, --quiet option is set
+  # Call snapraid touch to update timestamps. Suppress all output if --quiet option is set
   if [ $quiet_option == 1 ]
   then
     snapraid -c "$snapraid_config_file_path" touch -v -l $touch_command_logfile | tee $touch_logfile &> /dev/null
@@ -103,47 +94,61 @@ function snapraid_touch_cmd() {
 }
 
 function snapraid_diff_cmd() {
-  # Call snapraid diff & re-direct the output to a file for analysis
-  # Suppress all output if the -q, --quiet option is set. Take care not to
-  # use tee -a as diff command can be called multiple times
+  # Call snapraid diff - Suppress all output if the -q, --quiet option is set
   if [ $quiet_option == 1 ]
   then
     snapraid -c "$snapraid_config_file_path" -v -l $diff_command_logfile diff | tee $diff_logfile &> /dev/null
   else
     snapraid -c "$snapraid_config_file_path" -v -l $diff_command_logfile diff | tee $diff_logfile
   fi
+
+  # Get the numbers and exit status from analyzing the command logfile
+  number_equal=$( grep -w "^summary:equal" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_added=$( grep -w "^summary:added" $diff_command_logfile | awk -F ":" '{print $3}') 
+  number_removed=$( grep -w "^summary:removed" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_updated=$( grep -w "^summary:updated" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_moved=$( grep -w "^summary:moved" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_copied=$( grep -w "^summary:copied" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_restored=$( grep -w "^summary:restored" $diff_command_logfile | awk -F ":" '{print $3}')
+  diff_exit_status=$( grep -w "^summary:exit" $diff_command_logfile | awk -F ":" '{print $3}')
+
+  # Check if any of the above are undefined, or if the exit status is not
+  # "equal" or "diff" as this indiciates something unexpected with the diff command
+  if [ -z $number_equal ] || [ -z $number_added ] || [ -z $number_removed ] || \
+     [ -z $number_updated ] || [ -z $number_moved ] || [ -z $number_copied ] || \
+     [ -z $number_copied ] || [ -z $number_restored ] || [ -z "${diff_exit_status}" ]
+  then
+    log_to_email_time "Problem with Diff Command - Stopping"
+    log_to_email_time "Diff Command Logfile Is attached..."
+    send_email_with_log "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
+    clean_up_logfiles
+    exit $error_code
+
+  elif [ "${diff_exit_status}" != "diff" ] && [ "${diff_exit_status}" != "equal" ]
+  then
+    log_to_email_time "Unexpected Exit Status for Diff - Stopping"
+    log_to_email_time "It should be either \"diff\" or \"equal\""
+    log_to_email_time "Diff Command Logfile Is attached..."
+    send_email_with_log "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
+    clean_up_logfiles
+    exit $error_code
+  fi    
 }
 
 function snapraid_sync_cmd() {
-  ###################################################
-  # Call Snapraid Sync with -v, -h & -l switches to
-  ###################################################
-  # 1. Verbose Mode
-  # 2. Utilize Snapraid's logging function to allow for debugging
-  #    if need be, and to include in the email logfile if an error
-  #    is detected
-  # 3. Read data a 2nd time during sync to verify it, serves
-  #    as an extra safeguard against errors.
-  ###################################################
+  # Define snapraid sync arguments
   snapraid_sync_args=( -c "$snapraid_config_file_path" -v -l $sync_command_logfile -h)
 
-  # Check for force_zero
-  if [ "${force_zero}" == "yes" ];
-  then
+  # Check for force_zero, force_empty, or force_uuid inputs
+  if [ "${force_zero}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-zero )
     log_to_email_time "SYNC WARNING: --force-zero is enabled."
   fi 
-
-  # Check for force_empty
-  if [ "${force_empty}" == "yes" ]
-  then
+  if [ "${force_empty}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-empty )
     log_to_email_time "SYNC WARNING: --force-empty is enabled."
   fi
-
-  # Check for force_uuid
-  if [ "${force_uuid}" == "yes" ]
-  then
+  if [ "${force_uuid}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-uuid )
     log_to_email_time "SYNC WARNING: --force-uuid is enabled."
   fi 
@@ -161,8 +166,7 @@ function snapraid_scrub_cmd() {
   ###################################################
   # SnapRAID Scrub
   ###################################################
-  # Call Scrub Command with parameters from config file. Suppress
-  # all output if the -q, --quiet option is selected.
+  # Call Scrub Command with parameters from config file. Suppress all output --quiet option is selected.
   if [ $quiet_option == 1 ]
   then
     snapraid -c "$snapraid_config_file_path" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile scrub | tee -a $scrub_logfile &> /dev/null
@@ -176,24 +180,13 @@ function snapraid_scrub_cmd() {
 ##################################################
 
 # Read Config File parameters in. If it is not present, exit
-# the script.
 function read_config_file {
 
   # Find script source directory
   source_directory=$(dirname "$BASH_SOURCE")
 
-  # Check if the Logfile directory (/tmp), this should always be the
-  # case, but in the event something like systemd hardening is being used
-  # it may not be writable
-  if [ ! -w "/tmp/" ]
-  then
-    echo "ERROR: /tmp directory not writable for logfiles - Exiting"
-
-    # Exit with Status 1 to flag an error
-    exit $error_code
-  fi
-
   # Configuration Files are read in the following order of preference
+  # Exit if none of the below are found
   # 1 - Custom Config file if specified by the -f or --config options
   # 2 - /etc/snapraid-daily.conf
   # 3 - Same directory as script
@@ -201,26 +194,18 @@ function read_config_file {
   config_file1="/etc/snapraid-daily.conf"
   config_file2="${source_directory}""/snapraid-daily.conf"
 
-  # Check for Custom Config File, there's already a check that it exists in
-  # the parse arguments function, so this check is kind of redundant
   if [ -r "${config_file0}" ]
   then
     echo "Using Config File:" "${config_file0}"
     source "${config_file0}"
-
-  # Otherwise check the Default Config File Exists (/etc/snapraid-daily.conf)
   elif [ -r "${config_file1}" ]
   then
     echo "Using Config File:" "${config_file1}"
     source "${config_file1}"
-
-  # Otherwise check for the config file within the script folder
   elif [ -r "${config_file2}" ]
   then
     echo "Using Config File:" "${config_file2}"
     source "${config_file2}"
-
-  # No Config File Found - Print Message about defaults and move on
   else
     echo "WARNING: No config file found in any of the following locations:"
     echo "1. Specified with the -f or --config option"
@@ -232,14 +217,12 @@ function read_config_file {
     echo ""
   fi
 
-  # Check if all of the parameters are defined correctly within
-  # the "config.sh" config file. If any are undefined, set defaults
-  # Check the master snapraid config file path is present in snapraid-daily.conf,
-  # if not default to using /etc/snapraid.conf
+  # Check if all of the parameters are defined correctly within the config file
+  # If any are undefined, set defaults
+
+  # Snapraid Config File Path
   if [ -z "$snapraid_config_file_path" ]
   then
-    # No Config Path defined in snapraid-daily.conf for snapraid itself
-    # Default to /etc/snapraid.conf, exit if that's not found
     if [ ! -r "/etc/snapraid.conf" ]
     then
       echo "ERROR: snapraid_config_file_path missing in snapraid-daily.conf and /etc/snapraid.conf not found - Exiting"
@@ -267,44 +250,41 @@ function read_config_file {
     fi
   fi
 
-  # Check for the Deletion Threshold
+  # Check for the Deletion/Moved Thresholds and sanity check they're not less than one
   if [ -z $deletion_threshold ]
   then
     echo "WARNING: deletion_threshold not defined in snapraid-daily.conf - Using 100 by default"
     deletion_threshold=100
   else
-    # Next Do a Sanity Check it's not less than Zero
-    if [ $deletion_threshold -lt 0 ]
+    if [ $deletion_threshold -lt 1 ]
     then
-      echo "ERROR: deletion_threshold can't be set to a negative number - Exiting"
+      echo "ERROR: deletion_threshold can't be set to less than 1 - Exiting"
+      echo "       To disable deletion/moved thresholds use the -o argument."
       echo ""
       exit $error_code
     fi
   fi
-
-  # Repeat the Above for the Moved Threshold
   if [ -z $moved_threshold ]
   then
     echo "WARNING: moved_threshold not defined in snapraid-daily.conf - Using 100 by default"
     moved_threshold=100
   else
-    # Next Do a Sanity Check it's not less than Zero
-    if [ $moved_threshold -lt 0 ]
+    if [ $moved_threshold -lt 1 ]
     then
-      echo "ERROR: moved_threshold can't be set to a negative number - Exiting"
+      echo "ERROR: moved_threshold can't be set to less than one - Exiting"
+      echo "       To disable deletion/moved thresholds use the -o argument."
       echo ""
       exit $error_code
     fi
   fi
 
-  # Check for a Scrub Percent, if it doesn't exist - default to 8%
+  # Check for a Scrub Percent. default to 8%, sanity check its between 0 and 100
   if [ -z $scrub_percent ]
   then
     echo "WARNING: scrub_percent is not defined snapraid-daily.conf - Using 8%"
     scrub_percent=8
   else
-    # Otherwise do a check its a number between 0 and 100
-    if [ $scrub_percent -gt 100 ] || [ $scrub_percent -lt 0 ]
+    if [ $scrub_percent -ge 100 ] || [ $scrub_percent -lt 0 ]
     then
       echo "ERROR: scrub_percent should be a number between 0 & 100 - Exiting"
       echo ""
@@ -312,13 +292,12 @@ function read_config_file {
     fi
   fi
 
-  # Check for a Scrub Age, use 21 days if it's not present
-  if [ -z $scrub_age ] || [ $scrub_age -lt 0 ]
+  # Check for a Scrub Age, default to 21 days, sanity check its not negative
+  if [ -z $scrub_age ]
   then
     echo "WARNING: scrub_age is not defined in snapraid-daily.conf - Using 21 days"
     scrub_age=21
   else
-    # Otherwise do a check that the scrub age is a positive number
     if [ $scrub_age -lt 0 ]
     then
       echo "ERROR: scrub_age cannot be a negative number - Exiting"
@@ -327,9 +306,7 @@ function read_config_file {
     fi
   fi
 
-  # Check for disable_emails_on_success parameter in config file
-  # If defined and doesn't have a value of "yes" or "no" - exit,
-  # Otherwise set its value to "no" explicitly
+  # Check for disable_emails_on_success, default to no. Sanity check it's "yes" or "no"
   if [ ! -z "${disable_emails_on_success}" ]
   then
     if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]
@@ -345,8 +322,7 @@ function read_config_file {
   fi
 
   # Check for the Extra (Not Recommended) Options to Force Syncs are defined,
-  # and if they are that there value is valid - Exit if not
-  # force_zero
+  # force_zero, force_empty, force_uuid
   if [ ! -z "${force_zero}" ]
   then
     if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]
@@ -356,8 +332,6 @@ function read_config_file {
       exit $error_code
     fi
   fi
-
-  # force_empty
   if [ ! -z "${force_empty}" ]
   then
     if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]
@@ -367,8 +341,6 @@ function read_config_file {
       exit $error_code
     fi
   fi
-
-  # force_uuid
   if [ ! -z "${force_uuid}" ]
   then
     if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]
@@ -380,9 +352,7 @@ function read_config_file {
   fi
 }
 
-# Sanity Check function to check if SnapRAID, mutt etc.
-# are installed and that the SnapRAID config & content files
-# are present.
+# Sanity Check for Dependencies
 function sanity_check {
 
   # Check if Snapraid is Installed
@@ -409,12 +379,6 @@ function sanity_check {
     echo "ERROR: sed is not installed - Exiting..."
     exit $error_code
 
-  # Check if cut is Installed
-  elif [ -z $(which cut) ]
-  then
-    echo "ERROR: cut is not installed - Exiting..."
-    exit $error_code
-
   # Check if mktemp is Installed
   elif [ -z $(which mktemp) ]
   then
@@ -428,11 +392,8 @@ function sanity_check {
     exit $error_code
 
   else
-    # Find 1st Content File Location - Sed command picks out the 1st line
-    # and removes everything before the 1st occurance of the "/" character
-    # (which needs to be escaped)
+    # Find 1st Content File Location
     content_file=$(cat "$snapraid_config_file_path" | grep -w "^content" | sed -n 1p | sed 's/^[^\/]*\//\//' ) 
-
     if [ ! -w "${content_file}" ]
     then
       echo "ERROR: SnapRAID Content File does not exist or is not writable"
@@ -441,9 +402,7 @@ function sanity_check {
     fi
   fi
 
-  # Check if Mutt is Installed, otherwise disable emails, the check for
-  # the muttrc path and emails already will set the enable_emails check
-  # so an else is not required here to set it to zero
+  # Check if Mutt is Installed, otherwise disable emails
   if [ -z $(which mutt) ]
   then
     echo "WARNING: Mutt is not installed - No emails will be sent"
@@ -477,8 +436,7 @@ function print_help {
   exit $success_code
 }
 
-# Function to Parse Input Arguments to the Script, and correctly initalize
-# the variables required
+# Function to Parse Input Arguments to the Script
 function parse_arguments() {
 
   # Valid arguments are:
@@ -486,54 +444,38 @@ function parse_arguments() {
   # -s, --sync-only           : Only Run Sync
   # -c, --scrub-only          : Only Run Scrub
   # -f, --config              : Override default config file
+  # -q, --quiet               : Suppress output of touch/diff/sync/scrub
   # -h, --help                : Print Help and Exit
  
-  # Loop through input args to determine what was specified
   while (( ${#} ))
   do
-
     # Check for Valid Arguments
     case "${1}" in
 
-      ##########################
       # Check for Sync Only
-      ##########################
       -s|--sync-only)
       sync_only=1
       ;;
 
-      ##########################
       # Check for Scrub Only
-      ##########################
       -c|--scrub-only)
       scrub_only=1
       ;;
 
-      ##########################
       # Check for Override Thresholds
-      ##########################
       -o|--override-thresholds)
       override_thresholds=1
       ;;
 
-      ##########################
       # Check for Quiet Option
-      ##########################
       -q|--quiet)
       quiet_option=1
       ;;
 
-      #########################
       # Check if the default config is overriden
-      #########################
       -f|--config)
-
-      # Shift at the start here since the next argument should be the custom config
       shift 1
-
-      # Check the Config File supplied exists
-      if [ ! -f "${1}" ]
-      then
+      if [ ! -f "${1}" ]; then
         echo "ERROR: Specified custom config file, but given file does not exist - Exiting"
         echo ""
         print_help
@@ -542,37 +484,29 @@ function parse_arguments() {
       fi
       ;;
 
-      #########################
       # Check for Help
-      #########################
       -h|--help)
       print_help
       ;;
 
-      #########################
       # Check for an Unrecognised Argument
-      #########################
       *)
       echo "ERROR: Invalid Input Argument:" "${1}"
       echo ""
       print_help
       ;;
     esac
-
-    # Shift through arguments
     shift 1
-
   done
 
-  # Check if any of the above argument variables were not specified and
-  # set them to their default values to prevent errors further on
+  # Check if any of the above argument variables were not defined and 
+  # set them to their default values
   if [ -z $sync_only ]; then sync_only=0; fi
   if [ -z $scrub_only ]; then scrub_only=0; fi
   if [ -z $override_thresholds ]; then override_thresholds=0; fi
   if [ -z $quiet_option ]; then quiet_option=0; fi
 
-  # Check if --sync-only and --scrub-only were specified at the same time
-  # If so - exit with an error
+  # Check if --sync-only and --scrub-only were specified at the same time - Exit if so
   if [ $sync_only == 1 ] && [ $scrub_only == 1 ]
   then
     echo "ERROR: -s|--sync-only & -c|--scrub-only arguments can't both be specified at the same time - Exiting"
@@ -581,8 +515,7 @@ function parse_arguments() {
     exit $error_code
   fi
 
-  # Check if --override-thresholds and --scrub-only were specified at the same
-  # time. Print a Warning if so.
+  # Check if --override-thresholds and --scrub-only were specified at the same - Warn if so
   if [ $scrub_only == 1 ] && [ $override_thresholds == 1 ]
   then
     echo "WARNING: -o|--override-thresholds has no effect when using -c|--scrub-only"
@@ -590,30 +523,19 @@ function parse_arguments() {
 }
 
 # Print Greeting in Email Log
-# Say what time the script was initialized at, and list
-# the arguments that were specified.
 function print_greeting {
-
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY Version:" "${version}"
   log_to_email "##############################"
   log_to_email "Initialized at "$(date +%H:%M:%S)" on "$(date +%d/%m/%Y)
   log_to_email "Input Options:"
 
-  # Determine what the print to the screen and the email log
-  # depending on what the arguments were determined to be in the
-  # parse_arguments function
-
-  # Check for sync_only
-  if [ $sync_only -eq 1 ]
-  then
+  # Print Input Options based upon input arguments and config file 
+  if [ $sync_only -eq 1 ]; then
     log_to_email "Run-Sync: YES"
     log_to_email "Run-Scrub: NO"
   fi
-
-  # Check for scrub_only
-  if [ $scrub_only -eq 1 ]
-  then
+  if [ $scrub_only -eq 1 ]; then
     log_to_email "Run-Sync: NO"
     log_to_email "Run-Scrub: YES"
     log_to_email "Scrub-Percent:" $scrub_percent
@@ -630,10 +552,7 @@ function print_greeting {
   fi
 
   # Check if the Override Thresholds has been specified
-  if [ $override_thresholds -eq 1 ]
-  then
-    # No need to print the deletion/move thresholds if the
-    # --override-thresholds argument is being used
+  if [ $override_thresholds -eq 1 ]; then
     log_to_email "Override Deletion/Moved Thresholds: YES"
   else
     log_to_email "Override Deletion/Moved Thresholds: NO"
@@ -645,24 +564,18 @@ function print_greeting {
   if [ "${force_zero}" == "yes" ]; then 
     log_to_email "Force Sync on Zero Size: YES"
   fi 
-
   if [ "${force_empty}" == "yes" ]; then
     log_to_email "Force Sync on Empty: YES"
   fi
-
   if [ "${force_uuid}" == "yes" ]; then
     log_to_email "Force Sync on UUID Change: YES"
   fi 
-
   log_to_email "Run-Log is Below:"
   log_to_email ""
 }
 
-# Inital Check - Do an initial check of the array to see if
-# any errors are present, a sync is already in progress, or
-# if touch is required to update the timestamps
+# Inital Check - Do an initial check of the array check for errors/sync in progress etc.
 function initial_status_check {
-
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY: Initial Status Check"
   log_to_email "##############################"
@@ -671,35 +584,23 @@ function initial_status_check {
   # Call snapraid status
   snapraid_status_cmd
 
-  # Scenario 1 - Check if Snapraid is Already in Use or Not
-  # If yes, exit and notify via email
+  # Scenario 1 - Check if Snapraid is Already in Use - Exit if so
   if grep -qw "SnapRAID is already in use!" $status_logfile
   then
     log_to_email_time "SnapRAID is already Use - Exiting..."
     log_to_email ""
-
-    # Send Email & Use Status Logfile as Body
     send_email "SnapRAID-DAILY: SnapRAID In Use!"
-
-    # Delete the logfiles and exit with Status 1 to Flag an Error in Logs
     clean_up_logfiles
     exit $already_in_use_code
   
-  # Scenario 2 - Check for errors. These could be bad blocks or something else
-  # If detected - exit and notify the user via email
+  # Scenario 2 - Check for errors - Exit if present 
   elif ! grep -qw "No error detected." $status_logfile
   then
     log_to_email_time "Found error(s) - Exiting..."
     log_to_email_time "Current Status of the Array is as below:"
     log_to_email ""
-
-    # Call Snapraid Status to Put the Final Array Status into the Email
     snapraid_status_to_email
-
-    # Send Email & Use Status Logfile as Body
     send_email "SnapRAID-DAILY: Inital Error(s) Present"
-
-    # Delete the logfiles and exit with Status 1 to Flag an Error in Logs
     clean_up_logfiles
     exit $error_code
 
@@ -710,23 +611,15 @@ function initial_status_check {
     log_to_email_time "Rehash In-Progress/Required - Exiting..."
     log_to_email_time "Current Status of the Array is as below:"
     log_to_email ""
-
-    # Call Snapraid Status to Put the Final Array Status into the Email
     snapraid_status_to_email
-
-    # Send Email & Use Status Logfile as Body
     send_email "SnapRAID-DAILY: Re-Hash Warning"
-
-    # Delete the logfiles and exit with Status 1 to Flag an Error in the Logs
     clean_up_logfiles
     exit $error_code
 
   # Scenario 4 - Check if a Sync was previously stopped while in progress
   elif ! grep -qw "No sync is in progress." $status_logfile
   then
-
-    # No need to exit the array if a sync is in progress, as if a sync is in
-    # progress, the solution is to finish the sync. 
+    # Don't exit the if a sync is in progress - continue to sync
     found_unfinished_sync=1
 
     # If scrub-only is selected, exit and notify the user via email
@@ -734,19 +627,12 @@ function initial_status_check {
     then
       log_to_email_time "Sync Already in Progress - Continuing..."
     else
-      # Scrub Only is Selected
       log_to_email_time "Sync Already in Progress but Scrub-Only is selected"
       log_to_email_time "Cannot Scrub unless sync is finished - Exiting..."
       log_to_email_time "Current Status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send Email & Use Status Logfile as Body
       send_email "SnapRAID-Scrub: Sync In Progress"
-
-      # Delete the logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
       exit $error_code
     fi
@@ -758,14 +644,11 @@ function initial_status_check {
   fi
 
   # Check if Touch is Needed and if Scrub Only is Not Selected
-  # This is because touch is not performed if Scrub Only is selected.
   if [ $scrub_only -eq 0 ]
   then
     if ! grep -qw "No file has a zero sub-second timestamp." $status_logfile
     then
-      # Find Number of Files Needing Touch
       number_needing_touch=$(grep "zero sub-second timestamp." $status_logfile | awk '{print $3}')
-
       log_to_email_time "Touch Required on "$number_needing_touch" files..."
       touch_required=1
     else
@@ -776,10 +659,8 @@ function initial_status_check {
   log_to_email ""
 }
 
-# Touch Function - Run touch if it's detected that touch
-# is required
+# Touch Function - Run touch if required (and scrub only is not selected)
 function run_touch_if_needed {
-
   if [ $touch_required -eq 1 ]
   then
     log_to_email "##############################"
@@ -790,31 +671,21 @@ function run_touch_if_needed {
     # Call Snapraid touch command
     snapraid_touch_cmd
 
-    # Check Touch Output for Errors by looking for the
-    # following text in its output
+    # Check Touch Output for Errors
     if grep -qw "Error timing file" $touch_command_logfile
     then
-      # Touch Encountered Errors
       log_to_email_time "Touch Encountered Issues - Please Investigate..."
       log_to_email_time "Current Status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send Notification Email and Attach the Touch Logfile
       send_email_with_log "SnapRAID-DAILY: Touch Warning(s)" $touch_logfile
-
-      # Delete the Logfiles and exit with Status 1 to flag an error
       clean_up_logfiles
       exit $error_code
-
     else
       log_to_email_time "Touch Completed"
       log_to_email ""
     fi
   fi
-
 }
 
 # Check for Changes, Deletion Threshold & Move Threshold
@@ -828,23 +699,13 @@ function check_array_for_changes_and_thresholds {
   # Call snapraid diff command
   snapraid_diff_cmd
 
-  # Check for differences to see if a sync is required or not
-  # This method originally came from Zack Reed's script...
-  number_added=$( grep -w '^ \{1,\}[0-9]* added$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  number_removed=$( grep -w '^ \{1,\}[0-9]* removed$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  number_updated=$( grep -w '^ \{1,\}[0-9]* updated$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  number_moved=$( grep -w '^ \{1,\}[0-9]* moved$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  number_copied=$( grep -w '^ \{1,\}[0-9]* copied$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  number_restored=$( grep -w '^ \{1,\}[0-9]* restored$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-
-  # If any one of the above are not equal to zero, we know changes are present
-  if [ $number_added -ne 0 ] || [ $number_removed -ne 0 ] || [ $number_updated -ne 0 ] || [ $number_moved -ne 0 ] || [ $number_copied -ne 0 ] || [ $number_restored -ne 0 ]
+  # Check the Exit Status of the Diff Command to see if a sync is required or not
+  if [ "${diff_exit_status}" == "diff" ] 
   then
     # Specify a Sync is Required
     sync_required=1
     log_to_email_time "Changes Detected"
-
-    # Print the Above Numbers to the Email Logfile
+    log_to_email "Equal:" $number_equal
     log_to_email "Added:" $number_added
     log_to_email "Removed:" $number_removed
     log_to_email "Updated:" $number_updated
@@ -852,87 +713,84 @@ function check_array_for_changes_and_thresholds {
     log_to_email "Copied:" $number_copied
     log_to_email "Restored:" $number_restored
 
+    # Check For Deletion/Moved Thresholds
     if [ $override_thresholds -eq 1 ]
     then
-      log_to_email_time "Overriding Deletion/Moved Thresholds..."
+      log_to_email_time "Override Deletion/Moved Thresholds selected"
+      log_to_email_time "Proceeding to sync regardless..."
+
+    # Check For Deletion Threshold AND Moved Threshold both being exceeded
+    elif [ $number_removed -gt $deletion_threshold ] && [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
+    then
       log_to_email ""
+      log_to_email_time "Deletion AND Moved Threshold Exceeded"
+      log_to_email "Deleted: "$number_removed
+      log_to_email "Moved: "$number_moved
+      log_to_email "Deletion Threshold:" $deletion_threshold
+      log_to_email "Moved Threshold:" $moved_threshold
+      log_to_email "Maybe a Sync is not a good idea?..."
+      log_to_email_time "Stopping..."
+
+      # Send Notification Email and Exit
+      send_email "SnapRAID-DAILY: BOTH Thresholds Exceeded"
+      clean_up_logfiles
+      exit $thresholds_exceeded_code
+
+    # Check for Deletion Threshold
+    elif [ $number_removed -gt $deletion_threshold ] && [ $override_thresholds -eq 0 ]
+    then
+      log_to_email ""
+      log_to_email_time "Deletion Threshold Exceeded"
+      log_to_email "Deleted:" $number_removed
+      log_to_email "Deletion Threshold:" $deletion_threshold
+      log_to_email "Maybe a Sync is not a good idea?..."
+      log_to_email_time "Stopping..."
+
+      # Send Notification Email and Exit
+      send_email "SnapRAID-DAILY: Deletion Threshold Exceeded"
+      clean_up_logfiles
+      exit $thresholds_exceeded_code
+
+    # Check for Moved Threshold
+    elif [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
+    then
+      log_to_email ""
+      log_to_email_time "Moved Threshold Exceeded"
+      log_to_email "Moved:" $number_moved
+      log_to_email "Moved Threshold:" $moved_threshold
+      log_to_email "Maybe a Sync is not a good idea?..."
+      log_to_email_time "Stopping..."
+
+      # Send Notification Email and Exit
+      send_email "SnapRAID-DAILY: Moved Threshold Exceeded"
+      clean_up_logfiles
+      exit $thresholds_exceeded_code
     fi
     log_to_email ""
 
-    # Check Deletion & Moved Threshold
-    if [ $number_removed -gt $deletion_threshold ] && [ $override_thresholds -eq 0 ]
-    then
-      log_to_email_time "DELETION Threshold Exceeded"
-      log_to_email "Detected "$number_removed" deletions,"
-      log_to_email "Which is greater than "$deletion_threshold
-      log_to_email "Maybe a Sync is not a good idea?..."
-
-      # Send Notification Email and Exit
-      send_email "SnapRAID-DAILY: DELETION Threshold Exceeded"
-
-      # Delete the Logfiles and exit with Status 5 to Flag the Threshold has been exceeded
-      clean_up_logfiles
-      exit $thresholds_exceeded_code
-
-    elif [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
-    then
-      log_to_email_time "MOVED Threshold Exceeded"
-      log_to_email "Detected "$number_moved" files moved,"
-      log_to_email "Which is greater than "$moved_threshold
-      log_to_email "Maybe a Sync is not a good idea?..."
-
-      # Send Notification Email and Exit
-      send_email "SnapRAID-DAILY: MOVED Threshold Exceeded"
-
-      # Delete the Logfiles and exit with Status 5 to flag the threshold has been exceeded
-      clean_up_logfiles
-      exit $thresholds_exceeded_code
-    fi
-
-  # If all of the above are equal to zero, then we know no changes have occured since the last sync
-  elif [ $number_added -eq 0 ] && [ $number_removed -eq 0 ] && [ $number_updated -eq 0 ] && [ $number_moved -eq 0 ] && [ $number_copied -eq 0 ] && [ $number_restored -eq 0 ]
+  # If the exit status of the diff command is "equal", there are no changes
+  elif [ "${diff_exit_status}" == "equal" ]
   then
-    # Neither Threshold has been exceeded, but we still want
-    # to continue if a sync is in progress, since the solution to
-    # a sync being interrupted before it has finished is to
-    # let it finish.
+    # No new changes, but want to complete sync if a sync is in progress
     if [ $found_unfinished_sync == 1 ] 
     then
       log_to_email_time "No Changes - Nothing to Sync"
       log_to_email_time "However a sync is still in progress - Continuing..."
       log_to_email ""
-
-      # Specify a sync is required
       sync_required=1
-
     else
       log_to_email_time "No Changes - Nothing to Sync"
       log_to_email ""
-
-      # No Sync Required
       sync_required=0
-
     fi
-
-  else
-    # Complete IF Statement - Exit if we get to here
-    log_to_email_time "Problem with Diff Command - Exiting..."
-    log_to_email_time "Diff Command Logfile Is attached..."
-    send_email_with_log "SnapRAID-DAILY: DIFF Command Problem" $diff_command_logfile
-
-    # Delete the logfiles and exit with Status 1 to Flag an Error
-    clean_up_logfiles
-    exit $error_code
   fi
 }
 
 # Sync Array Function
 function sync_array {
-
   # Only Run if the previous snapraid diff check found changes
   if [ $sync_required -eq 1 ]
   then
-
     log_to_email "##############################"
     log_to_email "# SnapRAID-DAILY: Sync"
     log_to_email "##############################"
@@ -940,118 +798,80 @@ function sync_array {
     # Find the Current Time to Get the Time the Sync was Started At
     sync_start_time=`date '+%Y-%m-%d_%H-%M-%S'`
     sync_start_seconds=$(date +%s)
-
-    # Sync is required, proceed to sync the array
     log_to_email_time "Starting Sync on "$(date +%d/%m/%Y)"..."
 
     # Call snapraid sync command
     snapraid_sync_cmd
 
-    # Find the current time to get the time the sync finished at
+    # Compute the Run-Time of the Sync Command for the Email
     sync_finish_time=`date '+%Y-%m-%d_%H-%M-%S'`
     sync_finish_seconds=$(date +%s)
-
-    # Compute the Run-Time of the Sync Command for the Email
     sync_runtime=$((sync_finish_seconds-sync_start_seconds))
     sync_runtime_hours=$((sync_runtime / 3600))
     sync_runtime_minutes=$(( (sync_runtime % 3600) / 60 ))
     sync_runtime_seconds=$(( (sync_runtime % 3600) % 60 ))
-
     log_to_email_time "Sync Completed on "$(date +%d/%m/%Y)
     log_to_email_time "Duration: "$sync_runtime_hours" hours, "$sync_runtime_minutes "minutes, "$sync_runtime_seconds" seconds"
 
-    # Analyze the output of The Sync Command to See if Files were modified during the
-    # sync operation or not. This is useful as it is a common cause of the sync failing
+    # Get Error counts and Exit status from Sync Command Logfile
+    # summary:error_file:0 summary:error_io:0 summary:error_data:0 summary:exit:ok
+    io_errors=$(grep -w "^summary:error_io" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    data_errors=$(grep -w "^summary:error_data" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    file_errors=$(grep -w "^summary:error_file" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+
+    # For Sync there are two exit statuses printed to the logfile - for the diff and sync operations
+    diff_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 1p | awk -F ":" '{print $3}')
+    sync_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 2p | awk -F ":" '{print $3}')
+
+    # Check to see if Files were modified during the sync - Exit if so
     if grep -qw "WARNING! You cannot modify files during a sync." $sync_command_logfile 
-    then
-  
-      # The above string was present in the output of the snapraid command.
-      # this means we know the sync command was not successful, due to a file
-      # being modified during the sync operation.
+    then 
       log_to_email_time "Sync - File(s) Modified During Sync"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send the Notification Email and attach the output of the Sync Command
       send_email_with_log "SnapRAID-DAILY: File(s) Modified during Sync" $sync_command_logfile
-
-      # Delete the Logfiles and exit with Status 3 to Highlight that a Modification Took Place in the
-      # middle of the sync operation
       clean_up_logfiles
       exit $files_modified_during_sync_code
 
-    # Otherwise check if the Sync was Successful or Not. Note that now -h is
-    # being used it's no longer goo enough to just look for "Everything OK", since
-    # there are now 2 "Everything OK" lines - one for the hashing operation, and
-    # another for the data.
-
-    # The sync log reports 4 lines of interest, search for each one of them
-    # summary:error_file:0
-    # summary:error_io:0
-    # summary:error_data:0
-    # summary:exit:ok
-
-    # 1: Check for File Errors - Exit if found
-    elif ! grep -qw "summary:error_file:0" $sync_command_logfile
+    # 1: Check if any of the above error counts the exit statuses are undefined - exit if so
+    elif [ -z "$io_errors" ] || [ -z "$data_errors" ] || [ -z "$file_errors" ] || [ -z "${diff_exit_status}" ] || [ -z "${sync_exit_status}" ]
     then
-      log_to_email_time "Sync Log Reports File Error(s) - Please Investigate"
+      log_to_email_time "Sync Encountered Issues - Please Investigate"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send the Notification Email and attach the output of the Sync Command
       send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
-
-      # Delete Logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
       exit $error_code
 
-    # 2: Check for I/O Errors - Exit if found
-    elif ! grep -qw "summary:error_io:0" $sync_command_logfile
+    # 2: Exit if any of the number of errors above are non-zero or if the exit status is unexpected
+    elif [ $io_errors != 0 ] || [ $data_errors != 0 ] || [ $file_errors != 0 ] || [ "${sync_exit_status}" != "ok" ]
     then
-      log_to_email_time "Sync Log Reports I/O Error(s) - Please Investigate"
+      log_to_email_time "Sync Log Reports Error(s) - Please Investigate"
+      log_to_email_time "I/O Errors:" $io_errors
+      log_to_email_time "Data Errors:" $data_errors
+      log_to_email_time "File Errors:" $file_errors
+      log_to_email_time "Exit Status:" "${sync_exit_status}"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send the Notification Email and attach the output of the Sync Command
       send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
-
-      # Delete Logfiles and exit with Status 1 to Flag an Error
       clean_up_logfiles
       exit $error_code
 
-    # 3: Check for Data Errors - Exit if Found
-    elif ! grep -qw "summary:error_data:0" $sync_command_logfile
+    # 3: Sync Diff exit status reported no changes. Should be impossible to get to here though
+    # since sync is not called if changes are found
+    elif [ "${diff_exit_status}" == "equal" ]
     then
-      log_to_email_time "Sync Log Reports Data Error(s) - Please Investigate"
-      log_to_email_time "Sync Output Log is attached..."
-      log_to_email_time "Current status of the Array is as below:"
+      log_to_email_time "Found nothing to sync"
       log_to_email ""
 
-      # Call Snapraid Status to Put the Final Array Status into the Email
-      snapraid_status_to_email
-
-      # Send the Notification Email and attach the output of the Sync Command
-      send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
-
-      # Delete Logfiles and exit with Status 1 to Flag an Error
-      clean_up_logfiles
-      exit $error_code
-
-    # 4: Check for a Successful Exit
-    elif grep -qw "summary:exit:ok" $sync_command_logfile  
-    then
+    # Otherwise if none of the above checks found anything - The sync was successful
+    else
       # Print Out the Changes to Email Output
       log_to_email_time "Sync was Successful"
       log_to_email_time "Array Changes Found & Updated:"
@@ -1062,61 +882,24 @@ function sync_array {
       log_to_email "Copied:" $number_copied
       log_to_email "Restored:" $number_restored
       log_to_email ""
-
-    # Otherwise something else has gone wrong with the sync. Print a generic
-    # error message in the email instead
-    else
-      log_to_email_time "Sync Encountered Issues - Please Investigate"
-      log_to_email_time "Sync Output Log is attached..."
-      log_to_email_time "Current status of the Array is as below:"
-      log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
-      snapraid_status_to_email
-
-      # Send the Notification Email and attach the output of the Sync Command
-      send_email_with_log "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile
-
-      # Delete Logfiles and exit with Status 1 to Flag an Error
-      clean_up_logfiles
-      exit $error_code
     fi
   fi
 }
 
 # Scrub Array Function
 function scrub_array {
-
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY: Scrub"
   log_to_email "##############################"
 
-  ###################################################
-  # We need to check the array is up to date. It should be if a
-  # sync was just ran, but if files were either removed or updated
-  # in the period of time since the sync, this could cause
-  # the scrub command to stop and report an unexpected file change
-  # error. SnapRAID handles this gracefully, but to keep the email
-  # output neat, this is a good idea.
-  # If the system is left alone, it'll be synced as normal the next
-  # time the script is ran.
-  ###################################################
+  # Need to check the array is up to date. More relevant if --scrub-only is selected
   log_to_email_time "Checking if Array is still up to date..."
 
   # Call snapraid diff command to see if the array is still up to date
   snapraid_diff_cmd
 
-  # Analyze the Diff Logfile like before to see if there are Changes
-  scrub_number_added=$( grep -w '^ \{1,\}[0-9]* added$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  scrub_number_removed=$( grep -w '^ \{1,\}[0-9]* removed$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  scrub_number_updated=$( grep -w '^ \{1,\}[0-9]* updated$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  scrub_number_moved=$( grep -w '^ \{1,\}[0-9]* moved$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  scrub_number_copied=$( grep -w '^ \{1,\}[0-9]* copied$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-  scrub_number_restored=$( grep -w '^ \{1,\}[0-9]* restored$' $diff_logfile | sed 's/^ *//g' | cut -d ' ' -f1)
-
-  # Check if We have no Moved, Removed or Updated Files. Added or Copied are OK
-  # for the purposes of the scrub
-  if [ $scrub_number_removed -eq 0 ] && [ $scrub_number_updated -eq 0 ] && [ $scrub_number_moved -eq 0 ]
+  # Check if We have no Moved, Removed or Updated Files. Added or Copied are OK for scrubbing
+  if [ $number_removed -eq 0 ] && [ $number_updated -eq 0 ] && [ $number_moved -eq 0 ]
   then
     # Array is still up to date - proceeding to scrub
     log_to_email_time "Array is Up-to-Date - Proceeding"
@@ -1130,11 +913,9 @@ function scrub_array {
     # Call Snapraid Scrub command
     snapraid_scrub_cmd
 
-    # Find the current time to get the time the scrub finished at
+    # Compute the Run-Time of the Scrub Command
     scrub_finish_time=`date '+%Y-%m-%d_%H-%M-%S'`
     scrub_finish_seconds=$(date +%s)
-
-    # Compute the Run-Time of the Scrub Command for the Email
     scrub_runtime=$((scrub_finish_seconds-scrub_start_seconds))
     scrub_runtime_hours=$((scrub_runtime / 3600))
     scrub_runtime_minutes=$(( (scrub_runtime % 3600) / 60 ))
@@ -1142,140 +923,89 @@ function scrub_array {
     log_to_email_time "Scrub Completed at "$(date +%d/%m/%Y)
     log_to_email_time "Duration: "$scrub_runtime_hours" hours, "$scrub_runtime_minutes "minutes, "$scrub_runtime_seconds" seconds"
 
-    # Check if Nothing was found to scrub - "Nothing to do" is in
-    # the output. This means there are no blocks newer than the age specifed in
-    # snapraid-daily.conf to scrub. Do this by looking at the logfile of the
-    # standard output
-    if grep -qw "Nothing to do" $scrub_logfile 
+    # Check Scrub Command Logfile for Errors
+    # summary:error_file:0 summary:error_io:0 summary:error_data:0 summary:exit:ok
+    scrub_io_errors=$(grep -w "^summary:error_io" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_data_errors=$(grep -w "^summary:error_data" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_file_errors=$(grep -w "^summary:error_file" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_exit_status=$(grep -w "^summary:exit" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+
+    # Check if Nothing was found to scrub
+    if grep -qw "Nothing to do" "${scrub_command_logfile}"
     then
-      # Nothing to scrub - Maybe there is nothing older than
-      # the specified scrub age to scrub
       log_to_email_time "Found Nothing to Scrub"
       log_to_email ""
-
-      # This variable is used later to avoid having to grep the logfile above
-      # again. This is to change the email subject later
       nothing_to_scrub=1
 
-    # The scrub log reports 4 lines of interest, search for each one of them
-    # 1: summary:error_file:0  2: summary:error_io:0
-    # 3: summary:error_data:0  4: summary:exit:ok
-
-    # 1: Check for File Errors - Exit if any were found in scrub command log
-    elif ! grep -qw "summary:error_file:0" $scrub_command_logfile
+    # 1: Check if any of the above error counts or exit status are undefined
+    # Exit if this is the case - Print a generic message in the email
+    elif [ -z $scrub_io_errors ] || [ -z $scrub_data_errors ] || [ -z $scrub_file_errors ] || [ -z "${scrub_exit_status}" ]
     then
-      log_to_email_time "Scrub Log Reports File Error(s) - Please Investigate"
-      log_to_email_time "Scrub Log is Attached..."
+      log_to_email_time "Scrub Encountered Issues - Please Investigate"
+      log_to_email_time "Scrub Output Log is attached..."
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send Email and Exit Script
-      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
-
-      # Delete the logfiles and exit with Status 1 to Flag an Error
+      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}"
       clean_up_logfiles
       exit $error_code
 
-    # 2: Check for I/O Errors - Exit if any were found in scrub command log
-    elif ! grep -qw "summary:error_io:0" $scrub_command_logfile
+    # 2: Check if any of the number of errors in the counts above are non-zero
+    elif [ $scrub_io_errors != 0 ] || [ $scrub_data_errors != 0 ] || [ $scrub_file_errors != 0 ] || [ "${scrub_exit_status}" != "ok" ]
     then
-      log_to_email_time "Scrub Log Reports I/O Error(s) - Please Investigate"
-      log_to_email_time "Scrub Log is Attached..."
+      log_to_email_time "Scrub Log Reports Error(s) - Please Investigate"
+      log_to_email_time "I/O Errors:" $scrub_io_errors
+      log_to_email_time "Data Errors:" $scrub_data_errors
+      log_to_email_time "File Errors:" $scrub_file_errors
+      log_to_email_time "Exit Status:" "${scrub_exit_status}"
+      log_to_email_time "Scrub Output Log is attached..."
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send Email and Exit Script
-      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
-
-      # Delete the logfiles and exit with Status 1 to Flag an Error
+      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}"
       clean_up_logfiles
       exit $error_code
 
-    # 3: Check for Data Errors - Exit if any were found in scrub command log
-    elif ! grep -qw "summary:error_data:0" $scrub_command_logfile
-    then
-      log_to_email_time "Scrub Log Reports File Error(s) - Please Investigate"
-      log_to_email_time "Scrub Log is Attached..."
-      log_to_email_time "Current status of the Array is as below:"
-      log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
-      snapraid_status_to_email
-
-      # Send Email and Exit Script
-      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
-
-      # Delete the logfiles and exit with Status 1 to Flag an Error
-      clean_up_logfiles
-      exit $error_code
-
-    # 4: If none of the above checks found anything - check for Successful Exit
-    elif grep -qw "summary:exit:ok" $scrub_command_logfile
-    then
+    # Otherwise the scrub was successful
+    else
       log_to_email_time "Scrub was successful"
       log_to_email_time "Scrubbed" $scrub_percent"% older than" $scrub_age "days"
       log_to_email ""
-
-      # This variable is used later to avoid having to grep the scrub command
-      # logfile again. This is to change the email subject.
       nothing_to_scrub=0
-
-    # Otherwise, something else has gone wrong with the scrub, print a generic
-    # error message in the email and exit
-    else
-      log_to_email_time "Scrub Encountered Issues - Please Investigate"
-      log_to_email_time "Scrub Log is Attached..."
-      log_to_email_time "Current status of the Array is as below:"
-      log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
-      snapraid_status_to_email
-
-      # Send Email and Exit Script
-      send_email_with_log "SnapRAID-DAILY: Scrub Warning(s)" $scrub_command_logfile
-
-      # Delete the logfiles and exit with Status 1 to Flag an Error
-      clean_up_logfiles
-      exit $error_code
     fi
   else
     # Array is not up to date - Exit the Script if --scrub-only was given
     if [ $scrub_only -eq 1 ]
     then
-      # Add Changes to Email
-      log_to_email_time "Array not up-to-date - Sync Required 1st, Exiting..."
+      log_to_email_time "Array not up-to-date - Sync Required"
       log_to_email_time "Changes detected are:"
-      log_to_email "Added:" $scrub_number_added
-      log_to_email "Removed:" $scrub_number_removed
-      log_to_email "Updated:" $scrub_number_updated
-      log_to_email "Moved:" $scrub_number_moved
-      log_to_email "Copied:" $scrub_number_copied
-      log_to_email "Restored:" $scrub_number_restored
+      log_to_email "Equal:" $number_equal
+      log_to_email "Added:" $number_added
+      log_to_email "Removed:" $number_removed
+      log_to_email "Updated:" $number_updated
+      log_to_email "Moved:" $number_moved
+      log_to_email "Copied:" $number_copied
+      log_to_email "Restored:" $number_restored
+      log_to_email_time "Stopping"
       log_to_email ""
-
-      # Add Array Status to Email
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
-
-      # Call Snapraid Status to Put the Final Array Status into the Email
       snapraid_status_to_email
-
-      # Send Email and Exit Script
-      # Send the Notification Email and attach the output of the Sync Command
       send_email "SnapRAID-Scrub: Sync Required"
-
-      # Delete the Logfiles and Exit with Status 1 to Flag an Error
       clean_up_logfiles
       exit $error_code
 
     else
-      log_to_email_time "Array not up-to-date - Sync Required 1st..."
+      # Probably impossible to get to here as sync was just ran
+      log_to_email_time "Array not up-to-date - Sync Required"
+      log_to_email_time "Changes detected are:"
+      log_to_email "Equal:" $number_equal
+      log_to_email "Added:" $number_added
+      log_to_email "Removed:" $number_removed
+      log_to_email "Updated:" $number_updated
+      log_to_email "Moved:" $number_moved
+      log_to_email "Copied:" $number_copied
+      log_to_email "Restored:" $number_restored
       log_to_email ""
     fi
   fi
@@ -1283,7 +1013,6 @@ function scrub_array {
 
 # Send Final Email Log
 function send_final_notification_email {
-
   # Print out that the Email will be sent or not
   if [ "${disable_emails_on_success}" == "no" ]
   then
@@ -1294,7 +1023,6 @@ function send_final_notification_email {
     echo ""
   fi
 
-  # Print banner again
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY: Array Status"
   log_to_email "##############################"
@@ -1305,46 +1033,35 @@ function send_final_notification_email {
   snapraid_status_to_email
 
   # Send Final Notification Email if Script Ran all the way to the End,
-  # and disable_emails_on_success is set to no.
-  # also change the email subject depending on whether sync-only or
-  # scrub-only was input by the user.
+  # and disable_emails_on_success is set to no, and determine subject
   if [ "${disable_emails_on_success}" == "no" ]
   then
-    # Change Subject to "SnapRAID-Sync"
     if [ $sync_only -eq 1 ]
     then
       if [ $sync_required -eq 1 ]
       then
-        send_email "SnapRAID-Sync: Success"
+        send_email "SnapRAID-DAILY: Sync OK"
       else
-        send_email "SnapRAID-Sync: Nothing to Sync"
+        send_email "SnapRAID-DAILY: Nothing to Sync"
       fi
-
-    # Change Subject to "SnapRAID-Scrub"
     elif [ $scrub_only -eq 1 ]
     then
       # Refine Email subject if Nothing was found to scrub
       if [ $nothing_to_scrub == 1 ]
       then
-        # Nothing was found to Scrub - Put this in the email title
-        send_email "SnapRAID-Scrub: Nothing to Scrub"
+        send_email "SnapRAID-DAILY: Nothing to Scrub"
       else
-        # Otherwise, we know scrub ran as normal
-        send_email "SnapRAID-Scrub: Success"
+        send_email "SnapRAID-DAILY: Scrub OK"
       fi
-
-    # Otherwise pick default subject  
     else
-      send_email "SnapRAID-DAILY: Success"
+      send_email "SnapRAID-DAILY: All OK"
     fi
   fi
 }
 
 # Clean Up Log-Files Function
 function clean_up_logfiles {
-
-  # Delete all Logfiles Generated by the Script, with systemd logging and
-  # the error logfiles sent via email, there is not much value in keeping them
+  # Delete all Logfiles Generated by the Script
   rm $status_logfile &> /dev/null
   rm $touch_logfile &> /dev/null
   rm $diff_logfile &> /dev/null
@@ -1358,22 +1075,16 @@ function clean_up_logfiles {
   rm $diff_command_logfile &> /dev/null
 }
 
-# Functions to Send Emails without a Log (No Errors Encountered)
+# Send Emails without a Log (No Errors Encountered)
 function send_email() {
-
-  # Only attempt to send emails if a muttrc file path and
-  # email address were defined in snapraid-daily.conf
+  # Only attempt to send emails if a muttrc file path and email address are defined
   if [ $enable_emails == 1 ]
     then 
-    # Only argument is the subject
     email_subject="${1}"
-  
-    # Call Mutt to Send the Email
     mutt -F $muttrc_path -s "${email_subject}" $email_address < $email_body_logfile
   
     # Check if the email is sent successfully for the systemd logs
-    if [ $? -eq 0 ]
-    then
+    if [ $? -eq 0 ]; then
       echo "Email Sent Successfully..."
       echo ""
     else
@@ -1386,23 +1097,17 @@ function send_email() {
   fi
 }
 
-# Functions to Send Emails with a Log (Errors Encountered)
+# Send Emails with a Log (Errors Encountered)
 function send_email_with_log() {
-
-  # Only attempt to send emails if a muttrc file path and
-  # an email address were defined in snapraid-daily.conf
+  # Only attempt to send emails if a muttrc file path and email address are defined
   if [ $enable_emails == 1 ]
   then
-    # Arguments are the subject and attachment 
     email_subject="${1}"
     email_attachment="${2}"
-  
-    # Call Mutt to Send the Email with the Attachment
     mutt -F $muttrc_path -s "${email_subject}" -a "${email_attachment}" -- $email_address < $email_body_logfile
   
     # Check if the email is sent successfully for the systemd logs
-    if [ $? -eq 0 ]
-    then
+    if [ $? -eq 0 ]; then
       echo ""
       echo "Email Sent Successfully..."
     else
@@ -1419,56 +1124,40 @@ function send_email_with_log() {
 # SCRIPT START
 ###################################################
 
-# Parse Input Arguments to determine if sync only, scrub only
-# or overriding the deletion/moved thresholds is desired
-# by the user
+# Parse Input Arguments
 parse_arguments "$@"
 
-# Read Config File
+# Read Config File and Sanity Check its Contents and Dependencies
 read_config_file
-
-# Sanity-Check to see if all checks are satisfied
 sanity_check
 
 # Generate Logfiles for Analysis
 generate_logfiles
 
-# Start Email log by printing the greeting specifying the
-# start-time and the arguments specified.
+# Start Email log and print greeting
 print_greeting
 
-# Check the intial status to see if touch is required,
-# or if errors are present
+# Check the intial status for errors or if touch is needed
 initial_status_check
 
 # Run Touch if it is required, check for deletion/moved thresholds
-# and then sync the array. Only do this if the --scrub-only argument
-# is not active
+# and then sync the array. Only if the --scrub-only is not selected
 if [ $scrub_only -eq 0 ]
 then
-  # Run Touch if required
   run_touch_if_needed
-
-  # Check Array for Changes & Deletion Thresholds
   check_array_for_changes_and_thresholds
-
-  # Sync & Check the output for errors
   sync_array
 fi
 
-# Scrub & Check the output for errors if --sync-only
-# argument is not active
+# Scrub & Check the output for errors if --sync-only is not selected
 if [ $sync_only -eq 0 ]
 then
   scrub_array
 fi
 
-# Send Final Notification Email if No Errors were detected
+# Send Final Notification Email if No Errors were detected, clean up
+# /tmp logfiles and exit with success
 send_final_notification_email
-
-# Delete all Logfiles
 clean_up_logfiles
-
-# Exit with Status 0 to Flag Success if all Steps Completed
 exit $success_code
 
