@@ -152,7 +152,7 @@ sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 
 Next ensure all dependencies are installed:
 
-* grep, awk, sed, mktemp - Available on pretty much every linux based system
+* grep, awk, sed, mktemp, tee - Available on pretty much every linux based system
 * SnapRAID (This is left up to the user and not considered here)
 
 Next, create the config file as discussed below.
