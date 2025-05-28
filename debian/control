@@ -16,6 +16,7 @@ Depends:
  snapraid (>=11.0),
  bash (>=5.0),
  findutils (>=4.8),
+ gawk,
  ${misc:Depends},
 Recommends:
  mutt (>=2.0),
@@ -24,9 +25,9 @@ Description: Bash Script to automate SnapRAID with email notifications
    needs to fully automate the sync and scrub process of SnapRAID.
  * Runs sync to update the array for changes, then runs scrub 
    to check the array for silent corruption.
- * The number of deletions is monitored and if the number exceeds
+ * The number of deletions/moved is monitored and if the number exceeds
    a user defined threshold, then the sync is stopped and the user
-   is notified.
+   is notified via email.
  * Can also be set to run either sync only or scrub only if one
    wants to seperate the sync and scrub operations.
  * If at any point, errors are encountered, then the user
