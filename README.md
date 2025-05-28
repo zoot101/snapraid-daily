@@ -3,18 +3,19 @@ Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
 
 # Introduction 
-Thank you for your interest in this script. Snapraid is very good software,
+Thank you for your interest in this script! Snapraid is very good software,
 but lacks any default automation or notification ability.
 
 That is where this script comes in, it is intended to be an all-in-one
 script for the automation of snapraid.
 
-There are many other scripts out there that essentially do the same thing,
-and some are probably better than this one. However, none of them had exactly
-the features the author wanted or were more complex than desired.
+There are other scripts out there that essentially do the same thing. However, none
+of them had exactly had the features the author wanted such as not enforcing to be
+ran as root or being able to seperate the sync and scrub operations.
 
-This led to this script being created by the author. It has worked quite well
-for the author for many years up to this date, and hopefully prove useful to others.
+This led to this script being created by the author. It has worked extremely well
+for the author for many years up to this date, and hopefully prove useful to others,
+hence the reason for publishing it here in Github.
 
 The broad goal here is to be an all-in-one script to automate the necessary
 snapraid functions that can be scheduled accordingly and do it in a simple manner.
@@ -236,6 +237,10 @@ This is useful for the situation where the user may be running
 multiple SnapRAID arrays on the same system, but for the vast
 majority of users it'll be **/etc/snapraid.conf**.
 
+To run with multiple SnapRAID arrays, one could create a copy of
+the config file (snapraid-daily.conf), change this setting and
+pass it to the script with the **-f, --config** option.
+
 ### muttrc\_path
 
 This is the path for the muttrc file that is used for sending
@@ -266,7 +271,7 @@ The default is **100**
 
 ### scrub\_percent
 
-The percentage of the array to scrub should be a number between 1 and 100.
+The percentage of the array to scrub - should be a number between 1 and 100.
 The default is **8** (or 8%).
 
 ### scrub\_age
@@ -295,7 +300,7 @@ disable.
 
 ### force\_zero
 
-By default during **sync**, if Snapraid encounters a file of zero
+By default during **sync**, if SnapRAID encounters a file of zero
 size that was not previously of zero size, it will report this as
 an error and exit the sync. This is possible to happen during a
 system crash in Linux systems, so is **NOT RECOMMENDED**. This option

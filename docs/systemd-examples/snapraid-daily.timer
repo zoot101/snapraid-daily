@@ -2,12 +2,7 @@
 Description=Uses SnapRAID-Daily to Sync and Scrub the SnapRAID Array
 
 [Timer]
-# Run Every Day at 6am
 OnCalendar=*-*-* 06:00:00
-
-# Run Every Dat at 6am and 6pm
-#OnCalendar=*-*-* 06,18:00:00
-
 Persistent=false
 
 [Install]

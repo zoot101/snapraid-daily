@@ -25,7 +25,7 @@ script if it is detected that some files were modified during a sync. Its
 not completely perfect and probably needs some configuration. Feel free
 to experiment
 
-# hardnen.conf
+# harden.conf
 
 The harden.conf is a sample to add systemd hardening to the service files
 that run the script and lock down its permissions. These are strictly
@@ -43,4 +43,9 @@ in the **/etc/** directory when new packages are being installed.
 
 This is obviously not an issue if installing manually.
 
+# See Also
+
+* systemd.unit(1)  
+* systemd.timer(1)  
+* systemd-analyze(1)  
 

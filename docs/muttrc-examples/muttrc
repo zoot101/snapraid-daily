@@ -8,6 +8,9 @@
 # and go to Security, Two-Step Verification and select
 # the option to "Generate a Security" key. This will give
 # one a random string of letters as a password to use below.
+# Note the smtp_pass and imap_pass settings are to be set
+# to the same password
+
 # Should be possible to adapt to other email providers too.
 
 # This is the Name on the Email, and the Email

@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.4
+version=1.3.5
 
 ###################################################
 # RETURN CODES
@@ -20,8 +20,7 @@ thresholds_exceeded_code=5          # Deletion/Moved Thresholds exceeded
 ###################################################
 # FUNCTIONS
 ###################################################
-
-# ERROR FUNCTION
+# Error Function for Errors that exit immediately
 function error() {
   echo "ERROR:" "$@"
   echo ""
@@ -41,7 +40,6 @@ function log_to_email_time() {
 
 # Generate the necessary logfiles in /tmp using mktemp
 function generate_logfiles {
-
   # Do a quick cursory check to see if /tmp is writable
   if [ ! -w "/tmp/" ]; then
     error "/tmp directory is not writable - Exiting"
@@ -60,6 +58,7 @@ function generate_logfiles {
   email_body_logfile=$( mktemp -t "${tmp_file_prefix}" )
 
   # Command Output Logfiles
+  status_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
   scrub_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
   sync_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
   touch_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
@@ -70,14 +69,13 @@ function generate_logfiles {
 # SNAPRAID COMMANDS
 ##################################################
 function snapraid_status_cmd() {
-  # Call Snapraid Status and deposit the output into a logfile 
-  # Need to re-direct all output for SnapRAID in Use check
-  snapraid -c "$snapraid_config_file_path" status &> $status_logfile
+  # Call Snapraid Status using the "-l" option
+  snapraid -c "$snapraid_config_file_path" -l "${status_command_logfile}" -qq status | tee $status_logfile
 }
 
 function snapraid_status_to_email() {
-  # Call Snapraid status and put the output into the email
-  snapraid -c "$snapraid_config_file_path" status | tee -a $email_body_logfile
+  # Call Snapraid status and pipe the output into the email
+  snapraid -c "$snapraid_config_file_path" -qq status | tee -a $email_body_logfile
 }
 
 function snapraid_touch_cmd() {
@@ -185,7 +183,8 @@ function snapraid_scrub_cmd() {
 # Read Config File parameters in. If it is not present, exit
 function read_config_file {
 
-  # Find script source directory
+  # Find script source directory. NOTE: this fails if the script is called
+  # using a symbolic link - will fix
   source_directory=$(dirname "$BASH_SOURCE")
 
   # Configuration Files are read in the following order of preference
@@ -510,8 +509,7 @@ function print_greeting {
   fi
 
   # Check for the default condition where a sync and scrub are ran
-  if [ $sync_only -eq 0 ] && [ $scrub_only -eq 0 ]
-  then
+  if [ $sync_only -eq 0 ] && [ $scrub_only -eq 0 ]; then
     log_to_email "Run-Sync: YES"
     log_to_email "Run-Scrub: YES"
     log_to_email "Scrub-Percent:" $scrub_percent
@@ -523,9 +521,9 @@ function print_greeting {
     log_to_email "Override Deletion/Moved Thresholds: YES"
   else
     log_to_email "Override Deletion/Moved Thresholds: NO"
-    log_to_email "Deletion Threshold:" $deletion_threshold
-    log_to_email "Moved Threshold:" $moved_threshold
   fi
+  log_to_email "Deletion Threshold:" $deletion_threshold
+  log_to_email "Moved Threshold:" $moved_threshold
 
   # Check for Extra Non-Recommended Parameters for the Sync
   if [ "${force_zero}" == "yes" ]; then 
@@ -551,8 +549,20 @@ function initial_status_check {
   # Call snapraid status
   snapraid_status_cmd
 
+  # Error Checks - Not 100% Sure about this yet. Old method may be better - see below
+  bad_check0=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  bad_check1=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $4}')
+  bad_check2=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $5}')
+
+  # Re-Hash Check and Unsynced Check
+  rehash_check=$(grep -w "^summary:has_rehash" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  unsynced_check=$(grep -w "^summary:has_unsynced" "${status_command_logfile}" | awk -F ":" '{print $3}')
+
+  # Number of Files requiring touch - if any
+  touch_required_count=$(grep -w "^summary:zerosubsecond_file_count" "${status_command_logfile}" | awk -F ":" '{print $3}')
+
   # Scenario 1 - Check if Snapraid is Already in Use - Exit if so
-  if grep -qw "SnapRAID is already in use!" $status_logfile
+  if grep -qw "SnapRAID is already in use!" "${status_command_logfile}"
   then
     log_to_email_time "SnapRAID is already Use - Exiting..."
     log_to_email ""
@@ -560,36 +570,51 @@ function initial_status_check {
     clean_up_logfiles
     exit $already_in_use_code
   
-  # Scenario 2 - Check for errors - Exit if present 
-  elif ! grep -qw "No error detected." $status_logfile
+  # Scenario 2 - Check if the important parameters above are not defined
+  elif [ -z $rehash_check ] || [ -z $unsynced_check ] || [ -z $bad_check0 ] || \
+       [ -z $bad_check1 ] || [ -z $bad_check2 ]
+  then
+    log_to_email_time "Unexpected Status Output - Exiting..."
+    log_to_email_time "Status Logfile is attached"
+    log_to_email_time "Current Status of the Array is as below:"
+    log_to_email ""
+    snapraid_status_to_email
+    send_email_with_log "SnapRAID-Daily: Initial Error(s) Present" "${status_command_logfile}"
+    clean_up_logfiles
+    exit $error_code
+
+  # Scenario 3 - Check for errors - Exit if present (Old Method Commented Out) 
+  elif [ $bad_check0 != 0 ] || [ $bad_check1 != 0 ] || [ $bad_check2 != 0 ]
+  #elif ! grep -qw "No error detected." $status_logfile
   then
     log_to_email_time "Found error(s) - Exiting..."
+    log_to_email_time "Status Logfile is attached"
     log_to_email_time "Current Status of the Array is as below:"
     log_to_email ""
     snapraid_status_to_email
-    send_email "SnapRAID-DAILY: Inital Error(s) Present"
+    send_email_with_log "SnapRAID-DAILY: Inital Error(s) Present" "${status_command_logfile}"
     clean_up_logfiles
     exit $error_code
 
-  # Scenario 3 - Check if a ReHash is needed.
-  # If so - exit and notify the user via email
-  elif ! grep -qw "No rehash is in progress or needed." $status_logfile
+  # Scenario 4 - Check if a ReHash is needed.
+  elif [ $rehash_check != 0 ] 
   then
     log_to_email_time "Rehash In-Progress/Required - Exiting..."
+    log_to_email_time "Status Logfile is attached"
     log_to_email_time "Current Status of the Array is as below:"
     log_to_email ""
     snapraid_status_to_email
-    send_email "SnapRAID-DAILY: Re-Hash Warning"
+    send_email_with_log "SnapRAID-DAILY: Re-Hash Warning" "${status_command_logfile}"
     clean_up_logfiles
     exit $error_code
 
-  # Scenario 4 - Check if a Sync was previously stopped while in progress
-  elif ! grep -qw "No sync is in progress." $status_logfile
+  # Scenario 5 - Check if a Sync was previously stopped while in progress
+  elif [ $unsynced_check != 0 ] 
   then
     # Don't exit the if a sync is in progress - continue to sync
     found_unfinished_sync=1
 
-    # If scrub-only is selected, exit and notify the user via email
+    # Although, if scrub-only is selected, exit and notify the user via email
     if [ $scrub_only -eq 0 ]
     then
       log_to_email_time "Sync Already in Progress - Continuing..."
@@ -599,7 +624,7 @@ function initial_status_check {
       log_to_email_time "Current Status of the Array is as below:"
       log_to_email ""
       snapraid_status_to_email
-      send_email "SnapRAID-Scrub: Sync In Progress"
+      send_email "SnapRAID-DAILY: Sync In Progress"
       clean_up_logfiles
       exit $error_code
     fi
@@ -607,21 +632,17 @@ function initial_status_check {
   # Scenario 5 - None of the above checks found anything - Continue to Sync/Scrub
   else
     found_unfinished_sync=0
-    log_to_email_time "No Issues Found in Inital Check"
+    log_to_email_time "No Issues Found in Initial Check"
   fi
 
   # Check if Touch is Needed and if Scrub Only is Not Selected
-  if [ $scrub_only -eq 0 ]
+  if [ $scrub_only -eq 0 ] && [ $touch_required_count != 0 ] 
   then
-    if ! grep -qw "No file has a zero sub-second timestamp." $status_logfile
-    then
-      number_needing_touch=$(grep "zero sub-second timestamp." $status_logfile | awk '{print $3}')
-      log_to_email_time "Touch Required on "$number_needing_touch" files..."
-      touch_required=1
-    else
-      log_to_email_time "Touch Not Needed..."
-      touch_required=0
-    fi
+    log_to_email_time "Touch Required on" $touch_required_count "files..."
+    touch_required=1
+  else
+    log_to_email_time "Touch Not Needed..."
+    touch_required=0
   fi
   log_to_email ""
 }
@@ -638,14 +659,15 @@ function run_touch_if_needed {
     # Call Snapraid touch command
     snapraid_touch_cmd
 
-    # Check Touch Output for Errors
-    if grep -qw "Error timing file" $touch_command_logfile
+    # Check Touch Output for Errors - Do a search for "fatal" messages
+    # (Not sure if there's a better way of doing this)...
+    if grep -qw "^msg:fatal" "${touch_command_logfile}"
     then
       log_to_email_time "Touch Encountered Issues - Please Investigate..."
       log_to_email_time "Current Status of the Array is as below:"
       log_to_email ""
       snapraid_status_to_email
-      send_email_with_log "SnapRAID-DAILY: Touch Warning(s)" $touch_logfile
+      send_email_with_log "SnapRAID-DAILY: Touch Warning(s)" "${touch_command_logfile}"
       clean_up_logfiles
       exit $error_code
     else
@@ -657,7 +679,6 @@ function run_touch_if_needed {
 
 # Check for Changes, Deletion Threshold & Move Threshold
 function check_array_for_changes_and_thresholds {
-
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY: Difference Check"
   log_to_email "##############################"
@@ -953,12 +974,11 @@ function scrub_array {
       log_to_email "Moved:" $number_moved
       log_to_email "Copied:" $number_copied
       log_to_email "Restored:" $number_restored
-      log_to_email_time "Stopping"
-      log_to_email ""
+      log_to_email_time "Cannot Proceed with Scrub - Stopping"
       log_to_email_time "Current status of the Array is as below:"
       log_to_email ""
       snapraid_status_to_email
-      send_email "SnapRAID-Scrub: Sync Required"
+      send_email "SnapRAID-DAILY: Sync Required"
       clean_up_logfiles
       exit $error_code
 
@@ -1042,6 +1062,7 @@ function clean_up_logfiles {
   rm $scrub_logfile &> /dev/null
   rm $scrub_diff_logfile &> /dev/null
   rm $email_body_logfile &> /dev/null
+  rm $status_command_logfile &> /dev/null
   rm $scrub_command_logfile &> /dev/null
   rm $sync_command_logfile &> /dev/null
   rm $touch_command_logfile &> /dev/null
