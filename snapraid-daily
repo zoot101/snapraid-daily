@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.5
+version=1.3.6
 
 ###################################################
 # RETURN CODES
@@ -660,8 +660,9 @@ function run_touch_if_needed {
     snapraid_touch_cmd
 
     # Check Touch Output for Errors - Do a search for "fatal" messages
-    # (Not sure if there's a better way of doing this)...
-    if grep -qw "^msg:fatal" "${touch_command_logfile}"
+    # Exit if there's 10 or more of them...
+    touch_error_count=$(grep -w "^msg:fatal" "${touch_command_logfile}" | wc -l)
+    if [ $touch_error_count -gt 10 ]
     then
       log_to_email_time "Touch Encountered Issues - Please Investigate..."
       log_to_email_time "Current Status of the Array is as below:"
