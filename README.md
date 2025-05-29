@@ -78,8 +78,8 @@ any error being encountered.
 See the snapraid documentation here:   
 https://www.snapraid.it
 
-While the script will run out of the box with the default config, for best
-operation, a config file is required - see below.
+The script will run out of the box with the default config file, or
+no config file. However for best operation, a config file is required - see below.
 
 The number of files deleted and moved are monitored and if either exceed
 the threshold values specified in **snapraid-daily.conf**, the script will
@@ -184,7 +184,8 @@ sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 
 Next ensure all dependencies are installed:
 
-* grep, awk, sed, mktemp, tee - Available on pretty much every linux based system
+* grep, awk, sed, mktemp, tee (Available on pretty much every linux based system)
+* mutt
 * SnapRAID (This is left up to the user and not considered here)
 
 Next, create the config file as discussed below.
@@ -192,12 +193,12 @@ Next, create the config file as discussed below.
 ## Config File Setup
 
 As mentioned above, the script will run out of the box without a config file
-but its functionality is somewhat limited as a result.
+but for best operation it will require a configuration file set up.
 
 The location for the config file **(snapraid-daily.conf)** is tried in the
 following order of preference:
 
-1. **Via the -f or \--config option if specified**    
+1. Via the **-f** or **\--config option** if specified    
 2. **/etc/snapraid-daily.conf**    
 3. **snapraid-daily.conf** in the script directory    
 
@@ -219,7 +220,7 @@ See the sample here:
 https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
 
 If installed via the debian package, a sample configuration
-file is already placed at the 1st location above that can be
+file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
 edited directly by the user.
 
 If installing manually do the below and then manually edit it using the above
@@ -228,7 +229,7 @@ example.
 sudo cp ./config/snapraid-daily.conf /etc/
 ```
 
-Note that overriding the default config file can also be accomplished by
+As mentioned before, overriding the default config file can be accomplished by
 using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
 to the script.
 
@@ -403,10 +404,22 @@ scrub_age=7
 
 A valid muttrc configuration is required to send email notifications.
 A sample that works for Gmail can be found here along with some instructions
-on how to set it up.
+on how to set it up. It involves enabling 2FA within Gmail and creating an
+App Password for mutt.
 
-It should be simple to adapt to another email provider also.    
+It should also be simple to adapt to another email provider also. The author plans
+to include a number of more examples for popular email providers here also:     
 https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc
+
+Note that it's a good idea to test **mutt** out on its own with the generated
+**muttrc** file before using it with the script. 
+
+To do that, write up a sample email body in a simple text file (for example
+email-body.txt) and use mutt like so to send a test email to the desired email.
+(In this case example@mail.com)
+```bash
+mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-body.txt"
+``` 
 
 ## Automation with Systemd
 
