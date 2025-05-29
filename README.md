@@ -10,8 +10,8 @@ That is where this script comes in, it is intended to be an all-in-one
 script for the automation of snapraid.
 
 There are other scripts out there that essentially do the same thing. However, none
-of them had exactly had the features the author wanted such as not enforcing to be
-ran as root or being able to seperate the sync and scrub operations.
+of them had exactly had the features the author wanted such as not having to be
+ran as root.
 
 This led to this script being created by the author. It has worked extremely well
 for the author for many years up to this date, and hopefully prove useful to others,
@@ -22,27 +22,37 @@ snapraid functions that can be scheduled accordingly and do it in a simple manne
 
 # Table of Contents
 
-- [Scope](https://github.com/zoot101/snapraid-daily/edit/main/README.md#usage)
+- [Scope](#scope)
 - [Description](#description)
 - [Usage](#usage)
   * [Examples](#examples)
 - [Installation and Setup](#installation-and-setup)
 - [Config File Setup](#config-file-setup)
+  * [Config File Contents](#config-file-contents)
   * [Sample Config File](#sample-config-file)
 - [Setting Up Email Notifications](#setting-up-email-notifications)
 - [Automation with Systemd](#automation-with-systemd)
   * [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd)
 - [SnapRAID Sync and Scrub Options](#snapraid-sync-and-scrub-options)
-- [Return Codes](#return-codes)
+- [Detailed Operation](#detailed-operation)
+  * [Step 1 - Initial Checks](#step-1---initial-checks)
+  * [Step 2 - Check SnapRAID Array Current Status](#step-2---check-snapraid-array-current-status)
+  * [Step 3 - Run Touch if Required](#step-3---run-touch-if-required)
+  * [Step 4 - Check Array for Changes](#step-4---check-array-for-changes)
+  * [Step 5 - Run Sync to Update the Array](#step-5---run-sync-to-update-the-array)
+  * [Step 6 - Run Scrub to Check for Silent Corruption](#step-6---run-scrub-to-check-for-silent-corruption)
+  * [Step 7 - Send Final Notification Email](#step-7---send-final-notification-email)
 - [Sample Output](#sample-output)
   * [Sample Notification Email](#sample-notification-email)
 - [Further Examples](#further-examples)
 - [Creating your own Debian Package](#creating-your-own-debian-package)
+- [Return Codes](#return-codes)
 - [Credits](#credits)
 
 # Scope
 This script is intended to focus just on SnapRAID and simple email notifications,
-rather than adding many different features.
+rather than adding many different features. The plan going forward is that any
+additional features be accomplished via the use of additional hook scripts
 
 This is keeping in the traditional unix philosophy of do one thing and do it well.
 
@@ -513,20 +523,187 @@ SnapRAID scrub is invoked with the following options:
 * -p : To scrub the percentage in snapraid-daily.conf
 * -o : To only consider the age from snapraid-daily.conf   
 * -v : Verbose Mode
-* -l : Use SnapRAID's logging function
+* -l : Use SnapRAID's logging function 
 
-# Return Codes
+# Detailed Operation
 
-The Script Returns the following codes for the following conditions.
-This can be useful to direct systemd or a seperate master script to
-carry out further actions depending on the code. It is planned to add
-further return codes the future.
+The Steps taken are outlined below:
 
-* 0: Success    
-* 1: All Errors    
-* 2: SnapRAID already in use    
-* 3: Files Modified During Sync    
-* 5: Thresholds Exceeded    
+## Step 1 - Initial Checks
+
+The script carries out an initial check of everything
+before it will even attempt to interact with **snapraid**.
+
+Initially the config file **snapraid-daily.conf** is read,
+and its contents are checked. If anything is undefined,
+a default value is assumed. See **snapraid-daily.conf(1)**
+If the main config file for snapraid itself doesn't exist,
+the script will exit.
+
+Next checks are carried out for the script dependencies:
+awk, grep, sed, and snapraid itself. It will exit if
+any of these are not present.
+
+Next, a check on the first defined content file in the
+snapraid config (**/etc/snapraid.conf**) is checked to
+see if it exists and is writable.
+
+This is to ensure the script is being ran as the right user,
+and serves as a good sanity check to see if the content files
+exist and are writable.
+
+One could check all config files exist,  but given that there
+is usually a copy on each disk, that would mean potentially
+waking all the disks from standby which would be undesirable
+if a sync/scrub is not ran because of a subsequent issue.
+
+Likewise, it was decided not to check if the parity files
+exist to again prevent waking the disks unless a sync or a
+scrub **actually** are going to be carried out.
+
+If there is an issue with not being able to access the parity
+files or content files, the sync or scrub will fail and the
+user will be notified anyway.
+
+## Step 2 - Check SnapRAID Array Current Status
+Checks the Array for Errors or if Touch is required using
+**snapraid status**
+
+If errors are encountered at this point, the script will exit
+and send a notification email to the user. It will continue to
+do this each time the script is invoked, and stop here until the
+user intervenes to address whatever the error is.
+
+If a sync was found to be in progress (this is - the last sync
+was interrupted), and **\--scrub-only** is NOT specified, the
+script will continue as the solution to this is usually to let
+the sync complete. If **\--scrub-only** is specified, the script
+will exit here.
+
+A check is also carried out if **snapraid** is already in use,
+ie. whether a **sync** or **scrub** etc. is currently running.
+SnapRAID will not allow multiple instances of itself processing
+the same array.
+
+The script will exit in this case and the user is also notified
+explicity via email of this.
+
+## Step 3 - Run Touch if Required
+If it is determined from the initial check that 1 or more files
+do not have sub-zero timestamps, **snapraid touch** is ran to
+add the sub-zero timestamps.
+
+Touch of files added to the array by default will run the next
+time the script is executed after the files have been added.
+
+Snapraid is invoked with **-v** & **-l** switches to turn on
+verbose mode and logging, this is to aid in quick debugging if
+errors are detected during the touch.
+
+The output is monitored for errors and if any are detected,
+the script will exit, send a notification email to the user and
+attach the output of the log created with the "-l" switch.
+
+The idea here is that one can quickly know what the error is via
+the notification email alone.
+
+If it is determined that the touch operation is not required, this
+step will be skipped entirely.
+
+This step is also skipped if the **\--scrub-only** argument to the
+script is used.
+
+## Step 4 - Check Array For Changes
+Runs **snapraid diff** to check the array for changes to determine
+if a sync is required or not.
+
+If no changes are detected, the script will skip the sync entirely.
+If changes are detected, the sync will proceed. In the event that
+the **-s, --sync-only** is used, the script will exit if no changes
+are detected.
+
+However if either the threshold for deletions or moves that are
+defined in the config file **snapraid-daily.conf** are found to be
+exceeded, the script will exit and notify the user via email.
+
+The theory is that if excess deletions or moves are detected, it
+could very well be accidental, and a subsequent sync could prevent
+the recovery of that data.
+
+For subsequent runs, the script will continue to do this and stop
+at this point until the user intervenes. This step is skipped if the
+**\--scrub-only** argument is used.
+
+## Step 5 - Run Sync to Update the Array
+Runs **snapraid sync** to update the array. The start-time and finish
+time are monitored to compute the duration so it can be added to the
+email.
+
+The **-v** & **-l** switches are used to turn on verbose mode and
+logging, this is to aid in quick debugging if errors are detected
+during the sync operation.
+
+The **-h** option is also used to read data a 2nd time during the sync.
+This is to serve as an additional safeguard against silent errors
+during what is an extreme condition for the machine whereby all
+disks are spinning at the same time.
+
+The output is monitored for errors and if any are detected, the script
+will exit, send a notification email to the user and attach the output
+of the log created with the **-l** switch to the email.
+
+The idea here is that one can quickly know what the error is via the
+notification email alone.
+
+If it is determined that the sync operation is **NOT** required from
+the above Step 4 of checking for changes, this step will be skipped
+entirely.
+
+This step is also skipped if **\--scrub-only** is active.
+
+## Step 6 - Run Scrub to Check for Silent Corruption
+Runs Scrub using the **scrub_percent** & **scrub_age** input parameters
+specified in the config file snapraid-daily.conf The start-time
+and finish time are computed such that is can be added to the email.
+
+Before the scrub is carried out, **Step 3** above is repeated whereby
+the array is checked for changes since the last sync.
+
+In the default setup, where the **-c, --scrub-only** option is not
+used, this check should not find any changes since a sync was carried
+out moments ago. Howvever when one is using the **-c, --scrub-only**
+option this may not be the case.
+
+This is required as **snapraid** will exit with an error during a
+scrub if it finds files that have been modified and not synced.
+
+In this case, the script will exit and the user will be notified
+via email explicitly that a sync is required.
+
+The scrub is then called with the **-v** & **-l** switches to turn
+on verbose mode and logging, this is to aid in quick debugging if errors
+are detected during the scrub operation.
+
+The output is monitored for errors and if any are detected, the script
+will exit, send a notification email to the user and attach the logfile
+from the output of the log created with the **-l** switch to the email.
+
+Once again, this is to allow for quick debugging to know exactly what the
+error is from the notification email alone.
+
+If the scrub does encounter issues such as silent corruption, the status
+check at the start of the script will flag them, and the script will
+subsequently exit each time it is invoked until the user intervenes to
+attempt a manual fix.
+
+## Step 7 - Send Final Notification Email
+If no errors are detected during the touch, sync and scrub, or just
+touch & sync, or just scrub (depending on whether the **\--sync-only**
+or **\--scrub-only** arguments are used):
+
+The final condensed log file for the email is sent to the user. This
+will contain an concise output of all the operations carried out and what
+the result was.
 
 # Sample Output
 ```bash
@@ -756,6 +933,19 @@ dpkg-buildpackage -uc -us
 
 A new debian package should be created in the parent directory that can be installed
 with **dpkg** or with **apt** as shown above.
+
+# Return Codes
+
+The Script Returns the following codes for the following conditions.
+This can be useful to direct systemd or a seperate master script to
+carry out further actions depending on the code. It is planned to add
+further return codes the future.
+
+* 0: Success    
+* 1: All Errors    
+* 2: SnapRAID already in use    
+* 3: Files Modified During Sync    
+* 5: Thresholds Exceeded   
 
 # Credits
 
