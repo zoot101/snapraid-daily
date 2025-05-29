@@ -27,11 +27,11 @@ snapraid functions that can be scheduled accordingly and do it in a simple manne
 - [Usage](#usage)
   * [Examples](#examples)
 - [Installation and Setup](#installation-and-setup)
-- [Config File Setup](#config-file-setup)
+  * [Config File Setup](#config-file-setup)
   * [Config File Contents](#config-file-contents)
   * [Sample Config File](#sample-config-file)
-- [Setting Up Email Notifications](#setting-up-email-notifications)
-- [Automation with Systemd](#automation-with-systemd)
+  * [Setting Up Email Notifications](#setting-up-email-notifications)
+  * [Automation with Systemd](#automation-with-systemd)
   * [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd)
 - [SnapRAID Sync and Scrub Options](#snapraid-sync-and-scrub-options)
 - [Detailed Operation](#detailed-operation)
@@ -70,12 +70,13 @@ are detected.
 
 Before attempting to use this script, one should ensure that **SnapRAID** is
 normally functioning. That is one can run the following commands without
-any error being encountered. See the snapraid documentation here:
-https://www.snapraid.it
-
+any error being encountered.    
 1. **snapraid status**   
 2. **snapraid sync**   
 3. **snapraid scrub**   
+
+See the snapraid documentation here:   
+https://www.snapraid.it
 
 While the script will run out of the box with the default config, for best
 operation, a config file is required - see below.
@@ -188,7 +189,7 @@ Next ensure all dependencies are installed:
 
 Next, create the config file as discussed below.
 
-# Config File Setup
+## Config File Setup
 
 As mentioned above, the script will run out of the box without a config file
 but its functionality is somewhat limited as a result.
@@ -398,7 +399,7 @@ scrub_age=7
 
 ```
 
-# Setting up Email Notifications
+## Setting up Email Notifications
 
 A valid muttrc configuration is required to send email notifications.
 A sample that works for Gmail can be found here along with some instructions
@@ -407,7 +408,7 @@ on how to set it up.
 It should be simple to adapt to another email provider also.    
 https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc
 
-# Automation with Systemd
+## Automation with Systemd
 
 By default the below systemd files are bundled with the debian package
 installation, but are not enabled by default. 
