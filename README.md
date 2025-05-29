@@ -927,9 +927,6 @@ config for emails, or to use cron instead of systemd have a look here.
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
 
-Lastly - Thank you for your interest in this script. Hopefully it can be of
-use to other people also.
-
 # Creating your own Debian Package
 
 Given the author uses debian as their daily driver, a debian directory containing
@@ -976,3 +973,5 @@ Also a bit thank you to Andrea Mazzoleni for this excellent software:
 https://github.com/amadvance/snapraid     
 https://www.snapraid.it    
 
+Lastly - Thank you for your interest in this script. Hopefully it can be of
+use to other people also.
