@@ -20,6 +20,26 @@ hence the reason for publishing it here in Github.
 The broad goal here is to be an all-in-one script to automate the necessary
 snapraid functions that can be scheduled accordingly and do it in a simple manner.
 
+# Table of Contents
+
+- [Scope](https://github.com/zoot101/snapraid-daily/edit/main/README.md#usage)
+- [Description](#description)
+- [Usage](#usage)
+  * [Examples](#examples)
+- [Installation and Setup](#installation-and-setup)
+- [Config File Setup](#config-file-setup)
+  * [Sample Config File](#sample-config-file)
+- [Setting Up Email Notifications](#setting-up-email-notifications)
+- [Automation with Systemd](#automation-with-systemd)
+  * [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd)
+- [SnapRAID Sync and Scrub Options](#snapraid-sync-and-scrub-options)
+- [Return Codes](#return-codes)
+- [Sample Output](#sample-output)
+  * [Sample Notification Email](#sample-notification-email)
+- [Further Examples](#further-examples)
+- [Creating your own Debian Package](#creating-your-own-debian-package)
+- [Credits](#credits)
+
 # Scope
 This script is intended to focus just on SnapRAID and simple email notifications,
 rather than adding many different features.
@@ -97,7 +117,7 @@ sufficient to run once a day or however often is desired.
 This can also be tweaked by the supported arguments to the script if one wants
 to sync the array only or scrub the array only.
 
-## Examples:
+## Examples
 
 For default operation - Sync and then scrub do:
 ```bash
@@ -158,7 +178,7 @@ Next ensure all dependencies are installed:
 
 Next, create the config file as discussed below.
 
-# Config File (snapraid-daily.conf)
+# Config File Setup
 
 As mentioned above, the script will run out of the box without a config file
 but its functionality is somewhat limited as a result.
@@ -332,7 +352,7 @@ that may require it.
 Set to \"yes\" to use, leave commented out or set to \"no\" to
 disable.
 
-# Sample File Contents (snapraid-daily.conf)
+## Sample Config File
 
 Shown below is the bare minimum that is required in
 a snapraid-daily.conf config file for all functionality. Feel free to add
@@ -445,7 +465,7 @@ https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
 Note that some examples are also provided in the docs for using **cron**
 to run the script.
 
-## Running as a Non-Root User via Systemd
+## Running as a Standard User with Systemd
 
 Note that by default all of the above service files will run as root.
 This is probably fine for most users, however if one wants to run
@@ -480,7 +500,7 @@ notes are included here:
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
 
-# SnapRAID Sync/Scrub Options
+# SnapRAID Sync and Scrub Options
 
 SnapRAID sync is invoked with the following options:   
 * -c : To specify the config file for snapraid itself
