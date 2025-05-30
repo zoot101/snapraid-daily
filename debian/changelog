@@ -1,3 +1,21 @@
+snapraid-daily (1.3.7-1) stable; urgency=medium
+
+  * Major improvments to "greeting" printouts. SnapRAID version is now
+    included among other additions.
+
+  * Code cleanup which should make planned future additions easier.
+
+  * Added a config file option "sync_pre_hash", that one can use to disable
+    SnapRAID's additional preliminary hashing step during sync.
+
+  * Removed additional warning from end when emails are disabled since it's
+    displayed at the start anyway in this case.
+
+  * Attached scrub command logfile to emails where scrub is called on
+    an unsynced array. 
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Fri, 30 May 2025 15:34:01 +0100
+
 snapraid-daily (1.3.6-1) stable; urgency=medium
 
   * Changed touch error check to look for multiple fatal messages instead

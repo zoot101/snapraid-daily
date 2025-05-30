@@ -253,6 +253,7 @@ The main parameters included in the file are:
 * **email_address**    
 * **deletion_threshold**    
 * **moved_threshold**    
+* **sync_pre_hash**     
 * **scrub_percent**    
 * **scrub_age**    
 
@@ -300,6 +301,14 @@ number. The default is **100**
 
 As above, but for files moved. Must be a positive number.
 The default is **100**
+
+### sync\_pre\_hash
+
+Allows disabling of the use of the "-h" or "--pre-hash" option for snapraid
+during sync operations. This will speed up sync operations but forfeit the
+added safeguard that the extra preliminary hash operation provided. Set to
+**no** to disable. On by default if omitted. It is recommended to leave it
+on.
 
 ### scrub\_percent
 
@@ -385,6 +394,7 @@ email_address="server@example.com"
 # Deletion and Moved Thresholds
 deletion_threshold=200 
 moved_threshold=200
+sync_pre_hash="yes"
 
 # Scrub Age and Percent
 scrub_percent=10  
