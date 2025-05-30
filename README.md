@@ -757,7 +757,6 @@ Run-Log is Below:
 # SnapRAID-DAILY: Initial Status Check
 ##############################
 14:45:29 : Checking current status...
-WARNING! For 5 disks, it's recommended to use two parity levels.
 14:45:48 : No Issues Found in Initial Check
 14:45:48 : Touch Not Needed...
 
@@ -765,8 +764,6 @@ WARNING! For 5 disks, it's recommended to use two parity levels.
 # SnapRAID-DAILY: Difference Check
 ##############################
 14:45:48 : Checking array for changes...
-WARNING! For 5 disks, it's recommended to use two parity levels.
-
   951819 equal
        0 added
        0 removed
@@ -781,8 +778,6 @@ No differences
 # SnapRAID-DAILY: Scrub
 ##############################
 14:46:25 : Checking if Array is still up to date...
-WARNING! For 5 disks, it's recommended to use two parity levels.
-
   951819 equal
        0 added
        0 removed
@@ -794,7 +789,6 @@ No differences
 14:46:58 : Array is Up-to-Date - Proceeding
 14:46:58 : Starting Scrub on 30/05/2025
 14:46:58 : Scrubbing 5% older than 0 days...
-WARNING! For 5 disks, it's recommended to use two parity levels.
 Everything OK
 15:10:21 : Scrub Completed at 30/05/2025
 15:10:21 : Duration: 0 hours, 23 minutes, 23 seconds
@@ -808,7 +802,6 @@ Sending Final Notification Email...
 ##############################
 15:10:21 : Current status of the Array is as below:
 
-WARNING! For 5 disks, it's recommended to use two parity levels.
 SnapRAID status report:
 
    Files Fragmented Excess  Wasted  Used    Free  Use Name
