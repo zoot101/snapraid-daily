@@ -407,8 +407,9 @@ scrub_age=7
 #force_zero="no"
 #force_empty="no"
 #force_uuid="no"
-
 ```
+See a more detailed example with explanatory comments here:    
+https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
 
 ## Setting up Email Notifications
 
@@ -429,7 +430,9 @@ email-body.txt) and use mutt like so to send a test email to the desired email.
 (In this case example@mail.com)
 ```bash
 mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-body.txt"
-``` 
+```
+If the above command is successful at sending the email, then mutt is ready
+to use with the script accordingly.
 
 ## Automation with Systemd
 
@@ -454,6 +457,7 @@ If installing manually copy the above files to the
 that this is not required if installing via the debian package.
 
 ```bash
+# From the earlier directory created by "git clone" do:
 sudo cp ./systemd-files/snapraid-*.service /etc/systemd/system/
 sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
 
@@ -815,115 +819,88 @@ Email Sent Successfully...
 # Sample Notification Email
 ```bash
 ##############################
-# SnapRAID-DAILY Version: 1.2.6
+# SnapRAID-DAILY Version: 1.3.7
 ##############################
-Initialized at 06:00:00 on 25/05/2025
+Initialized at 14:19:03 on 30/05/2025
+ * SnapRAID Version: 12.4
 Input Options:
-Run-Sync: YES
-Run-Scrub: YES
-Scrub-Percent: 15
-Scrub-Age: 2 days
-Override Deletion/Moved Thresholds: NO
-Deletion Threshold: 1000
-Moved Threshold: 1000
+ * Run-Sync: YES
+ * Sync Pre-Hash: YES
+ * Run-Scrub: YES
+ * Scrub-Percent: 5
+ * Scrub-Age: 0 days and older
+ * Override Thresholds: NO
+ * Deletion Threshold: 5000
+ * Moved Threshold: 5000
 Run-Log is Below:
 
 ##############################
 # SnapRAID-DAILY: Initial Status Check
 ##############################
-06:00:00 : Checking current status...
-06:00:16 : No Issues Found in Inital Check
-06:00:16 : Touch Required on 66 files...
-
-##############################
-# SnapRAID-DAILY: Touch
-##############################
-06:00:16 : Starting Touch...
-06:01:02 : Touch Completed
+14:19:03 : Checking current status...
+14:19:22 : No Issues Found in Initial Check
+14:19:22 : Touch Not Needed...
 
 ##############################
 # SnapRAID-DAILY: Difference Check
 ##############################
-06:01:02 : Checking array for changes...
-06:01:48 : Changes Detected
-Added: 335
-Removed: 9
-Updated: 18
-Moved: 0
-Copied: 0
-Restored: 0
-
-##############################
-# SnapRAID-DAILY: Sync
-##############################
-06:01:48 : Starting Sync on 25/05/2025...
-06:03:38 : Sync Completed on 25/05/2025
-06:03:38 : Duration: 0 hours, 1 minutes, 50 seconds
-06:03:38 : Sync was Successful
-06:03:38 : Array Changes Found & Updated:
-Added: 335
-Removed: 9
-Updated: 18
-Moved: 0
-Copied: 0
-Restored: 0
+14:19:22 : Checking array for changes...
+14:19:57 : No Changes - Nothing to Sync
 
 ##############################
 # SnapRAID-DAILY: Scrub
 ##############################
-06:03:38 : Checking if Array is still up to date...
-06:04:21 : Array is Up-to-Date - Proceeding
-06:04:21 : Starting Scrub on 25/05/2025
-06:04:21 : Scrubbing 15% older than 2 days...
-07:19:21 : Scrub Completed at 25/05/2025
-07:19:21 : Duration: 1 hours, 15 minutes, 0 seconds
-07:19:21 : Scrub was successful
-07:19:21 : Scrubbed 15% older than 2 days
+14:19:57 : Checking if Array is still up to date...
+14:20:27 : Array is Up-to-Date - Proceeding
+14:20:27 : Starting Scrub on 30/05/2025
+14:20:27 : Scrubbing 5% older than 0 days...
+14:43:03 : Scrub Completed at 30/05/2025
+14:43:03 : Duration: 0 hours, 22 minutes, 36 seconds
+14:43:03 : Scrub was successful
+14:43:03 : Scrubbed 5% older than 0 days
 
 ##############################
 # SnapRAID-DAILY: Array Status
 ##############################
-07:19:21 : Current status of the Array is as below:
+14:43:03 : Current status of the Array is as below:
 
-Self test...
-Loading state from /opt/snapraid/ballyryan-nas.content...
-Using 1340 MiB of memory for the file-system.
 SnapRAID status report:
 
    Files Fragmented Excess  Wasted  Used    Free  Use Name
             Files  Fragments  GB      GB      GB
-  220631     180     653       -    1628     338  83% media1
-  333341     530    1987       -    1936    1013  66% media2
-  581601     275     888       -    1537     427  79% media3
-  408485    1844    6475    -3.3    2933    1000  74% media4
+  435317       4      19       -    2519     431  85% disk1
+  135689       9      16       -     528     454  54% disk2
+  134452      11      17       -     560     421  57% disk3
+  144523      10      27       -     632     350  65% disk4
+  101798     702    3149   -48.8    1797    2138  45% disk5
  --------------------------------------------------------------------------
- 1544058    2829   10003     0.0    8036    2780  74%
+  951779     736    3228     0.0    6037    3797  61%
 
 
- 15%|  *          o             o             o             o             o
-    |  *          *             *             *             *             *
-    |  *          *             *             *             *             *
-    |  *          *             *             *             *             *
-    |  *          *             *             *             *             *
-    |  *          *             *             *             *             *
-    |  *          *             *             *             *             *
-  7%|* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-    |* *          *             *             *             *             *
-  0%|*_*__________*_____________*_____________*_____________*_____________*
-     5                    days ago of the last scrub/sync                 0
+ 16%|                                                                     o
+    |                                                                     *
+    |                                                                     *
+    |                                                                     *
+    |                                                                     *
+    |                                                                     *
+    |                                                                     *
+  8%|                                                                     *
+    |o                                                                    *
+    |*    o     o     o           o               o             o         *
+    |*    *     *     *           *     o     o   *oo    *o     *     o   *
+    |*    *     *     *     o     *     *     *   ***    **     *     *   *
+    |*    *     *     *     *     *     *     *   ***    **     *     *   *
+    |*    *     *     *     *     *     *     *   ***    **     *     *   *
+  0%|*____*_____*_____*_____*_____*_____*_____*___***____**_____*_____*___*
+    11                    days ago of the last scrub/sync                 0
 
-The oldest block was scrubbed 5 days ago, the median 3, the newest 0.
+The oldest block was scrubbed 11 days ago, the median 4, the newest 0.
 
 No sync is in progress.
-2% of the array is not scrubbed.
+6% of the array is not scrubbed.
 No file has a zero sub-second timestamp.
 No rehash is in progress or needed.
-No error detected
+No error detected.
 ```
 
 # Further Examples
