@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.7
+version=1.3.8
 
 ###################################################
 # RETURN CODES
@@ -69,6 +69,16 @@ error() {
   exit $error_code
 }
 
+# Function to check if a Variable is a number >= 0
+is_number() {
+  local number_regex='^[0-9]+$'
+  if ! [[ "$1" =~ $number_regex ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
 ###################################################
 # LOGGING FUNCTIONS
 ###################################################
@@ -92,11 +102,6 @@ generate_logfiles() {
 
   # Generate Logfiles
   status_logfile=$( mktemp -t "${tmp_file_prefix}" )
-  touch_logfile=$( mktemp -t "${tmp_file_prefix}" )
-  diff_logfile=$( mktemp -t "${tmp_file_prefix}" )
-  sync_logfile=$( mktemp -t "${tmp_file_prefix}" )
-  scrub_logfile=$( mktemp -t "${tmp_file_prefix}" )
-  scrub_diff_logfile=$( mktemp -t "${tmp_file_prefix}" )
   main_logfile=$( mktemp -t "${tmp_file_prefix}" )
 
   # Command Output Logfiles
@@ -113,20 +118,20 @@ generate_logfiles() {
 snapraid_status_cmd() {
   # Call Snapraid Status using the "-l" option
   if [ $quiet_option == 1 ]; then
-    snapraid -c "$snapraid_config_file_path" -l "${status_command_logfile}" -qq status | tee $status_logfile &> /dev/null
+    snapraid -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile &> /dev/null
   else
-    snapraid -c "$snapraid_config_file_path" -l "${status_command_logfile}" -qq status | tee $status_logfile
+    snapraid -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile
   fi
 }
 
 snapraid_status_to_email() {
   # Call Snapraid status and pipe the output into the email
-  snapraid -c "$snapraid_config_file_path" -qq status | tee -a $main_logfile
+  snapraid -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
 }
 
 snapraid_touch_cmd() {
   # Specify SnapRAID Touch arguments
-  snapraid_touch_args=( -c "$snapraid_config_file_path" -v -l $touch_command_logfile )
+  snapraid_touch_args=( -c "${snapraid_config_file_path}" -v -l $touch_command_logfile )
 
   # Call snapraid touch to update timestamps. Suppress all output if --quiet option is set
   if [ $quiet_option == 1 ]; then
@@ -134,12 +139,12 @@ snapraid_touch_cmd() {
   fi
 
   # Call SnapRAID Touch
-  snapraid "${snapraid_touch_args[@]}" touch | tee $touch_logfile
+  snapraid "${snapraid_touch_args[@]}" touch
 }
 
 snapraid_diff_cmd() {
   # Define snapraid diff arguments
-  snapraid_diff_args=( -c "$snapraid_config_file_path" -v -l $diff_command_logfile ) 
+  snapraid_diff_args=( -c "${snapraid_config_file_path}" -v -l $diff_command_logfile ) 
 
   # Call snapraid diff - Suppress all output if the -q, --quiet option is set
   if [ $quiet_option == 1 ]; then
@@ -147,7 +152,7 @@ snapraid_diff_cmd() {
   fi
 
   # Call SnapRAID diff
-  snapraid "${snapraid_diff_args[@]}" diff | tee $diff_logfile
+  snapraid "${snapraid_diff_args[@]}" diff
 
   # Get the numbers and exit status from analyzing the command logfile
   number_equal=$( grep -w "^summary:equal" $diff_command_logfile | awk -F ":" '{print $3}')
@@ -184,7 +189,7 @@ snapraid_diff_cmd() {
 
 snapraid_sync_cmd() {
   # Define snapraid sync arguments - Disable pre-hash if specified in config file
-  snapraid_sync_args=( -c "$snapraid_config_file_path" -v -l $sync_command_logfile)
+  snapraid_sync_args=( -c "${snapraid_config_file_path}" -v -l $sync_command_logfile)
 
   # Add Pre-Hash Step (On by default)
   if [ "${sync_pre_hash}" == "yes" ]; then
@@ -211,12 +216,12 @@ snapraid_sync_cmd() {
   fi
 
   # Call SnapRAID Sync
-  snapraid "${snapraid_sync_args[@]}" sync | tee $sync_logfile
+  snapraid "${snapraid_sync_args[@]}" sync
 }
 
 snapraid_scrub_cmd() {
   # Define snapraid scrub arguments
-  snapraid_scrub_args=( -c "$snapraid_config_file_path" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile ) 
+  snapraid_scrub_args=( -c "${snapraid_config_file_path}" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile ) 
  
   # Call Scrub Command with parameters from config file. Suppress all output --quiet option is selected.
   if [ $quiet_option == 1 ]; then
@@ -224,7 +229,7 @@ snapraid_scrub_cmd() {
   fi
 
   # Call SnapRAID Scrub
-  snapraid "${snapraid_scrub_args[@]}" scrub | tee -a $scrub_logfile
+  snapraid "${snapraid_scrub_args[@]}" scrub
 }
 
 ##################################################
@@ -271,7 +276,7 @@ read_config_file() {
   fi
 
   # Check Snapraid Config File Path
-  if [ -z "$snapraid_config_file_path" ]; then
+  if [ -z "${snapraid_config_file_path}" ]; then
     if [ ! -r "/etc/snapraid.conf" ]
     then
       error "snapraid_config_file_path missing in config and default of /etc/snapraid.conf not found - Exiting"
@@ -279,12 +284,12 @@ read_config_file() {
       echo "WARNING: snapraid_config_file_path not defined in config - Using /etc/snapraid.conf"
       snapraid_config_file_path="/etc/snapraid.conf"
     fi
-  elif [ ! -r "$snapraid_config_file_path" ]; then
-    error "snapraid_config_file_path:" "$snapraid_config_file_path" "does not exist or is not readable - Exiting"
+  elif [ ! -r "${snapraid_config_file_path}" ]; then
+    error "snapraid_config_file_path:" "${snapraid_config_file_path}" "does not exist or is not readable - Exiting"
   fi
 
   # Find the 1st Snapraid Content File Location, and check if it can be accessed
-  content_file=$(cat "$snapraid_config_file_path" | grep -w "^content" | sed -n 1p | sed 's/^[^\/]*\//\//' ) 
+  content_file=$(cat "${snapraid_config_file_path}" | grep -w "^content" | sed -n 1p | sed 's/^[^\/]*\//\//' ) 
   if [ ! -w "${content_file}" ]; then
     error "1st defined SnapRAID Content File in" "${snapraid_config_file_path}" "does not exist or is not writable"
   fi
@@ -303,99 +308,84 @@ read_config_file() {
   fi
 
   # Check for the Deletion Threshold
-  if [ -z $deletion_threshold ]
-  then
+  if [ -z "$deletion_threshold" ]; then
     echo "WARNING: deletion_threshold not defined in snapraid-daily.conf - Using 100 by default"
     deletion_threshold=100
-  elif [ $deletion_threshold -lt 1 ]
-  then
-    error "deletion_threshold can't be set to less than 1 - To disable deletion/moved thresholds use the -o argument."
+  elif ! is_number "$deletion_threshold"; then
+    error "deletion_threshold value" "${deletion_threshold}" "is invalid. It should be a number >=0"
   fi
 
   # Check Moved Threshold
-  if [ -z $moved_threshold ]
-  then
+  if [ -z "$moved_threshold" ]; then
     echo "WARNING: moved_threshold not defined in snapraid-daily.conf - Using 100 by default"
     moved_threshold=100
-  elif [ $moved_threshold -lt 1 ]
-  then
-    error "moved_threshold can't be set to less than one - To disable deletion/moved thresholds use the -o argument."
+  elif ! is_number "$moved_threshold"; then
+    error "moved_threshold value" "${moved_threshold}" "is invalid. It should be a number >=0"
   fi
 
   # Check for a Scrub Percent. default to 8%, sanity check its between 0 and 100
-  if [ -z $scrub_percent ]
-  then
+  if [ -z "$scrub_percent" ]; then
     echo "WARNING: scrub_percent is not defined snapraid-daily.conf - Using 8%"
     scrub_percent=8
-  elif [ $scrub_percent -gt 100 ] || [ $scrub_percent -le 0 ]
-  then
+  elif ! is_number "$scrub_percent"; then
+    error "scrub-percent value:" "$scrub_percent" "is invalid - It should be a number >=0"
+  elif [ $scrub_percent -gt 100 ] || [ $scrub_percent -le 0 ]; then
     error "scrub_percent should be a number greater than 0 & less than 100 - Exiting"
   fi
 
   # Check for a Scrub Age, default to 21 days, sanity check its not negative
-  if [ -z $scrub_age ]
-  then
+  if [ -z "$scrub_age" ]; then
     echo "WARNING: scrub_age is not defined in snapraid-daily.conf - Using 21 days"
     scrub_age=21
-  elif [ $scrub_age -lt 0 ]
-  then
+  elif ! is_number "$scrub_age"; then
+    error "scrub_age value:" "$scrub_age" "is invalid - It should be a number >=0"
+  elif [ $scrub_age -lt 0 ]; then
     error "scrub_age cannot be a negative number - Exiting"
   fi
 
   # Check for disable_emails_on_success, default to no. Sanity check it's "yes" or "no"
-  if [ -z "${disable_emails_on_success}" ]
-  then
+  if [ -z "${disable_emails_on_success}" ]; then
     disable_emails_on_success="no"
   else
-    if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]
-    then
+    if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]; then
       error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
-    elif [ "${disable_emails_on_success}" == "yes" ]
-    then
+    elif [ "${disable_emails_on_success}" == "yes" ]; then
       echo "INFO: Notification Emails disabled on Success"
     fi
   fi
 
   # Check for sync_pre_hash, default to no. Sanity check it's "yes" or "no"
-  if [ -z "${sync_pre_hash}" ]
-  then
+  if [ -z "${sync_pre_hash}" ]; then
     sync_pre_hash="yes"
   else
-    if [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]
-    then
+    if [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]; then
       error "Specified invalid sync_pre_hash in config file - It should be either \"yes\" or \"no\""
     fi
   fi
 
   # Check for force_zero. Default to no if undefined - exit if invalid
-  if [ -z "${force_zero}" ]
-  then
+  if [ -z "${force_zero}" ]; then
     force_zero="no"
   else
-    if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]
-    then
+    if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]; then
       error "Specified invalid force_zero in config - It should be either \"yes\" or \"no\""
     fi
   fi
 
   # Check for force_empty. Default to no if undefined - exit if invalid
-  if [ -z "${force_empty}" ]
-  then
+  if [ -z "${force_empty}" ]; then
     force_empty="no"
   else
-    if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]
-    then
+    if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]; then
       error "Specified invalid force_empty in config file - It should be either \"yes\" or \"no\""
     fi
   fi
 
   # Check for force_uuid. Default to no if undefined - exit if invalid
-  if [ -z "${force_uuid}" ]
-  then
+  if [ -z "${force_uuid}" ]; then
     force_uuid="no"
   else
-    if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]
-    then
+    if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]; then
       error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
     fi
   fi
@@ -586,9 +576,17 @@ print_greeting() {
     log_to_email " * Override Thresholds: NO"
   fi
 
-  # Print Thresholds Regardless
-  log_to_email " * Deletion Threshold:" $deletion_threshold
-  log_to_email " * Moved Threshold:" $moved_threshold
+  # Print Thresholds
+  if [ $deletion_threshold == 0 ]; then
+    log_to_email " * Deletion Threshold: Disabled"
+  else
+    log_to_email " * Deletion Threshold:" $deletion_threshold
+  fi
+  if [ $moved_threshold == 0 ]; then
+    log_to_email " * Moved Threshold: Disabled"
+  else
+    log_to_email " * Moved Threshold:" $moved_threshold
+  fi
   log_to_email "Run-Log is Below:"
   log_to_email ""
 }
@@ -759,11 +757,12 @@ check_array_for_changes_and_thresholds() {
       log_to_email_time "Overriding Deletion/Moved Thresholds"
       log_to_email_time "Proceeding to sync regardless..."
 
-    # Check For Deletion Threshold AND Moved Threshold both being exceeded
-    elif [ $number_removed -gt $deletion_threshold ] && [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
-    then
+    # Check For Either Threshold being greater than zero AND exceeded...
+    elif [[ ($number_removed -gt $deletion_threshold && $deletion_threshold -gt 0)  || \
+            ($number_moved -gt $moved_threshold && $moved_threshold -gt 0) ]]
+    then 
       log_to_email ""
-      log_to_email_time "Deletion AND Moved Threshold Exceeded"
+      log_to_email_time "One or more Thresholds Exceeded"
       log_to_email " * Deleted: "$number_removed
       log_to_email " * Moved: "$number_moved
       log_to_email " * Deletion Threshold:" $deletion_threshold
@@ -772,39 +771,11 @@ check_array_for_changes_and_thresholds() {
       log_to_email_time "Stopping..."
 
       # Send Notification Email and Exit
-      notify_of_warning "SnapRAID-DAILY: BOTH Thresholds Exceeded"
+      notify_of_warning "SnapRAID-DAILY: Threshold(s) Exceeded"
       clean_up_logfiles
       exit $thresholds_exceeded_code
-
-    # Check for Deletion Threshold
-    elif [ $number_removed -gt $deletion_threshold ] && [ $override_thresholds -eq 0 ]
-    then
-      log_to_email ""
-      log_to_email_time "Deletion Threshold Exceeded"
-      log_to_email " * Deleted:" $number_removed
-      log_to_email " * Deletion Threshold:" $deletion_threshold
-      log_to_email "Maybe a Sync is not a good idea?..."
-      log_to_email_time "Stopping..."
-
-      # Send Notification Email and Exit
-      notify_of_warning "SnapRAID-DAILY: Deletion Threshold Exceeded"
-      clean_up_logfiles
-      exit $thresholds_exceeded_code
-
-    # Check for Moved Threshold
-    elif [ $number_moved -gt $moved_threshold ] && [ $override_thresholds -eq 0 ]
-    then
-      log_to_email ""
-      log_to_email_time "Moved Threshold Exceeded"
-      log_to_email " * Moved:" $number_moved
-      log_to_email " * Moved Threshold:" $moved_threshold
-      log_to_email "Maybe a Sync is not a good idea?..."
-      log_to_email_time "Stopping..."
-
-      # Send Notification Email and Exit
-      notify_of_warning "SnapRAID-DAILY: Moved Threshold Exceeded"
-      clean_up_logfiles
-      exit $thresholds_exceeded_code
+    else
+      log_to_email_time "Proceeding to sync..."
     fi
     log_to_email ""
 
@@ -1116,9 +1087,9 @@ send_email() {
   # Only attempt to send emails if a muttrc file path and email address are defined
   if [ -z "${email_attachment}" ]
   then
-    mutt -F $muttrc_path -s "${email_subject}" $email_address < $main_logfile
+    mutt -F "${muttrc_path}" -s "${email_subject}" $email_address < $main_logfile
   else
-    mutt -F $muttrc_path -s "${email_subject}" -a "${email_attachment}" -- $email_address < $main_logfile
+    mutt -F "${muttrc_path}" -s "${email_subject}" -a "${email_attachment}" -- $email_address < $main_logfile
   fi  
 
   # Check if the email is sent successfully for the systemd logs
@@ -1135,11 +1106,6 @@ send_email() {
 clean_up_logfiles() {
   # Delete all Logfiles Generated by the Script
   rm $status_logfile &> /dev/null
-  rm $touch_logfile &> /dev/null
-  rm $diff_logfile &> /dev/null
-  rm $sync_logfile &> /dev/null
-  rm $scrub_logfile &> /dev/null
-  rm $scrub_diff_logfile &> /dev/null
   rm $main_logfile &> /dev/null
   rm $status_command_logfile &> /dev/null
   rm $scrub_command_logfile &> /dev/null
