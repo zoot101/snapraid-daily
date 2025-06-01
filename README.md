@@ -1,5 +1,5 @@
 # snapraid-daily
-Bash Script for the automation of all essential SnapRAID functions with
+A simple Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
 
 # Introduction 
@@ -10,8 +10,7 @@ That is where this script comes in, it is intended to be an all-in-one
 script for the automation of snapraid.
 
 There are other scripts out there that essentially do the same thing. However, none
-of them had exactly had the features the author wanted such as not having to be
-ran as root.
+of them had exactly had the features the author wanted.
 
 This led to this script being created by the author. It has worked extremely well
 for the author for many years up to this date, and hopefully prove useful to others,
@@ -65,7 +64,7 @@ If errors are detected, the user is notified by email and the script will
 exit. **Mutt** is used for sending the emails.
 
 Note that no attempts are made here to automate the correction of
-errors automatically, the user will have to intervene in each case if they
+errors, the user will have to intervene in each case if they
 are detected.
 
 Before attempting to use this script, one should ensure that **SnapRAID** is
@@ -188,6 +187,11 @@ Next ensure all dependencies are installed:
 * mutt
 * SnapRAID (This is left up to the user and not considered here)
 
+If on Debian, one can do:
+```bash
+sudo apt install coreutils gawk mutt snapraid
+```
+
 Next, create the config file as discussed below.
 
 ## Config File Setup
@@ -231,7 +235,7 @@ sudo cp ./config/snapraid-daily.conf /etc/
 
 As mentioned before, overriding the default config file can be accomplished by
 using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
-to the script.
+to the script. In this case the name of the config file does not have to be **snapraid-daily.conf**.
 
 The debian package installation will also place a sample file in the docs
 location below.    
@@ -394,6 +398,8 @@ email_address="server@example.com"
 # Deletion and Moved Thresholds
 deletion_threshold=200 
 moved_threshold=200
+
+# Sync Pre Hash Function (on by default)
 sync_pre_hash="yes"
 
 # Scrub Age and Percent
@@ -403,7 +409,7 @@ scrub_age=7
 # Extra Options
 #disable_emails_on_success="no"
 
-# Not Recommended Options
+# Not Recommended Options (Off by default)
 #force_zero="no"
 #force_empty="no"
 #force_uuid="no"
@@ -433,6 +439,9 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 ```
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
+
+See more here:
+https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ## Automation with Systemd
 
@@ -501,7 +510,8 @@ automatic restarts or systemd hardening (see below).
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
 
 Note that some examples are also provided in the docs for using **cron**
-to run the script.
+to run the script.   
+https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/CRON_README.md
 
 ## Running as a Standard User with Systemd
 
