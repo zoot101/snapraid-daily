@@ -295,12 +295,12 @@ default is none, thus disabling email notifications.
 If the number of files deleted since the last sync is
 found to be greater than this number, then the script
 will exit and notify the user via email. Must be a postive
-number. The default is **100**
+number. The default is **100**. To disable permanently and sync every time regardless of the number deleted, set to 0.
 
 ### moved\_threshold
 
 As above, but for files moved. Must be a positive number.
-The default is **100**
+The default is **100**. As before, to disable permanently and sync every time regardless of the number moved, set to 0.
 
 ### sync\_pre\_hash
 
