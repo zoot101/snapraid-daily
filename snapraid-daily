@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.8
+version=1.3.9
 
 ###################################################
 # RETURN CODES
@@ -239,9 +239,8 @@ snapraid_scrub_cmd() {
 # Read Config File parameters in. If it is not present, exit
 read_config_file() {
 
-  # Find script source directory. NOTE: this fails if the script is called
-  # using a symbolic link - will fix
-  source_directory=$(dirname "$BASH_SOURCE")
+  # Find script source directory using readlink -f to traverse all symbolic links
+  source_directory="$( dirname "$( readlink -f "${0}" )")"
 
   # Configuration Files are read in the following order of preference
   # Exit if none of the below are found
