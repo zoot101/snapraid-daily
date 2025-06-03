@@ -216,9 +216,10 @@ are present in this file.
 1. MuttRC File Path for Notification Emails    
 2. Email Address for Notification Emails    
 3. Deletion Threshold    
-4. Move Threshold    
-5. Scrub Percentage     
-6. Scrub Age     
+4. Move Threshold
+5. Sync Pre Hash   
+6. Scrub Percentage     
+7. Scrub Age     
 
 See the sample here:
 https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
@@ -284,10 +285,14 @@ This is the path for the muttrc file that is used for sending
 email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
-See the example here to set up the email notifications. A sample config
-is provided for gmail along with instructions to set it up. It should be
-simple to adapt for other email providers also:    
-https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples/muttrc
+See the notes provided in the docs directory here to set up the email
+notifications. Two sample configs are provided along with instructions on
+how to set them up.
+
+* Gmail via App Passwords
+* Outlook via Oauth2 
+  
+https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ### email\_address
 
@@ -440,7 +445,14 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
 
-See more here:
+As mentioned above - Two sample configs are provided along with instructions on
+how to set them up.
+
+* Gmail via App Passwords
+* Outlook via Oauth2 
+
+The 1st option via Gmail is much more simple, so it is the authors recommendation
+to try that out 1st.    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ## Automation with Systemd
