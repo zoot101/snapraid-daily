@@ -40,7 +40,6 @@ echo ""
 echo "If the diff operation above shows no changes, you are the"
 echo "proud owner of a corrupted file"
 echo ""
-echo "A Scrub operation should now find it. If not make sure"
-echo "a sync is ran right before."
+echo "A Scrub operation should now find it."
 echo ""
 
