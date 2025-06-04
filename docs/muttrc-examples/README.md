@@ -7,14 +7,25 @@ The author has used **mutt** for many years with success
 to send emails. The script requires a muttrc file which will
 contain all the settings to allow mutt to send emails.
 
-Two configurations are shown below. One for Gmail which works through
+Three configurations are shown below. The first one is for Gmail which works through
 the use of "App Passwords" which are simple to configure. This is the
-preferred option.
+preferred option for its simplicity.
 
-A 2nd configuration is shown for outlook.com. However, this is more
-complicated as it requires calling a hook script to handle the oauth2
-protocol required. The author has not been able to get app passwords
-working with outlook.
+Added configurations are shown for outlook.com and also gmail. However, these are more
+complicated as they require calling a hook script to handle the oauth2
+protocol required.
+
+Although long term they will probably prove to be
+more reliable as some email providers can often disable features like
+app passwords. They work by effectively getting mutt to masquerade as
+Mozilla Thunderbird (which is widely supported).
+
+The author has not been able to get app passwords working with outlook, it may
+be down to the reason that they only seem to list a certain few clients
+like old generation Xbox consoles that are intended for use with app passwords
+on their website. 
+
+To data, only gmail has proved reliable for the author with app passwords.
 
 The author would like to add more sample configurations here in the future,
 but alternative methods of notifications will be explored via hook
@@ -32,7 +43,8 @@ can be specified directly in the **muttrc** file.
 
 This muttrc works well for the author - change the password and
 email from **server@gmail.com** to the email you want to use and
-app password generated via the gmail account page.
+app password generated via the gmail account page. Change the "server.home.lan"
+to whatever you want the email to be "from".
  
 ```bash
 set realname = "server.home.lan"
@@ -134,8 +146,13 @@ Next in the registrations section under "microsoft", change the
 'client_id': '9e5f94bc-e8a4-4e73-b8be-63364c29d753',
 ```
 
-The above list of character is important. It is the client ID for Thunderbird, I'm not
+The above list of characteris is important. It is the client ID for Thunderbird, I'm not
 sure if there is one for mutt. That is all that is needed to be changed.
+
+This, in effect causes mutt to masquerade as Thunderbird. Thunderbird's client ID and secrets
+are publicly available here:
+
+https://hg-edge.mozilla.org/comm-central/file/tip/mailnews/base/src/OAuth2Providers.sys.mjs
 
 ## Step 3 - Generate the Token
 
@@ -145,14 +162,19 @@ Call the now edited hook script like so to generate the token file:
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
 
-Type microsoft and devicecode. I have not been able to get the "authcode" or "localhostauthcode" working.
+Type microsoft and devicecode. I have not been able to get the "authcode" or "localhostauthcode" methods working.
 
 Follow the instructions to visit the URL displayed in a browser and enter the code. Then login, the
-process should complete automatically and generate a token file correctly.
+process is pretty straight-forward and should complete automatically and generate a token file correctly.
+
+This should also all work over an SSH connection.
 
 ## Step 4 - Generate a muttrc file
 
-Then create a muttrc file. This config works for the author:   
+Then create a muttrc file. This config works for the author, change the
+email to the desired email and the paths if they are different. The "realname"
+will show up as who the emails sent are "from", it doesn't have to be one's
+actual real name.
 
 ```bash
 # The realname can be edited
@@ -206,8 +228,151 @@ rm ./.tokens/example.outlook.com.token
 
 If the above works, the muttrc file is ready for use with the main script.
 
+# Sample Configuration 3 - Gmail via oauth2
+
+This procedure is very similiar to that of the outlook one covered above. Repeat all of
+the steps until it comes to editing the python script (mutt\_oauth2.py), then
+follow the below:
+
+## Step 1 - Download the Hook script and configure it
+
+As before the steps are:
+
+```bash
+wget https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py
+chmod +x mutt_oauth2.py
+```
+
+The setup with the gpg key is as above for the outlook example.
+
+The main change comes with the client\_id and client\_secret values that
+need to be edited into the hook script. 
+
+Once again the easiest way is to masquerade as Thunderbird using the client\_id
+and secret from here:
+
+https://hg-edge.mozilla.org/comm-central/file/tip/mailnews/base/src/OAuth2Providers.sys.mjs
+
+Edit the hook script in the google section under registrations
+so that the clientID and clientSecret look like this:
+
+```bash
+clientId: "406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com",
+clientSecret: "kSmqreRr0qwBWJgbf5Y-PjSU",
+```
+
+## Step 2 - Generate the Token
+
+As before with the outlook example, call the hook script like so:
+
+```bash
+./mutt_oauth2.py ./.tokens/example.gmail.token --verbose --authorize
+```
+
+Type google, localhostauthcode, and the desired email. The author has not been successful
+in getting the other two auth options to work with gmail.
+
+The hook script will show a complicated url to paste into the browser, do that
+and you should be prompted to allow Thunderbird access to your account.
+
+If all goes well, the token should be generated by the hook script without problems.
+
+## Step 3 - Getting the token on a remote machine (If required)
+
+If there's no GUI or browser on the server (there isn't on mine), this creates a bit of a problem
+as the localhostauthcode method requires the browser used to be on the same machine
+as is calling the hook script.
+
+There is thankfully a simple way around this if one is using a different machine to
+interface with the server - An SSH Tunnel.
+
+To get this to work, follow the steps above until one is prompted to enter a complicated
+url into the browser, and have a close look at the url.
+
+Here's an example:
+
+```bash
+https://accounts.google.com/o/oauth2/auth?client_id=406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com&scope=https%3A%2F%2Fmail.google.com%2F&login_hint=example%40gmail.com&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A35505%2F&code_challenge=XXXXXXXXXXXXXXXXXXXXXXXXX&code_challenge_method=S256
+```
+
+Note this part of the above URL, this is what directs the browser to the hook script to
+generate the token.
+
+```bash
+redirect_uri=http%3A%2F%2Flocalhost%3A35505%2F
+```
+
+The number after localhost is the port number to use, in this case **35505**.
+
+So on the machine one is using to interface with a server, open an SSH tunnel like so:
+```bash
+ssh -i /path/to/ssh/key -L 127.0.0.1:35505:127.0.0.1:35505 user@server-hostname
+```
+
+This will create an SSH tunnel from the machine with the browser to the server, on the same
+port as was in the URL so the the redirect uri part of the above URL will work. Once that
+tunnel is opened, one can proceed to paste the complicated URL into the browser, logon, approve
+and the token file should be created by the hook script via the SSH tunnel.
+
+One could also edit the localhost part of the URL to the IP of the server, but that would
+require opening ports etc.
+
+## Step 4 - Create a muttrc configuration
+
+Here is a sample configuration, edit the email accordingly and paths to the
+edited hook script and token files.
+
+See the example **muttrc_gmail_oauth2** in this directory.
+
+```bash
+set realname = "server.home.lan"
+set from = "server@gmail.com"
+set use_from = yes
+set envelope_from = yes
+
+set smtp_url = "smtps://server@gmail.com@smtp.gmail.com:465/"
+set imap_user = "server@gmail.com"
+
+set folder = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "nano"
+set charset = "utf-8"
+set record = ''
+
+#set imap_authenticators="oauthbearer:xoauth2"
+set imap_authenticators="oauthbearer"
+ set imap_oauth_refresh_command="/Appdata/server/mutt/mutt_oauth2.py /Appdata/server/mutt/.tokens/server.gmail.token"
+ set smtp_authenticators=${imap_authenticators}
+ set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+```
+
+## Step 5 - Test it Out
+
+Just like with the outlook example, this can be tested out like so:
+
+```bash
+echo "This is a test email!" > email_body.txt
+mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt"
+```
+
+If no errors are encountered and the email is sent, the mutt configuration with
+Gmail via oauth2 is ready for use with the main script.
+
+# Creating ones own Client ID
+
+It is possible to create one's own Client ID at both google and microsoft, but
+the process is involved and beyond the scope of what's considered here. Masquerading
+as Thunderbird is much easier and likely to be more reliable.
+
+The below links in the references do talk about this.
+
 # References
 
+* https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt\_oauth2.py.README   
 * https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook
 * https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html
 * https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret
