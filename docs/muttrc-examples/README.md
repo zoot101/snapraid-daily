@@ -377,7 +377,7 @@ The below links in the references do talk about this.
 
 # References
 
-* https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt\_oauth2.py.README   
+* https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README   
 * https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook
 * https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html
 * https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret
