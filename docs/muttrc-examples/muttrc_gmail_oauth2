@@ -18,7 +18,7 @@ set record = ''
 
 #set imap_authenticators="oauthbearer:xoauth2"
 set imap_authenticators="oauthbearer"
- set imap_oauth_refresh_command="/Appdata/server/mutt/mutt_oauth2.py /Appdata/marks/mutt/.tokens/server.gmail.token"
+ set imap_oauth_refresh_command="/path/to/mutt_oauth2.py /path/to/token/file"
  set smtp_authenticators=${imap_authenticators}
  set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
 

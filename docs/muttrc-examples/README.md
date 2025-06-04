@@ -226,7 +226,9 @@ rm ./.tokens/example.outlook.com.token
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
 
-If the above works, the muttrc file is ready for use with the main script.
+If the above works, the muttrc file is ready for use with the main script. Note that it
+is possible to start over by simply deleting the token file and calling the hook script
+with \--authorize like above again.
 
 # Sample Configuration 3 - Gmail via oauth2
 
@@ -361,6 +363,9 @@ mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_bod
 
 If no errors are encountered and the email is sent, the mutt configuration with
 Gmail via oauth2 is ready for use with the main script.
+
+Note that it is possible to start over by simply deleting the token file and calling the hook script
+with \--authorize like above again.
 
 # Creating ones own Client ID
 
