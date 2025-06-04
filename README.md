@@ -431,7 +431,7 @@ App Password for mutt.
 
 It should also be simple to adapt to another email provider also. The author plans
 to include a number of more examples for popular email providers here also:     
-https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc
+https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/
 
 Note that it's a good idea to test **mutt** out on its own with the generated
 **muttrc** file before using it with the script. 
