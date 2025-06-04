@@ -445,11 +445,12 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
 
-As mentioned above - Two sample configs are provided along with instructions on
+As mentioned above - A number of sample configs are provided along with instructions on
 how to set them up.
 
-* Gmail via App Passwords
-* Outlook via Oauth2 
+* Gmail via App Passwords   
+* Outlook via Oauth2   
+* Gmail via Oauth2   
 
 The 1st option via Gmail is much more simple, so it is the authors recommendation
 to try that out 1st.    
