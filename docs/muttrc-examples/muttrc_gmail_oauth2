@@ -1,0 +1,24 @@
+set realname = "server.home.lan"
+set from = "server@gmail.com"
+set use_from = yes
+set envelope_from = yes
+
+set smtp_url = "smtps://server@gmail.com@smtp.gmail.com:465/"
+set imap_user = "server@gmail.com"
+
+set folder = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "nano"
+set charset = "utf-8"
+set record = ''
+
+#set imap_authenticators="oauthbearer:xoauth2"
+set imap_authenticators="oauthbearer"
+ set imap_oauth_refresh_command="/Appdata/server/mutt/mutt_oauth2.py /Appdata/marks/mutt/.tokens/server.gmail.token"
+ set smtp_authenticators=${imap_authenticators}
+ set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+
