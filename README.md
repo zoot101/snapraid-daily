@@ -955,10 +955,12 @@ No error detected.
 # Further Examples
 
 For examples on how to automate via systemd timers, set up a valid muttrc
-config for emails, or to use cron instead of systemd have a look here.
+config for emails, some notes on SnapRAID itself, or to use cron instead of
+systemd have a look here.
 
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
@@ -985,8 +987,7 @@ with **dpkg** or with **apt** as shown above.
 
 The Script Returns the following codes for the following conditions.
 This can be useful to direct systemd or a seperate master script to
-carry out further actions depending on the code. It is planned to add
-further return codes the future.
+carry out further actions depending on the code. 
 
 * 0: Success    
 * 1: All Errors    
