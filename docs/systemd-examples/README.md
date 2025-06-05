@@ -68,6 +68,9 @@ For new package installations, one will be prompted to replace them if
 there is a change, just take care to select "N" when upgrading using the
 new package. This is obviously not an issue if installing manually.
 
+See the **sample-timer.timer** file included here for some examples of
+the syntax required.
+
 # Editing the Service Files
 
 If one wants to change some settings in the service files, they also can

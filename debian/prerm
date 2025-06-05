@@ -1,7 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-############################
-# MF PRE REMOVE SCRIPT
 ############################
 # Copyright (C) Mark Finnan 2025
 ############################

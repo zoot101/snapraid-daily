@@ -18,13 +18,13 @@ The below should work assuming the script is in **/usr/bin**, change the path ac
 # Sync the Array Only Every day at 06:00 and 18:00
 00 06,18 * * * "/usr/bin/snapraid-daily -s"
 
-* Scrub the Array Only Every day at 03:00
+# Scrub the Array Only Every day at 03:00
 00 03 * * * "/usr/bin/snapraid-daily -c"
 
-* Scrub the Array Only Every Friday Night at 21:00
+# Scrub the Array Only Every Friday Night at 21:00
 00 21 * * 5 "/usr/bin/snapraid-daily -c"
 
-* Run the full Sync -> Scrub (Default) Every Day at 04:00
+# Run the full Sync -> Scrub (Default) Every Day at 04:00
 00 04 * * * "/usr/bin/snapraid-daily"
 ```
 
