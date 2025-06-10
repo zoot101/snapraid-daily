@@ -63,7 +63,7 @@ set spoolfile = "+INBOX"
 set ssl_force_tls = yes
 
 bind index G imap-fetch-mail
-set editor = "nano"
+set editor = "vim"
 set charset = "utf-8"
 set record = ''
 ```
@@ -202,7 +202,7 @@ set ssl_force_tls = yes
 
 # G to get mail
 bind index G imap-fetch-mail
-set editor = "nano"
+set editor = "vim"
 set charset = "utf-8"
 set record = ''
 
@@ -326,8 +326,19 @@ port as was in the URL so the the redirect uri part of the above URL will work. 
 tunnel is opened, one can proceed to paste the complicated URL into the browser, logon, approve
 and the token file should be created by the hook script via the SSH tunnel.
 
-One could also edit the localhost part of the URL to the IP of the server, but that would
-require opening ports etc.
+One thing that can be done to simplify creating the tunnel is to edit the python script
+to make the port that is used to always be the same each time the script is called to create
+a token.
+
+To do that, edit the following line (~line 185) like so. Just make sure that the
+port is not used by somethine else.
+
+```bash
+listen_port = s.getsockname()[1]
+
+# Change it to this to make the port permanent
+listen_port = 50556
+```
 
 ## Step 4 - Create a muttrc configuration
 
@@ -351,7 +362,7 @@ set ssl_force_tls = yes
 
 # G to get mail
 bind index G imap-fetch-mail
-set editor = "nano"
+set editor = "vim"
 set charset = "utf-8"
 set record = ''
 
