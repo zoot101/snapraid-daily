@@ -180,8 +180,9 @@ Now call the edited hook script like so to generate the token file:
 ```
 
 Type microsoft when prompted 1st and then devicecode when prompted for the 2nd time, and then finally
-the desired email for the last prompt. (I have not been able to get the "authcode" or "localhostauthcode"
-methods working for outlook.)
+the desired email for the last prompt. I prefer the devicecode as its easier and clearer to use, the
+authcode also works, but the resulting code isn't displayed unless you actually click on the address
+bar in the browser. (I have not been able to get the "localhostauthcode" method working for outlook.)
 
 Then the hook script should show a complicated URL to copy and paste into a browser.
 
