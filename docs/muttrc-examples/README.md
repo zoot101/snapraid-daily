@@ -139,6 +139,16 @@ ENCRYPTION_PIPE = ['gpg', '--homedir', '/Appdata/server/mutt/.gpg/', '--encrypt'
 DECRYPTION_PIPE = ['gpg', '--homedir', '/Appdata/server/mutt/.gpg/', '--decrypt']
 ```
 
+Alternatively, if one wants to disable the encryption and decryption entirely and
+just store the token in plain text format, edit the above lines to look like this. This
+is NOT recommended of course, but if you don't care about the email account and want
+to simplify things, it can be done.
+
+```bash
+ENCRYPTION_PIPE = ['cat']
+DECRYPTION_PIPE = ['cat']
+```
+
 Next in the registrations section under "microsoft", change the
 **client_id** parameter to look like this:   
 
