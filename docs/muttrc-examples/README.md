@@ -7,13 +7,16 @@ The author has used **mutt** for many years with success
 to send emails. The script requires a muttrc file which will
 contain all the settings to allow mutt to send emails.
 
+Note that it is only sending emails that is required here, no consideration is given
+to mutt receiving emails since it is not necessary here.
+
 Three configurations are shown below. The first one is for Gmail which works through
 the use of "App Passwords" which are simple to configure. This is the
 preferred option for its simplicity.
 
 Added configurations are shown for outlook.com and also gmail. However, these are more
 complicated as they require calling a hook script to handle the oauth2
-protocol required.
+protocol required. The hook script also needs to be edited directly.
 
 Although long term they will probably prove to be
 more reliable as some email providers can often disable features like
@@ -25,11 +28,10 @@ be down to the reason that they only seem to list a certain few clients
 like old generation Xbox consoles that are intended for use with app passwords
 on their website. 
 
-To data, only gmail has proved reliable for the author with app passwords.
+To date, only Gmail has proved reliable for the author with the app password feature.
 
-The author would like to add more sample configurations here in the future,
-but alternative methods of notifications will be explored via hook
-scripts in the future.
+It is the plan to explore alternative methods of notifications via a custom
+notification hook script to **snapraid-daily** in the future.
 
 # Sample Configuration 1 - Gmail via App Passwords
 
@@ -88,9 +90,11 @@ to use with the script accordingly.
 
 # Sample Configuration 2 - Outlook.com via oauth2
 
-This method is more involved, but does have certain advantages.
+This method is more involved as it uses the more secure Oauth2 protocol, but does have
+certain advantages.
 
-Mutt supports Oauth2 but requires a hook script to accomplish it.
+Mutt supports Oauth2 but requires a hook script to accomplish it. Thankfully, the team
+who develop mutt have provided a python hook script that accomplishes this.
 
 A requirement of the mutt\_oauth2 hook that is
 needed to get it to work with Outlook is that it wants to encrypt
@@ -103,6 +107,8 @@ I don't really care and will just create a new one.
 
 This is just the authors viewpoint of course.
 
+(See the notes below on a way to disable the encryption/decryption if desired.)
+
 ## Step 1 - Create a Special Directory for the mutt config
 
 Lets say we want the muttrc configuration in **/Appdata/server/mutt**. It is possible to work out of
@@ -110,7 +116,8 @@ Lets say we want the muttrc configuration in **/Appdata/server/mutt**. It is pos
 
 Start off by creating a directory in the mutt directory for gpg to work out of, and creating a
 keypair. Make sure to generate the key pair without a password so the main script can call it
-without any input from the user.
+without any input from the user. This isn't very secure, but the email being used shouldn't
+really be a critical email anyway.
 
 ```bash
 mkdir /Appdata/server/mutt/.gpg/
@@ -156,7 +163,7 @@ Next in the registrations section under "microsoft", change the
 'client_id': '9e5f94bc-e8a4-4e73-b8be-63364c29d753',
 ```
 
-The above list of characteris is important. It is the client ID for Thunderbird, I'm not
+The above list of characters is important. It is the client ID for Thunderbird, I'm not
 sure if there is one for mutt. That is all that is needed to be changed.
 
 This, in effect causes mutt to masquerade as Thunderbird. Thunderbird's client ID and secrets
@@ -166,16 +173,21 @@ https://hg-edge.mozilla.org/comm-central/file/tip/mailnews/base/src/OAuth2Provid
 
 ## Step 3 - Generate the Token
 
-Call the now edited hook script like so to generate the token file:
+Now call the edited hook script like so to generate the token file:
 
 ```bash
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
 
-Type microsoft and devicecode. I have not been able to get the "authcode" or "localhostauthcode" methods working.
+Type microsoft when prompted 1st and then devicecode when prompted for the 2nd time, and then finally
+the desired email for the last prompt. (I have not been able to get the "authcode" or "localhostauthcode"
+methods working for outlook.)
 
-Follow the instructions to visit the URL displayed in a browser and enter the code. Then login, the
-process is pretty straight-forward and should complete automatically and generate a token file correctly.
+Then the hook script should show a complicated URL to copy and paste into a browser.
+
+Follow the instructions to visit the URL displayed in a browser and enter the code. Then login and click through
+the prompts to allow "Thunderbird" access to your outlook account. Then, all going well, the hook script 
+should complete automatically and generate a token file correctly.
 
 This should also all work over an SSH connection.
 
@@ -206,7 +218,7 @@ set editor = "vim"
 set charset = "utf-8"
 set record = ''
 
-# Puth the path to the edited python script below along with the
+# Put the path to the edited python script below along with the
 # path the token file generated
 set imap_authenticators="xoauth2"
  set imap_oauth_refresh_command="/Appdata/server/mutt/mutt_oauth2.py /Appdata/server/mutt/.tokens/example.outlook.token"
@@ -261,12 +273,12 @@ The main change comes with the client\_id and client\_secret values that
 need to be edited into the hook script. 
 
 Once again the easiest way is to masquerade as Thunderbird using the client\_id
-and secret from here:
+and secret from here. (The client ID and Secret are different for Gmail)
 
 https://hg-edge.mozilla.org/comm-central/file/tip/mailnews/base/src/OAuth2Providers.sys.mjs
 
 Edit the hook script in the google section under registrations
-so that the clientID and clientSecret look like this:
+so that the clientID and clientSecret look like this as per the above link.
 
 ```bash
 clientId: "406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com",
@@ -281,10 +293,10 @@ As before with the outlook example, call the hook script like so:
 ./mutt_oauth2.py ./.tokens/example.gmail.token --verbose --authorize
 ```
 
-Type google, localhostauthcode, and the desired email. The author has not been successful
-in getting the other two auth options to work with gmail.
+Type google for the 1st prompt, and localhostauthcode for the 2nd, and then the desired
+email. The author has not been successful in getting the other two auth options to work with gmail.
 
-The hook script will show a complicated url to paste into the browser, do that
+Just like with the Outlook example, the hook script will show a complicated url to paste into the browser, do that
 and you should be prompted to allow Thunderbird access to your account.
 
 If all goes well, the token should be generated by the hook script without problems.
@@ -316,17 +328,18 @@ redirect_uri=http%3A%2F%2Flocalhost%3A35505%2F
 
 The number after localhost is the port number to use, in this case **35505**.
 
-So on the machine one is using to interface with a server, open an SSH tunnel like so:
+So on the machine one is using to interface with the server, open an SSH tunnel like so:
 ```bash
 ssh -i /path/to/ssh/key -L 127.0.0.1:35505:127.0.0.1:35505 user@server-hostname
 ```
 
-This will create an SSH tunnel from the machine with the browser to the server, on the same
+This will create an SSH tunnel from the machine with the browser to the server on the same
 port as was in the URL so the the redirect uri part of the above URL will work. Once that
-tunnel is opened, one can proceed to paste the complicated URL into the browser, logon, approve
-and the token file should be created by the hook script via the SSH tunnel.
+tunnel is opened, one can proceed to paste the complicated URL into the browser, login, approve
+access of "Thunderbird" to the account, and the token file should be created by the hook script
+as before over the SSH tunnel.
 
-One thing that can be done to simplify creating the tunnel is to edit the python script
+One thing that can be done to simplify creating the tunnel is to edit the hook script
 to make the port that is used to always be the same each time the script is called to create
 a token.
 
