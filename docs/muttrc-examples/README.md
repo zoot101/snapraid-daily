@@ -35,9 +35,8 @@ notification hook script to **snapraid-daily** in the future.
 
 # Sample Configuration 1 - Gmail via App Passwords
 
-A sample configuration here is provided that works with **Gmail**
-which should be easy enough to set up with other providers
-also. See the **muttrc_gmail_app_pws** file in this directory.
+A sample configuration here is provided that works with **Gmail**.
+See the **muttrc_gmail_app_pws** file in this directory.
 
 Note that 2FA is required to be enabled in your Gmail account,
 one will then have the option to create app passwords which
@@ -126,7 +125,9 @@ gpg --homedir /Appdata/server/mutt/.gpg/ --full-generate-key
 
 ## Step 2 - Download the Hook Script and Configure It
 
-Now download the hook script for mutt from here, and make it executable.
+Now download the hook script for mutt from here, and make it executable. This hook script
+seems to have been around for quite some time, it works pretty well but there are
+some areas where it needs configuration.
 
 ```bash
 wget https://gitlab.com/muttmua/mutt/-/raw/master/contrib/mutt_oauth2.py
@@ -135,6 +136,10 @@ chmod +x mutt_oauth2.py
 
 Unfortunately the script needs to be edited directly. I'm not proficient in python,
 but editing it is rather easy.
+
+Note there is a sample edited version of the script
+in this folder that can be used (mutt\_oauth2\_mf.py), but it does have the encryption/decryption disabled,
+so I recommend editing it yourself.
 
 Find the lines near the top that start with ENCRYPTION\_PIPE and DECRYPTION\_PIPE, and
 change them to look like this. They are near the top of the script just where the comments end.
@@ -179,7 +184,7 @@ Now call the edited hook script like so to generate the token file:
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
 
-Type microsoft when prompted 1st and then devicecode when prompted for the 2nd time, and then finally
+Type **microsoft** when prompted 1st and then **devicecode** when prompted for the 2nd time, and then finally
 the desired email for the last prompt.
  
 Then the hook script should show a complicated URL to copy and paste into a browser.
@@ -191,8 +196,12 @@ should complete automatically and generate a token file correctly.
 This should also all work over an SSH connection.
 
 I prefer the devicecode method as its easier and clearer to use, the
-authcode also works, but the resulting code isn't displayed unless you actually click on the address
-bar in the browser. (I have not been able to get the "localhostauthcode" method working for outlook.)
+authcode also works. The only thing to remember is that once you follow the online prompts and come
+to the end, the required code for the hook script sometimes isn't displayed unless you actually click on the address
+bar in the browser.
+
+(I have not been able to get the "localhostauthcode" method working for outlook,
+it seems outlook requires a https connection to localhost which the script doesn't provide)
 
 ## Step 4 - Generate a muttrc file
 
@@ -244,8 +253,6 @@ If the above completes, mutt is setup to use outlook.com with the oauth2 functio
 as it doesn't require using the app passwords feature, which certain providers can like
 to turn off without any notice.
 
-If the token file is to expire, delete the token file and call the mutt\_oauth2.py script again.
-
 ```bash
 rm ./.tokens/example.outlook.com.token
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
@@ -296,15 +303,53 @@ As before with the outlook example, call the hook script like so:
 ./mutt_oauth2.py ./.tokens/example.gmail.token --verbose --authorize
 ```
 
-Type google for the 1st prompt, and localhostauthcode for the 2nd, and then the desired
-email. The author has not been successful in getting the other two auth options to work with gmail.
+The two following options can be used in the hook script below. The authors preference is the
+**authcode** method, but both that and the **localhostauthcode** will work.
 
+(The author has not been successful in getting the devicecode with gmail.)
+
+## Method 1 - authcode
+
+It is possible to get the **authcode** option but it requires a further edit to the hook script. In
+the google section under registrations that was previously edited to add the client ID and secret,
+change the redirect\_uri setting like so:
+
+```bash
+'redirect_uri': 'http://localhost:1',
+```
+
+The reason for the above change is that in 2022 (I think?), Google stopped supporting the
+old redirect uri setting that the hook script uses.
+
+Pick a port that isn't being used (1 is a good choice). 
+
+Now call the hook script as above, type **google** and then **authcode** when prompted.
+
+As before copy and paste the complicated URL into the browser, and follow the prompts. However
+this time at the very end, the browser will throw an error on not being able to reach the
+redirect uri (in this case http://localhost:1), but the required code is now included in
+the address bar as before. Here is an example:
+
+```bash
+http://localhost:1/?code=4/0AUJR-x4tGGjOkQ5EyCqx9xy2FdLYBU9rzrUZcCY53NK3k7CfoJpaHS2BATs2Q&scope=https://mail.google.com/
+```
+
+Copy and paste the code part from the link above to the terminal running the hook script and it 
+should now work. 
+
+## Method 2 - localhostauthcode
+
+Type **google** for the 1st prompt, and **localhostauthcode** for the 2nd, and then the desired
+email.
+ 
 Just like with the Outlook example, the hook script will show a complicated url to paste into the browser, do that
 and you should be prompted to allow Thunderbird access to your account.
 
-If all goes well, the token should be generated by the hook script without problems.
+If all goes well, the token should be generated by the hook script without problems. The only
+caveat with the **localhostauthcode** method is that it requires the browser to be on the
+same machine as what is running the hook script - see below.
 
-## Step 3 - Getting the token on a remote machine (If required)
+### Getting the token on a remote machine (If required)
 
 If there's no GUI or browser on the server (there isn't on mine), this creates a bit of a problem
 as the localhostauthcode method requires the browser used to be on the same machine
@@ -415,8 +460,8 @@ The below links in the references do talk about this.
 # References
 
 * https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README   
-* https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook
-* https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html
-* https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret
-
+* https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook   
+* https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html   
+* https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret   
+* https://www.redhat.com/en/blog/mutt-email-oauth2   
 
