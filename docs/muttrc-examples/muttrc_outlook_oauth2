@@ -12,7 +12,7 @@ set ssl_force_tls = yes
 
 # G to get mail
 bind index G imap-fetch-mail
-set editor = "nano"
+set editor = "vim"
 set charset = "utf-8"
 set record = ''
 
