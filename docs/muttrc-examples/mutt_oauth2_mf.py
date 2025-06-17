@@ -56,8 +56,8 @@ import readline
 # encryption and decryption pipes you prefer. They should read from standard
 # input and write to standard output. The example values here invoke GPG,
 # although won't work until an appropriate identity appears in the first line.
-#ENCRYPTION_PIPE = ['gpg', '--homedir', '/Appdata/marks-server/mutt/.gpg/', '--encrypt', '--recipient', 'mfinnan101.server@outlook.com']
-#DECRYPTION_PIPE = ['gpg', '--homedir', '/Appdata/marks-server/mutt/.gpg/', '--decrypt']
+#ENCRYPTION_PIPE = ['gpg', '--encrypt', '--recipient', 'YOUR_GPG_IDENTITY']
+#DECRYPTION_PIPE = ['gpg', '--decrypt']
 
 # Alternatively use the below to disable encryption entirely
 ENCRYPTION_PIPE = ['cat']
