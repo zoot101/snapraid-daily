@@ -16,14 +16,18 @@ preferred option for its simplicity.
 
 Added configurations are shown for outlook.com and also gmail. However, these are more
 complicated as they require calling a hook script to handle the oauth2
-protocol required. The hook script also needs to be edited directly.
+protocol required. The hook script also needs to be edited directly, which is not ideal.
 
-Although long term they will probably prove to be
+Although long term the Oauth2 configurations will probably prove to be
 more reliable as some email providers can often disable features like
 app passwords. They work by effectively getting mutt to masquerade as
 Mozilla Thunderbird (which is widely supported).
 
-The author has not been able to get app passwords working with outlook, it may
+This link has useful background information on the Oauth2 protocol and is well worth a read:  
+ 
+https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README 
+
+The author has not been able to get app passwords working with Outlook, it may
 be down to the reason that they only seem to list a certain few clients
 like old generation Xbox consoles that are intended for use with app passwords
 on their website. 
@@ -31,21 +35,32 @@ on their website.
 To date, only Gmail has proved reliable for the author with the app password feature.
 
 It is the plan to explore alternative methods of notifications via a custom
-notification hook script to **snapraid-daily** in the future.
+notification hook script to **snapraid-daily** in the future. However email notifications
+will continue to remain the main notification method for **snapraid-daily**.
 
 # Sample Configuration 1 - Gmail via App Passwords
 
-A sample configuration here is provided that works with **Gmail**.
-See the **muttrc_gmail_app_pws** file in this directory.
+A sample configuration here is provided that works with **Gmail** using their app
+passwords feature - See the **muttrc_gmail_app_pws** file in this directory.
 
 Note that 2FA is required to be enabled in your Gmail account,
 one will then have the option to create app passwords which
 can be specified directly in the **muttrc** file.
 
-This muttrc works well for the author - change the password and
+Some time ago (at least for the author) the link to set up app passwords seems
+to have been removed from the google account page. Perhaps it is a sign that
+they will remove the feature eventually? Hopefully not.
+
+Nonetheless, if one cannot find the app password link within the Google account settings
+after enabling 2FA, you should be able to access it directly at the below link
+after signing in:    
+
+https://myaccount.google.com/apppasswords
+
+This muttrc configuration works well for the author - change the password and
 email from **server@gmail.com** to the email you want to use and
-app password generated via the gmail account page. Change the "server.home.lan"
-to whatever you want the email to be "from".
+app password generated via the google account page. Change the "server.home.lan"
+to whatever name you want the notification emails to be "from".
  
 ```bash
 set realname = "server.home.lan"
@@ -53,10 +68,10 @@ set from = "server@gmail.com"
 set use_from = yes
 set envelope_from = yes
 
-set smtp_url = "smtps://server@gmail.com@smtp.gmail.com:465/"
+set smtp_url = "smtps://${from}@smtp.gmail.com:465/"
 set smtp_pass = "long-list-of-characters"
 
-set imap_user = "server@gmail.com"
+set imap_user = "${from}"
 set imap_pass = "long-list-of-characters"
 
 set folder = "imaps://imap.gmail.com:993"
@@ -95,7 +110,7 @@ certain advantages.
 Mutt supports Oauth2 but requires a hook script to accomplish it. Thankfully, the team
 who develop mutt have provided a python hook script that accomplishes this.
 
-A requirement of the mutt\_oauth2 hook that is
+A requirement of the below hook script (mutt\_oauth2.py) hook that is
 needed to get it to work with Outlook is that it wants to encrypt
 the token file.
 
@@ -123,6 +138,8 @@ mkdir /Appdata/server/mutt/.gpg/
 gpg --homedir /Appdata/server/mutt/.gpg/ --full-generate-key
 ```
 
+Answer the questions and put in an email to identify the key. (It can be a madeup email)
+
 ## Step 2 - Download the Hook Script and Configure It
 
 Now download the hook script for mutt from here, and make it executable. This hook script
@@ -144,7 +161,8 @@ so I recommend editing it yourself.
 Find the lines near the top that start with ENCRYPTION\_PIPE and DECRYPTION\_PIPE, and
 change them to look like this. They are near the top of the script just where the comments end.
 The --home-dir and "/Appdata/server/mutt/.gpg/" can be
-omitted if one is happy to have gpg work out of the home directory.
+omitted if one is happy to have gpg work out of the home directory. The example@outlook.com is
+the email provided to the gpg \--full-generate-key step above.
 
 ```bash
 ENCRYPTION_PIPE = ['gpg', '--homedir', '/Appdata/server/mutt/.gpg/', '--encrypt', '--recipient', 'example@outlook.com']
@@ -176,6 +194,8 @@ are publicly available here:
 
 https://hg-edge.mozilla.org/comm-central/file/tip/mailnews/base/src/OAuth2Providers.sys.mjs
 
+(However, note the warning about them being likely to change in the future)
+
 ## Step 3 - Generate the Token
 
 Now call the edited hook script like so to generate the token file:
@@ -200,15 +220,15 @@ authcode also works. The only thing to remember is that once you follow the onli
 to the end, the required code for the hook script sometimes isn't displayed unless you actually click on the address
 bar in the browser.
 
-(I have not been able to get the "localhostauthcode" method working for outlook,
-it seems outlook requires a https connection to localhost which the script doesn't provide)
+I have not been able to get the "localhostauthcode" method working for outlook,
+it seems outlook requires a https connection to localhost which the script doesn't provide.
 
 ## Step 4 - Generate a muttrc file
 
 Then create a muttrc file. This config works for the author, change the
 email to the desired email and the paths if they are different. The "realname"
 will show up as who the emails sent are "from", it doesn't have to be one's
-actual real name.
+actual real name. Note the passwords are no longer required below.
 
 ```bash
 # The realname can be edited
@@ -217,8 +237,8 @@ set from = "example@outlook.com"
 set use_from = yes
 set envelope_from = yes
 
-set smtp_url = "smtp://example@outlook.com@smtp.office365.com:587/"
-set imap_user = "example@outlook.com"
+set smtp_url = "smtp://${from}@smtp.office365.com:587/"
+set imap_user = "${from}"
 
 set folder = "imaps://outlook.office365.com:993"
 set spoolfile = "+INBOX"
@@ -253,14 +273,13 @@ If the above completes, mutt is setup to use outlook.com with the oauth2 functio
 as it doesn't require using the app passwords feature, which certain providers can like
 to turn off without any notice.
 
+Note that it is possible to start over by simply deleting the token file and calling the hook script
+with \--authorize like above again.
+
 ```bash
 rm ./.tokens/example.outlook.com.token
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
-
-If the above works, the muttrc file is ready for use with the main script. Note that it
-is possible to start over by simply deleting the token file and calling the hook script
-with \--authorize like above again.
 
 # Sample Configuration 3 - Gmail via oauth2
 
@@ -414,8 +433,8 @@ set from = "server@gmail.com"
 set use_from = yes
 set envelope_from = yes
 
-set smtp_url = "smtps://server@gmail.com@smtp.gmail.com:465/"
-set imap_user = "server@gmail.com"
+set smtp_url = "smtps://${from}@smtp.gmail.com:465/"
+set imap_user = "${from}"
 
 set folder = "imaps://imap.gmail.com:993"
 set spoolfile = "+INBOX"
@@ -452,10 +471,13 @@ with \--authorize like above again.
 # Creating ones own Client ID
 
 It is possible to create one's own Client ID at both google and microsoft, but
-the process is involved and beyond the scope of what's considered here. Masquerading
-as Thunderbird is much easier and likely to be more reliable.
+that is beyond the scope of what's considered here. Masquerading as Thunderbird is much easier,
+however there is the potential problem of the Client ID and Secret ID changing in the future.
 
-The below links in the references do talk about this.
+The best long term solution is probably to create an app registration at Google/Microsoft, but
+for the moment using Thunderbird's credentials works well.
+
+The below links in the references talk about creating an app registration.
 
 # References
 
