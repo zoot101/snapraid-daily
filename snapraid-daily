@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version=1.3.10
+version=1.3.11
 
 ###################################################
 # RETURN CODES
@@ -529,10 +529,15 @@ parse_arguments() {
 # Print Greeting in Email Log
 print_greeting() {
   snapraid_version=$(snapraid -V | awk '{print $2}' | sed 's/v//')
+  system_hostname=$(hostname --fqdn)
+  os_name=$(cat /etc/os-release | grep -w "^PRETTY_NAME" | sed 's/PRETTY_NAME="//;s/"$//')
+
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY Version:" "${version}"
   log_to_email "##############################"
   log_to_email "Initialized at "$(date +%H:%M:%S)" on "$(date +%d/%m/%Y)
+  if [ ! -z "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
+  if [ ! -z "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
   log_to_email " * SnapRAID Version:" "$snapraid_version"
   log_to_email "Input Options:"
 
