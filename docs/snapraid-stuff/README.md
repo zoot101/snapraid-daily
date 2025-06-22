@@ -181,6 +181,11 @@ command for this would be:
 snapraid scrub -S 3094 -B 2
 ```
 
+Sometimes, the above command may take a long time. In that case it may be faster do do:
+```bash
+snapraid scrub -p bad
+```
+
 Here is a sample output from the above, now showing the names of the effected
 files.
 
