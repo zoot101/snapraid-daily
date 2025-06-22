@@ -1,5 +1,5 @@
 # snapraid-daily
-A simple Bash Script for the automation of all essential SnapRAID functions with
+Simple Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
 
 # Introduction 
@@ -42,7 +42,6 @@ snapraid functions that can be scheduled accordingly and do it in a simple manne
   * [Step 6 - Run Scrub to Check for Silent Corruption](#step-6---run-scrub-to-check-for-silent-corruption)
   * [Step 7 - Send Final Notification Email](#step-7---send-final-notification-email)
 - [Sample Output](#sample-output)
-  * [Sample Notification Email](#sample-notification-email)
 - [Further Examples](#further-examples)
 - [Creating your own Debian Package](#creating-your-own-debian-package)
 - [Return Codes](#return-codes)
@@ -286,11 +285,12 @@ email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
 See the notes provided in the docs directory here to set up the email
-notifications. Two sample configs are provided along with instructions on
+notifications. Three sample configs are provided along with instructions on
 how to set them up.
 
 * Gmail via App Passwords
-* Outlook via Oauth2 
+* Outlook via Oauth2
+* Gmail via Oauth2   
   
 https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
@@ -425,13 +425,18 @@ https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
 ## Setting up Email Notifications
 
 A valid muttrc configuration is required to send email notifications.
-A sample that works for Gmail can be found here along with some instructions
-on how to set it up. It involves enabling 2FA within Gmail and creating an
-App Password for mutt.
 
-It should also be simple to adapt to another email provider also. The author plans
-to include a number of more examples for popular email providers here also:     
+As mentioned above - the following 3 sample configurations are provided in the
+docs directory below.
+
+* Gmail via App Passwords
+* Outlook via Oauth2
+* Gmail via Oauth2
+ 
 https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/
+
+Detailed instructions are provided in the above link on how to set **mutt** up
+to send emails with the script.
 
 Note that it's a good idea to test **mutt** out on its own with the generated
 **muttrc** file before using it with the script. 
@@ -444,17 +449,6 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 ```
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
-
-As mentioned above - A number of sample configs are provided along with instructions on
-how to set them up.
-
-* Gmail via App Passwords   
-* Outlook via Oauth2   
-* Gmail via Oauth2   
-
-The 1st option via Gmail is much more simple, so it is the authors recommendation
-to try that out 1st.    
-https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 ## Automation with Systemd
 
@@ -758,196 +752,112 @@ the result was.
 
 # Sample Output
 ```bash
-INFO: Using Config File: /etc/snapraid-daily.conf
-
 ##############################
-# SnapRAID-DAILY Version: 1.3.7
+# SnapRAID-DAILY Version: 1.3.11
 ##############################
-Initialized at 14:45:29 on 30/05/2025
+Initialized at 06:00:00 on 22/06/2025
+ * Hostname: server.example.org
+ * Host OS: Debian GNU/Linux 12 (bookworm)
  * SnapRAID Version: 12.4
 Input Options:
  * Run-Sync: YES
  * Sync Pre-Hash: YES
  * Run-Scrub: YES
- * Scrub-Percent: 5
- * Scrub-Age: 0 days and older
+ * Scrub-Percent: 15
+ * Scrub-Age: 2 days and older
  * Override Thresholds: NO
- * Deletion Threshold: 5000
- * Moved Threshold: 5000
+ * Deletion Threshold: 1000
+ * Moved Threshold: 1000
 Run-Log is Below:
 
 ##############################
 # SnapRAID-DAILY: Initial Status Check
 ##############################
-14:45:29 : Checking current status...
-14:45:48 : No Issues Found in Initial Check
-14:45:48 : Touch Not Needed...
+06:00:00 : Checking current status...
+06:00:10 : No Issues Found in Initial Check
+06:00:10 : Touch Not Needed...
 
 ##############################
 # SnapRAID-DAILY: Difference Check
 ##############################
-14:45:48 : Checking array for changes...
-  951819 equal
-       0 added
-       0 removed
-       0 updated
-       0 moved
-       0 copied
-       0 restored
-No differences
-14:46:25 : No Changes - Nothing to Sync
+06:00:10 : Checking array for changes...
+06:00:30 : Changes Detected
+ * Equal: 1576092
+ * Added: 187
+ * Removed: 4
+ * Updated: 0
+ * Moved: 0
+ * Copied: 535
+ * Restored: 0
+06:00:30 : Proceeding to sync...
+
+##############################
+# SnapRAID-DAILY: Sync
+##############################
+06:00:30 : Starting Sync on 22/06/2025...
+06:04:25 : Sync Completed on 22/06/2025
+06:04:25 : Duration: 0 hours, 3 minutes, 55 seconds
+06:04:25 : Sync was Successful
+06:04:25 : Array Changes Found & Updated:
+ * Added: 187
+ * Removed: 4
+ * Updated: 0
+ * Moved: 0
+ * Copied: 535
+ * Restored: 0
 
 ##############################
 # SnapRAID-DAILY: Scrub
 ##############################
-14:46:25 : Checking if Array is still up to date...
-  951819 equal
-       0 added
-       0 removed
-       0 updated
-       0 moved
-       0 copied
-       0 restored
-No differences
-14:46:58 : Array is Up-to-Date - Proceeding
-14:46:58 : Starting Scrub on 30/05/2025
-14:46:58 : Scrubbing 5% older than 0 days...
-Everything OK
-15:10:21 : Scrub Completed at 30/05/2025
-15:10:21 : Duration: 0 hours, 23 minutes, 23 seconds
-15:10:21 : Scrub was successful
-15:10:21 : Scrubbed 5% older than 0 days
-
-Sending Final Notification Email...
+06:04:25 : Checking if Array is still up to date...
+06:04:46 : Array is Up-to-Date - Proceeding
+06:04:46 : Starting Scrub on 22/06/2025
+06:04:46 : Scrubbing 15% older than 2 days...
+07:19:03 : Scrub Completed at 22/06/2025
+07:19:03 : Duration: 1 hours, 14 minutes, 17 seconds
+07:19:03 : Scrub was successful
+07:19:03 : Scrubbed 15% older than 2 days
 
 ##############################
 # SnapRAID-DAILY: Array Status
 ##############################
-15:10:21 : Current status of the Array is as below:
+07:19:03 : Current status of the Array is as below:
 
 SnapRAID status report:
 
    Files Fragmented Excess  Wasted  Used    Free  Use Name
             Files  Fragments  GB      GB      GB
-  435317       4      19       -    2519     431  85% disk1
-  135689       9      16       -     528     454  54% disk2
-  134452      11      17       -     560     421  57% disk3
-  144523      10      27       -     632     350  65% disk4
-  101798     702    3149   -48.8    1797    2138  45% disk5
+  220631     180     653       -    1628     338  83% media1
+  359795     578    2249       -    2097     852  71% media2
+  581583     275     888       -    1534     430  78% media3
+  414803    1855    6687    -2.5    3081     852  78% media4
  --------------------------------------------------------------------------
-  951779     736    3228     0.0    6037    3797  61%
+ 1576812    2888   10477     0.0    8342    2474  77%
 
 
- 21%|                                                                     o
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
- 10%|                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |     o     o     o                                                   *
-    |     *     *     *           o     o     o   ooo   * o     o     o   *
-    |     *     *     *     o     *     *     *   ***   * *     *     *   *
-    |*    *     *     *     *     *     *     *   ***   * *     *     *   *
-  0%|*____*_____*_____*_____*_____*_____*_____*___***___*_*_____*_____*__o*
-    11                    days ago of the last scrub/sync                 0
+ 17%|                                   o                                 
+    |           o                       o                      o          o
+    |           *           o           *          o           *          *
+    |           *           *           *          *           *          *
+    |           *           *           *          *           *          *
+    |           *           *           *          *           *          *
+    |           *           *           *          *           *          *
+  8%|           *           *           *          *           *          *
+    |           *           *           *          *           *          *
+    |*          *           *           *          *           *          *
+    |*          *           *           *          *           *          *
+    |*          *           *           *          *           *          *
+    |*          *           *           *          *           *          *
+    |*          *           *           *          *           *          *
+  0%|*__________*___________*___________*_o____o___*___________*__________*
+     6                    days ago of the last scrub/sync                 0
 
-The oldest block was scrubbed 11 days ago, the median 3, the newest 0.
+The oldest block was scrubbed 6 days ago, the median 3, the newest 0.
 
 No sync is in progress.
 6% of the array is not scrubbed.
-No file has a zero sub-second timestamp.
-No rehash is in progress or needed.
-No error detected.
-Email Sent Successfully...
-```
-
-# Sample Notification Email
-```bash
-##############################
-# SnapRAID-DAILY Version: 1.3.7
-##############################
-Initialized at 14:19:03 on 30/05/2025
- * SnapRAID Version: 12.4
-Input Options:
- * Run-Sync: YES
- * Sync Pre-Hash: YES
- * Run-Scrub: YES
- * Scrub-Percent: 5
- * Scrub-Age: 0 days and older
- * Override Thresholds: NO
- * Deletion Threshold: 5000
- * Moved Threshold: 5000
-Run-Log is Below:
-
-##############################
-# SnapRAID-DAILY: Initial Status Check
-##############################
-14:19:03 : Checking current status...
-14:19:22 : No Issues Found in Initial Check
-14:19:22 : Touch Not Needed...
-
-##############################
-# SnapRAID-DAILY: Difference Check
-##############################
-14:19:22 : Checking array for changes...
-14:19:57 : No Changes - Nothing to Sync
-
-##############################
-# SnapRAID-DAILY: Scrub
-##############################
-14:19:57 : Checking if Array is still up to date...
-14:20:27 : Array is Up-to-Date - Proceeding
-14:20:27 : Starting Scrub on 30/05/2025
-14:20:27 : Scrubbing 5% older than 0 days...
-14:43:03 : Scrub Completed at 30/05/2025
-14:43:03 : Duration: 0 hours, 22 minutes, 36 seconds
-14:43:03 : Scrub was successful
-14:43:03 : Scrubbed 5% older than 0 days
-
-##############################
-# SnapRAID-DAILY: Array Status
-##############################
-14:43:03 : Current status of the Array is as below:
-
-SnapRAID status report:
-
-   Files Fragmented Excess  Wasted  Used    Free  Use Name
-            Files  Fragments  GB      GB      GB
-  435317       4      19       -    2519     431  85% disk1
-  135689       9      16       -     528     454  54% disk2
-  134452      11      17       -     560     421  57% disk3
-  144523      10      27       -     632     350  65% disk4
-  101798     702    3149   -48.8    1797    2138  45% disk5
- --------------------------------------------------------------------------
-  951779     736    3228     0.0    6037    3797  61%
-
-
- 16%|                                                                     o
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-    |                                                                     *
-  8%|                                                                     *
-    |o                                                                    *
-    |*    o     o     o           o               o             o         *
-    |*    *     *     *           *     o     o   *oo    *o     *     o   *
-    |*    *     *     *     o     *     *     *   ***    **     *     *   *
-    |*    *     *     *     *     *     *     *   ***    **     *     *   *
-    |*    *     *     *     *     *     *     *   ***    **     *     *   *
-  0%|*____*_____*_____*_____*_____*_____*_____*___***____**_____*_____*___*
-    11                    days ago of the last scrub/sync                 0
-
-The oldest block was scrubbed 11 days ago, the median 4, the newest 0.
-
-No sync is in progress.
-6% of the array is not scrubbed.
-No file has a zero sub-second timestamp.
+You have 15 files with a zero sub-second timestamp.
+Run 'snapraid touch' to set their sub-second timestamps to a non-zero value.
 No rehash is in progress or needed.
 No error detected.
 ```
