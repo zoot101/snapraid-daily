@@ -1,6 +1,9 @@
 # snapraid-daily
+
 Simple Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
+
+Customisable through the use of external hooks.
 
 # Introduction 
 Thank you for your interest in this script! Snapraid is very good software,
@@ -32,15 +35,20 @@ snapraid functions that can be scheduled accordingly and do it in a simple manne
   * [Setting Up Email Notifications](#setting-up-email-notifications)
   * [Automation with Systemd](#automation-with-systemd)
   * [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd)
+  * [Notification Hook](#notification-hook)
+  * [Start and End Hooks](#start-and-end-hooks)
 - [SnapRAID Sync and Scrub Options](#snapraid-sync-and-scrub-options)
 - [Detailed Operation](#detailed-operation)
   * [Step 1 - Initial Checks](#step-1---initial-checks)
   * [Step 2 - Check SnapRAID Array Current Status](#step-2---check-snapraid-array-current-status)
-  * [Step 3 - Run Touch if Required](#step-3---run-touch-if-required)
-  * [Step 4 - Check Array for Changes](#step-4---check-array-for-changes)
-  * [Step 5 - Run Sync to Update the Array](#step-5---run-sync-to-update-the-array)
-  * [Step 6 - Run Scrub to Check for Silent Corruption](#step-6---run-scrub-to-check-for-silent-corruption)
-  * [Step 7 - Send Final Notification Email](#step-7---send-final-notification-email)
+  * [Step 3 - Run Start Hook if Given](#step-3---run-start-hook-if-given)
+  * [Step 4 - Run Touch if Required](#step-4---run-touch-if-required)
+  * [Step 5 - Check Array for Changes](#step-5---check-array-for-changes)
+  * [Step 6 - Run Sync to Update the Array](#step-6---run-sync-to-update-the-array)
+  * [Step 7 - Run Scrub to Check for Silent Corruption](#step-7---run-scrub-to-check-for-silent-corruption)
+  * [Step 8 - Run End Hook If Given](#step-8---run-end-hook-if-given)
+  * [Step 9 - Send Final Notification Email](#step-9---send-final-notification-email)
+  * [Step 10 - Run Notification Hook if Given](#step-10---run-notification-hook-if-given)
 - [Sample Output](#sample-output)
 - [Further Examples](#further-examples)
 - [Creating your own Debian Package](#creating-your-own-debian-package)
@@ -256,7 +264,8 @@ The main parameters included in the file are:
 * **muttrc_path**    
 * **email_address**    
 * **deletion_threshold**    
-* **moved_threshold**    
+* **moved_threshold**
+* **updated_treshold**    
 * **sync_pre_hash**     
 * **scrub_percent**    
 * **scrub_age**    
@@ -294,10 +303,13 @@ how to set them up.
   
 https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
+Comment out to disable email notifications.
+
 ### email\_address
 
 Main email address to send the notification emails to. The
-default is none, thus disabling email notifications.
+default is none, thus disabling email notifications. Comment out to
+disable email notifications.
 
 ### deletion\_threshold
 
@@ -310,6 +322,12 @@ number. The default is **100**. To disable permanently and sync every time regar
 
 As above, but for files moved. Must be a positive number.
 The default is **100**. As before, to disable permanently and sync every time regardless of the number moved, set to 0.
+
+## updated\_threshold
+
+Also as above, but for files updated. Must be a positive number. Set to
+zero to disable permanently and sync each time regardless of the number
+of updated files. If omitted, the default is **100**
 
 ### sync\_pre\_hash
 
@@ -382,6 +400,57 @@ that may require it.
 Set to \"yes\" to use, leave commented out or set to \"no\" to
 disable.
 
+## start\_hook
+
+Specify a path to a hook script that is called when the script
+completes its initial checks and determines the intial status of the
+array is OK but before **SnapRAID** touch/diff/sync/scrub operations
+are carried out. Must be executable. Comment out or omit out if not using.
+
+```bash
+start_hook="/path/to/hook"
+```
+
+See the section on hooks later for more information.
+
+## end\_hook
+
+Specify a path to a hook script that is called when the script completes all
+sync/scrub operations and before sending the final notification email. This is also
+called if the script exits in an error condition. Must be executable. Comment
+out or omit if not using.
+
+```bash
+end_hook="/path/to/end/hook"
+```
+
+Can be the same as the start hook if it accepts the "start" and "end" arguments. See
+the section on hooks later for more information.
+
+## notification\_hook
+
+Specify a path to a custom notification hook here if an alternative form of
+notification to emails with **mutt** is preferred. Note that it must be executable. It
+can used instead of or in addition to the emails if desired. Comment out or omit if
+not using.
+
+```bash
+notification_hook="/path/to/notification/hook/script"
+```
+
+As above, see the section on hooks later for more information.
+
+## Hook Variables
+
+If any variables are required for the start/end or notification hooks they can be
+specified in the config file through the use of "export" - Example:
+
+```bash
+export var1="whatever etc."
+```
+
+Remember not to forget the "export"!
+
 ## Sample Config File
 
 Shown below is the bare minimum that is required in
@@ -403,6 +472,7 @@ email_address="server@example.com"
 # Deletion and Moved Thresholds
 deletion_threshold=200 
 moved_threshold=200
+updated_threshold=200
 
 # Sync Pre Hash Function (on by default)
 sync_pre_hash="yes"
@@ -418,6 +488,12 @@ scrub_age=7
 #force_zero="no"
 #force_empty="no"
 #force_uuid="no"
+
+# Hooks
+#start_hook="/path/to/start/hook"
+#end_hook="/path/to/end/hook"
+#notification_hook="/path/to/notification/hook"
+
 ```
 See a more detailed example with explanatory comments here:    
 https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
@@ -555,6 +631,94 @@ notes are included here:
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
 
+# Notification Hook
+
+Since version 1.4.0, the script supports the use of a custom notification
+hook, to allow the user to integrate an alternative form of notification into the script
+if desired.
+
+A bash script is probably what is best to use here, but this hook script can be anything
+that is ran from the command line and accepts the below arguments - it doesn't have to
+be a bash script.
+
+If the **snapraid-daily** script ends in success, the notification hook is called on
+the command line like so:
+
+```bash
+"/path/to/notification/hook" "SnapRAID-DAILY: All OK" "/path/to/email/body"
+```
+
+The 1st argument is what would be the email subject, and the 2nd argument
+is what would be the file containing the text that would form the email
+body.
+
+However, if the script ends in an error/warning, the hook script is called like so:
+
+```bash
+"/path/to/notification/hook" "SnapRAID-DAILY: Sync Warning(s)" "/path/to/email/body" "/path/to/command/log/file"
+```
+
+As before, the 1st argument is what would be the email subject, and the 2nd argument
+is what would be the file containing the text that would form the email
+body. The 3rd argument is the log file of the command that caused the script to exit
+with an error.
+
+To use the notification hook, set the **notification_hook** parameter in the
+config file (**snapraid-daily.conf**). See **snapraid-daily.conf(1)**
+
+# Start and End Hooks
+
+The script can also be configured to execute a hook upon startup and also
+after all sync/scrub operations have been completed. These hooks can be bash
+scripts, or anything that can be called from the command line.
+
+A check is carried out for a non-zero (error) return code on the start hook, and the main
+script will exit if this condition is encountered. This same error check is
+not however carried out on the end hook to ensure the script runs to end and the final
+notification is sent.
+
+It is primarily intended to start and stop a list of services that can access files
+in the **SnapRAID** array to allow **SnapRAID** to run without the risk of files being
+modified while in use, but could be used for anything else.
+
+The start hook is executed after the main script has completed all of
+its initial checks and just before it starts to run **SnapRAID**
+touch/diff/sync/scrub operations. The start hook is also passed a
+"start" argument, and is called like so:
+
+```bash
+/path/to/hook start
+```
+
+The end hook then is executed after all sync/scrub operations have been carried
+out just before the final notification is sent. It is also executed if the
+script exits due to an error condition encountered during any of the
+main **SnapRAID** operations (touch/diff/sync/scrub). The end hook is
+also passed an "end"argument and is called like so:
+
+```bash
+/path/to/hook end
+```
+
+The use of the "start" and "end" arguments allows the same hook to
+be used at both the start and end of **snapraid-daily**. Note that
+it is also possible to use different hooks at the start and end of
+the script if desired. It is also not required to use a start
+**AND** end hook simultaneously, the user can use only the start 
+hook or end hook as desired. The hooks also do not need to use the
+"start" or "end" arguments.
+
+To use either of these set the **start_hook** or **end_hook** parameter in
+the config file **/etc/snapraid-daily.conf**
+
+See the manual entry on the config file here:
+
+* **snapraid-daily.conf(1)**   
+* **$ man snapraid-daily.conf**   
+
+An example hook script is provided here:
+https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example 
+
 # SnapRAID Sync and Scrub Options
 
 SnapRAID sync is invoked with the following options:   
@@ -577,20 +741,21 @@ The Steps taken are outlined below:
 ## Step 1 - Initial Checks
 
 The script carries out an initial check of everything
-before it will even attempt to interact with **snapraid**.
+before it will even attempt to interact with **SnapRAID**.
 
 Initially the config file **snapraid-daily.conf** is read,
 and its contents are checked. If anything is undefined,
 a default value is assumed. See **snapraid-daily.conf(1)**
-If the main config file for snapraid itself doesn't exist,
-the script will exit.
+
+If the main config file for SnapRAID itself is not present in
+the default location or doesn't exist, the script will exit.
 
 Next checks are carried out for the script dependencies:
-awk, grep, sed, and snapraid itself. It will exit if
+awk, grep, sed, mktemp, tee and SnapRAID itself. It will exit if
 any of these are not present.
 
 Next, a check on the first defined content file in the
-snapraid config (**/etc/snapraid.conf**) is checked to
+SnapRAID config (**/etc/snapraid.conf**) is checked to
 see if it exists and is writable.
 
 This is to ensure the script is being ran as the right user,
@@ -604,13 +769,14 @@ if a sync/scrub is not ran because of a subsequent issue.
 
 Likewise, it was decided not to check if the parity files
 exist to again prevent waking the disks unless a sync or a
-scrub **actually** are going to be carried out.
+scrub operation are **actually** going to be carried out.
 
 If there is an issue with not being able to access the parity
 files or content files, the sync or scrub will fail and the
 user will be notified anyway.
 
 ## Step 2 - Check SnapRAID Array Current Status
+
 Checks the Array for Errors or if Touch is required using
 **snapraid status**
 
@@ -625,7 +791,7 @@ script will continue as the solution to this is usually to let
 the sync complete. If **\--scrub-only** is specified, the script
 will exit here.
 
-A check is also carried out if **snapraid** is already in use,
+A check is also carried out if **SnapRAID** is already in use,
 ie. whether a **sync** or **scrub** etc. is currently running.
 SnapRAID will not allow multiple instances of itself processing
 the same array.
@@ -633,7 +799,15 @@ the same array.
 The script will exit in this case and the user is also notified
 explicity via email of this.
 
-## Step 3 - Run Touch if Required
+## Step 3 - Run Start Hook If Given
+
+After all checks are completed, and SnapRAID's status looks okay,
+the start hook is called if it was specified in the config file.
+If the start hook reports an error, the script will exit here and
+notify the user.
+
+## Step 4 - Run Touch if Required
+
 If it is determined from the initial check that 1 or more files
 do not have sub-zero timestamps, **snapraid touch** is ran to
 add the sub-zero timestamps.
@@ -641,7 +815,7 @@ add the sub-zero timestamps.
 Touch of files added to the array by default will run the next
 time the script is executed after the files have been added.
 
-Snapraid is invoked with **-v** & **-l** switches to turn on
+SnapRAID is invoked with **-v** & **-l** switches to turn on
 verbose mode and logging, this is to aid in quick debugging if
 errors are detected during the touch.
 
@@ -658,7 +832,8 @@ step will be skipped entirely.
 This step is also skipped if the **\--scrub-only** argument to the
 script is used.
 
-## Step 4 - Check Array For Changes
+## Step 5 - Check Array for Changes
+
 Runs **snapraid diff** to check the array for changes to determine
 if a sync is required or not.
 
@@ -667,11 +842,11 @@ If changes are detected, the sync will proceed. In the event that
 the **-s, --sync-only** is used, the script will exit if no changes
 are detected.
 
-However if either the threshold for deletions or moves that are
+However if either the threshold for deletions, moves or updates that are
 defined in the config file **snapraid-daily.conf** are found to be
 exceeded, the script will exit and notify the user via email.
 
-The theory is that if excess deletions or moves are detected, it
+The theory is that if excess deletions, moves or updates are detected, it
 could very well be accidental, and a subsequent sync could prevent
 the recovery of that data.
 
@@ -679,12 +854,13 @@ For subsequent runs, the script will continue to do this and stop
 at this point until the user intervenes. This step is skipped if the
 **\--scrub-only** argument is used.
 
-## Step 5 - Run Sync to Update the Array
+## Step 6 - Run Sync to Update the Array
+
 Runs **snapraid sync** to update the array. The start-time and finish
 time are monitored to compute the duration so it can be added to the
 email.
 
-The **-v** & **-l** switches are used to turn on verbose mode and
+The **-v** and **-l** switches are used to turn on verbose mode and
 logging, this is to aid in quick debugging if errors are detected
 during the sync operation.
 
@@ -706,20 +882,21 @@ entirely.
 
 This step is also skipped if **\--scrub-only** is active.
 
-## Step 6 - Run Scrub to Check for Silent Corruption
+## Step 7 - Run Scrub to Check for Silent Corruption
+
 Runs Scrub using the **scrub_percent** & **scrub_age** input parameters
-specified in the config file snapraid-daily.conf The start-time
+specified in the config file **snapraid-daily.conf**. The start-time
 and finish time are computed such that is can be added to the email.
 
-Before the scrub is carried out, **Step 3** above is repeated whereby
-the array is checked for changes since the last sync.
+Before the scrub is carried out, the array is once again checked for
+changes since the last sync so the scrub can correctly run.
 
 In the default setup, where the **-c, --scrub-only** option is not
 used, this check should not find any changes since a sync was carried
 out moments ago. Howvever when one is using the **-c, --scrub-only**
 option this may not be the case.
 
-This is required as **snapraid** will exit with an error during a
+This is required as **SnapRAID** will exit with an error during a
 scrub if it finds files that have been modified and not synced.
 
 In this case, the script will exit and the user will be notified
@@ -741,14 +918,28 @@ check at the start of the script will flag them, and the script will
 subsequently exit each time it is invoked until the user intervenes to
 attempt a manual fix.
 
-## Step 7 - Send Final Notification Email
-If no errors are detected during the touch, sync and scrub, or just
-touch & sync, or just scrub (depending on whether the **\--sync-only**
-or **\--scrub-only** arguments are used):
+## Step 8 - Run End Hook If Given
 
-The final condensed log file for the email is sent to the user. This
-will contain an concise output of all the operations carried out and what
-the result was.
+The end hook is now called here if it was specified in the config
+file. If the end hook exits in error, the script will still continue
+so that the final notification is sent.
+
+The end hook is also ran in the event of error conditions for
+SnapRAID touch/diff/sync/scrub operations above.
+
+## Step 9 - Send Final Notification Email
+
+If no errors are detected during the touch, sync and scrub, or just
+touch & sync, or just scrub (depending on whether the **-s, \--sync-only**
+or **-c, \--scrub-only** arguments are used):
+
+If emails are enabled, the final condensed log file for the email is sent
+to the user. This will contain an concise output of all the operations carried
+out and what the result was.
+
+## Step 10 - Run Notification Hook if Given
+
+Lastly the notification hook is called here if specified in the config file.
 
 # Sample Output
 ```bash
@@ -865,8 +1056,8 @@ No error detected.
 # Further Examples
 
 For examples on how to automate via systemd timers, set up a valid muttrc
-config for emails, some notes on SnapRAID itself, or to use cron instead of
-systemd have a look here.
+config for emails, some notes on SnapRAID itself, a sample hook script, 
+or notes on how to use cron instead of systemd have a look here.
 
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
@@ -874,6 +1065,7 @@ systemd have a look here.
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 * https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example
 
 # Creating your own Debian Package
 
