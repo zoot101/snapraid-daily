@@ -664,7 +664,7 @@ body. The 3rd argument is the log file of the command that caused the script to 
 with an error.
 
 To use the notification hook, set the **notification_hook** parameter in the
-config file (**snapraid-daily.conf**). See **snapraid-daily.conf(1)**
+config file (**snapraid-daily.conf**).
 
 # Start and End Hooks
 
@@ -709,14 +709,9 @@ hook or end hook as desired. The hooks also do not need to use the
 "start" or "end" arguments.
 
 To use either of these set the **start_hook** or **end_hook** parameter in
-the config file **/etc/snapraid-daily.conf**
+the config file **/etc/snapraid-daily.conf** 
 
-See the manual entry on the config file here:
-
-* **snapraid-daily.conf(1)**   
-* **$ man snapraid-daily.conf**   
-
-An example hook script is provided here:
+An example hook script is provided here:    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example 
 
 # SnapRAID Sync and Scrub Options
