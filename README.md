@@ -939,113 +939,134 @@ Lastly the notification hook is called here if specified in the config file.
 # Sample Output
 ```bash
 ##############################
-# SnapRAID-DAILY Version: 1.3.11
+# SnapRAID-DAILY Version: 1.4.0
 ##############################
-Initialized at 06:00:00 on 22/06/2025
+Initialized at 09:36:24 on 30/06/2025
  * Hostname: server.example.org
- * Host OS: Debian GNU/Linux 12 (bookworm)
- * SnapRAID Version: 12.4
+ * Host OS: Debian GNU/Linux 13 (trixie)
+ * SnapRAID Version: none
 Input Options:
  * Run-Sync: YES
  * Sync Pre-Hash: YES
  * Run-Scrub: YES
- * Scrub-Percent: 15
+ * Scrub-Percent: 8
  * Scrub-Age: 2 days and older
  * Override Thresholds: NO
  * Deletion Threshold: 1000
  * Moved Threshold: 1000
+ * Updated Threshold: 1000
+Hooks:
+ * Start-Hook: YES
+ * End-Hook: YES
+ * Notification Hook: NO
 Run-Log is Below:
 
 ##############################
 # SnapRAID-DAILY: Initial Status Check
 ##############################
-06:00:00 : Checking current status...
-06:00:10 : No Issues Found in Initial Check
-06:00:10 : Touch Not Needed...
+09:36:24 : Checking current status...
+09:36:34 : No Issues Found in Initial Check
+09:36:34 : Ready to run SnapRAID operations
+09:36:34 : Touch Not Needed...
+
+##############################
+# SnapRAID-DAILY: Start Hook
+##############################
+09:36:34 : Calling Start Hook...
+09:36:34 : Start Hook completed successfully
 
 ##############################
 # SnapRAID-DAILY: Difference Check
 ##############################
-06:00:10 : Checking array for changes...
-06:00:30 : Changes Detected
- * Equal: 1576092
- * Added: 187
- * Removed: 4
+09:36:34 : Checking array for changes...
+09:36:46 : Changes Detected
+ * Equal: 1578513
+ * Added: 7
+ * Removed: 0
  * Updated: 0
  * Moved: 0
- * Copied: 535
+ * Copied: 0
  * Restored: 0
-06:00:30 : Proceeding to sync...
+09:36:46 : Proceeding to sync...
 
 ##############################
 # SnapRAID-DAILY: Sync
 ##############################
-06:00:30 : Starting Sync on 22/06/2025...
-06:04:25 : Sync Completed on 22/06/2025
-06:04:25 : Duration: 0 hours, 3 minutes, 55 seconds
-06:04:25 : Sync was Successful
-06:04:25 : Array Changes Found & Updated:
- * Added: 187
- * Removed: 4
+09:36:46 : Starting Sync on 30/06/2025...
+09:37:46 : Sync Completed on 30/06/2025
+09:37:46 : Duration: 0 hours, 1 minutes, 0 seconds
+09:37:46 : Sync was Successful
+09:37:46 : Array Changes Found & Updated:
+ * Added: 7
+ * Removed: 0
  * Updated: 0
  * Moved: 0
- * Copied: 535
+ * Copied: 0
  * Restored: 0
 
 ##############################
 # SnapRAID-DAILY: Scrub
 ##############################
-06:04:25 : Checking if Array is still up to date...
-06:04:46 : Array is Up-to-Date - Proceeding
-06:04:46 : Starting Scrub on 22/06/2025
-06:04:46 : Scrubbing 15% older than 2 days...
-07:19:03 : Scrub Completed at 22/06/2025
-07:19:03 : Duration: 1 hours, 14 minutes, 17 seconds
-07:19:03 : Scrub was successful
-07:19:03 : Scrubbed 15% older than 2 days
+09:37:46 : Checking if Array is still up to date...
+09:38:10 : Array is Up-to-Date - Proceeding
+09:38:10 : Starting Scrub on 30/06/2025
+09:38:10 : Scrubbing 8% older than 2 days...
+10:16:31 : Scrub Completed at 30/06/2025
+10:16:31 : Duration: 0 hours, 38 minutes, 21 seconds
+10:16:31 : Scrub was successful
+10:16:31 : Scrubbed 8% older than 2 days
+
+##############################
+# SnapRAID-DAILY: End Hook
+##############################
+10:16:31 : Calling End Hook...
+10:16:32 : End Hook completed successfully
 
 ##############################
 # SnapRAID-DAILY: Array Status
 ##############################
-07:19:03 : Current status of the Array is as below:
+10:16:32 : Current status of the Array is as below:
 
 SnapRAID status report:
 
    Files Fragmented Excess  Wasted  Used    Free  Use Name
             Files  Fragments  GB      GB      GB
   220631     180     653       -    1628     338  83% media1
-  359795     578    2249       -    2097     852  71% media2
+  360368     594    2367       -    2114     835  72% media2
   581583     275     888       -    1534     430  78% media3
-  414803    1855    6687    -2.5    3081     852  78% media4
+  415936    1869    6712    -2.4    3104     829  79% media4
  --------------------------------------------------------------------------
- 1576812    2888   10477     0.0    8342    2474  77%
+ 1578518    2918   10620     0.0    8382    2434  77%
 
 
- 17%|                                   o                                 
-    |           o                       o                      o          o
-    |           *           o           *          o           *          *
-    |           *           *           *          *           *          *
-    |           *           *           *          *           *          *
-    |           *           *           *          *           *          *
-    |           *           *           *          *           *          *
-  8%|           *           *           *          *           *          *
-    |           *           *           *          *           *          *
-    |*          *           *           *          *           *          *
-    |*          *           *           *          *           *          *
-    |*          *           *           *          *           *          *
-    |*          *           *           *          *           *          *
-    |*          *           *           *          *           *          *
-  0%|*__________*___________*___________*_o____o___*___________*__________*
-     6                    days ago of the last scrub/sync                 0
+ 15%|                 *               o                o                o 
+    |                 *               *                *                * 
+    |                 *               *                *                * 
+    |                 *     o         *                *                * 
+    |                 *     *         *                *                * 
+    |*                *     *         *                *                * 
+    |*                *     *         *                *                * 
+  7%|*                *     *         *                *                * o
+    |*                *     *         *                *                * *
+    |*                *     *         *                *                * *
+    |*                *     *         *                *                * *
+    |*                *     *         *                *                * *
+    |*                *     *         *                *                * *
+    |*      o        o* oo* *         *                *                * *
+  0%|*_____o*__o_____o*_***_*o________*________________*___o_o_oo_______*_*
+     4                    days ago of the last scrub/sync                 0
 
-The oldest block was scrubbed 6 days ago, the median 3, the newest 0.
+The oldest block was scrubbed 4 days ago, the median 2, the newest 0.
 
 No sync is in progress.
-6% of the array is not scrubbed.
-You have 15 files with a zero sub-second timestamp.
-Run 'snapraid touch' to set their sub-second timestamps to a non-zero value.
+3% of the array is not scrubbed.
+No file has a zero sub-second timestamp.
 No rehash is in progress or needed.
 No error detected.
+
+Regards,
+server.example.org
+
 ```
 
 # Further Examples
