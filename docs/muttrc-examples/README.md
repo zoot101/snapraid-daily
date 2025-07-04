@@ -155,8 +155,10 @@ Unfortunately the script needs to be edited directly. I'm not proficient in pyth
 but editing it is rather easy.
 
 Note there is a sample edited version of the script
-in this folder that can be used (mutt\_oauth2\_mf.py), but it does have the encryption/decryption disabled,
+in the examples folder below that can be used (mutt-oauth-mf.py), but it does have the encryption/decryption disabled,
 so I recommend editing it yourself.
+
+* **/usr/share/doc/snapraid-daily/examples/mutt-oauth2-mf.py**
 
 Find the lines near the top that start with ENCRYPTION\_PIPE and DECRYPTION\_PIPE, and
 change them to look like this. They are near the top of the script just where the comments end.
