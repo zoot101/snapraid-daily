@@ -944,7 +944,7 @@ Lastly the notification hook is called here if specified in the config file.
 Initialized at 09:36:24 on 30/06/2025
  * Hostname: server.example.org
  * Host OS: Debian GNU/Linux 13 (trixie)
- * SnapRAID Version: none
+ * SnapRAID Version: 12.4
 Input Options:
  * Run-Sync: YES
  * Sync Pre-Hash: YES
