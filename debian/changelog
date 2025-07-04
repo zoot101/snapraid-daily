@@ -1,3 +1,75 @@
+snapraid-daily (1.4.0-1) stable; urgency=medium
+
+  * Added the ability to use custom start and end hooks. The primary
+    intention of these is that the user could stop and restart
+    services at the start and end of the main script to allow SnapRAID
+    to run without the risk of files being modfied while in use, but
+    they could be used for anything else as desired.
+
+  * Start/Stop Hooks are passed a "start" and "end" argument like so:
+     - /path/to/start/hook start
+     - /path/to/end/hook end
+    Using the "start" and "end" arguments allows the same hook script
+    to be used for both operations. It is also possible to use only
+    the start hook or end hook, using both simulataneously is not
+    required.
+
+  * Added the ability to use a custom notification hook. This allows
+    the user to use an alternative form of notification to standard
+    emails if desired. 
+    The notification hook is called like so:
+     -  /path/to/hook "Email-Subject" "Email-Body" "Email-Attachment"
+    (The attachments are only present in the case of an error)
+
+  * Added an Updated Threshold in addition to the Moved and Deletion
+    thresholds already present.
+
+  * disable_emails_on_success parameter will also disable the calls to
+    the custom notification hook upon completing a successful run.
+
+  * Diff command logfile is now attached to the emails when sending
+    a notification email about exceeded thresholds or when scrub only
+    is selected and the array has changes. This allows the user to
+    directly see what files have changed from the email.
+    
+  * Updated man pages to add details about start, end and notification
+    hooks.
+
+  * Updated default config file to add hook parameters and comments
+    providing detailed explanations.
+
+  * Added an example hook script for the start/end functions to the
+    docs directory.
+
+  * Specified the modified mutt_oauth2 python script in the examples
+    in the debian package directory so ".py" is not interpreted as a
+    language.
+
+  * Improvements to "Greeting" included at the start of the email
+    showing the input options.
+
+  * Note that on Debian 12 "Bookworm" or 13 "Trixie"  packaged
+    versions of SnapRAID, the version is reported as "none" instead
+    of "12.2" or "12.4". This is caused by the SnapRAID compliation
+    options used in the Debian packaged version and not due to the
+    script itself.
+
+  * Added a signature of the system hostname to the emails.
+
+  * Made detection of content file from snapraid.conf more robust so
+    spaces or tabs at the end or start of the line or quotes dont 
+    cause issues. 
+
+  * Minor code cleanup - Removed the use of cat and some awk calls.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Wed, 02 Jul 2025 11:56:32 +0100
+
+snapraid-daily (1.3.11-2) stable; urgency=medium
+
+  * Package Rev: Fixed typo in main script (no functionality change)
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 24 Jun 2025 15:44:19 +0100
+
 snapraid-daily (1.3.11-1) stable; urgency=medium
 
   * Minor documentation improvements particularly with regards to the
