@@ -677,13 +677,15 @@ above with a test email subject and body file.
 
 If the notification hook requires any variables to be passed into it (for example a URL
 for something like ntfy or healthchecks.io), that can be accomplished by doing the following
-in the config file (**/etc/snapraid-daily.conf**):
+in the config file (**/etc/snapraid-daily.conf**). This avoids requiring a new config
+file for the hook script.
 
 ```bash
 export ntfy_url="https://ntfy.sh/channelname
 ```
 
-(See the sample config file)
+See the sample config file here:    
+https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
 
 # Start and End Hooks
 
@@ -739,13 +741,15 @@ above with the "start" and "end" arguments.
 
 If the start/end hooks require any variables to be passed into them (for example a service
 to stop/start), that can be accomplished by doing the following
-in the config file (**/etc/snapraid-daily.conf**):
+in the config file (**/etc/snapraid-daily.conf**). This is much more elegant that using
+another seperate config file for the hook script.
 
 ```bash
 export service1="smbd"
 ```
 
-(See the sample config file)
+See the sample config file here:    
+https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
 
 # SnapRAID Sync and Scrub Options
 
