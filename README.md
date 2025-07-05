@@ -526,6 +526,10 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
 
+To disable emails entirely and rely upon an alternative form of notification comment
+out the **muttrc_path** or **email_address** in the config file and use the
+**notification_hook** instead.
+
 ## Automation with Systemd
 
 By default the below systemd files are bundled with the debian package
@@ -635,7 +639,8 @@ https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
 
 Since version 1.4.0, the script supports the use of a custom notification
 hook, to allow the user to integrate an alternative form of notification into the script
-if desired.
+if desired. It can be used as an alternative to the standard email notifications
+or can be used in addition to them.
 
 A bash script is probably what is best to use here, but this hook script can be anything
 that is ran from the command line and accepts the below arguments - it doesn't have to
@@ -665,6 +670,20 @@ with an error.
 
 To use the notification hook, set the **notification_hook** parameter in the
 config file (**snapraid-daily.conf**).
+
+Its a good idea to test the notification hook on its own before using it with
+**snapraid-daily** to make sure it works as desired. To do that call it directly like
+above with a test email subject and body file.
+
+If the notification hook requires any variables to be passed into it (for example a URL
+for something like ntfy or healthchecks.io), that can be accomplished by doing the following
+in the config file (**/etc/snapraid-daily.conf**):
+
+```bash
+export ntfy_url="https://ntfy.sh/channelname
+```
+
+(See the sample config file)
 
 # Start and End Hooks
 
@@ -713,6 +732,20 @@ the config file **/etc/snapraid-daily.conf**
 
 An example hook script is provided here:    
 https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example 
+
+As before, it's good idea to test the start/end hooks on their own before using them with
+**snapraid-daily** to make sure they work as desired. To do that call it directly like
+above with the "start" and "end" arguments.
+
+If the start/end hooks require any variables to be passed into them (for example a service
+to stop/start), that can be accomplished by doing the following
+in the config file (**/etc/snapraid-daily.conf**):
+
+```bash
+export service1="smbd"
+```
+
+(See the sample config file)
 
 # SnapRAID Sync and Scrub Options
 
