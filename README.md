@@ -681,7 +681,7 @@ in the config file (**/etc/snapraid-daily.conf**). This avoids requiring a new c
 file for the hook script.
 
 ```bash
-export ntfy_url="https://ntfy.sh/channelname
+export ntfy_url="https://ntfy.sh/channelname"
 ```
 
 See the sample config file here:    
