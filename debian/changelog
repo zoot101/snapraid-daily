@@ -1,3 +1,25 @@
+snapraid-daily (1.4.1-1) stable; urgency=medium
+
+  * Fixed order of email printouts for error conditions when the end
+    hook is called.
+
+  * Code cleanup - remove outdated comments.
+
+  * Script tested on Fedora 42, tweaks to the check for the 1st content
+    file to get it to run smoother.
+
+  * Main manpage improvements, and additional details added about the
+    hooks.
+
+  * Removed unused status logfile generation and updated default
+    config file comments.
+
+  * Minor improvements to error printout messages.
+
+  * Added a Suggests for snapraid-daily-hooks in debian/control.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 07 Jul 2025 11:13:10 +0100
+
 snapraid-daily (1.4.0-1) stable; urgency=medium
 
   * Added the ability to use custom start and end hooks. The primary
