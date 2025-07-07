@@ -20,6 +20,7 @@ Depends:
  ${misc:Depends},
 Recommends:
  mutt (>=2.0),
+Suggests: snapraid-daily-hooks
 Description: Bash Script to automate SnapRAID with email notifications
  * Automate the running of snapraid. Contains everything one
    needs to fully automate the sync and scrub process of SnapRAID.
