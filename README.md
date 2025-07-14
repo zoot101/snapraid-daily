@@ -176,14 +176,14 @@ It's better to use **apt** rather than **dpkg** so the dependencies will be
 automatically installed.
 
 ```bash
-sudo apt install ./snapraid-daily_1.2.6-5_amd64.deb
+sudo apt install ./snapraid-daily_1.4.1-1_amd64.deb
 ```
 
 Alternatively to install manually, do the following:
 
 ```bash
 sudo apt install git # (On Debian based distros)
-sudo dnf install git # (On Fedora)
+sudo dnf install git-core # (On Fedora)
 
 git clone https://github.com/zoot101/snapraid-daily
 cd snapraid-daily
@@ -201,7 +201,11 @@ Next ensure all dependencies are installed:
 
 If on Debian, one can do:
 ```bash
+# On Debian
 sudo apt install coreutils gawk mutt snapraid
+
+# On Fedora
+sudo dnf install coreutils gawk mutt snapraid
 ```
 
 Next, create the config file as discussed below.
