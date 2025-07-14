@@ -1,4 +1,4 @@
-# snapraid-daily
+# SnapRAID-DAILY
 
 Simple Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
