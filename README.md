@@ -4,7 +4,7 @@ Simple Bash Script for the automation of all essential SnapRAID functions with
 in-built email notifications and monitoring of the number of deletions/moves.
 
 Customisable through the use of external hooks. See some examples here:    
-https://github.com/zoot101/snapraid-daily-hooks
+* https://github.com/zoot101/snapraid-daily-hooks
 
 # Introduction 
 Thank you for your interest in this script! SnapRAID is very good software,
@@ -84,7 +84,7 @@ any error being encountered.
 3. **snapraid scrub**   
 
 See the snapraid documentation here:   
-https://www.snapraid.it
+* https://www.snapraid.it
 
 The script will run out of the box with the default config file, or
 no config file. However for best operation, a config file is required - see below.
@@ -239,7 +239,7 @@ are present in this file.
 8. Scrub Age     
 
 See the sample here:
-https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
 
 If installed via the debian package, a sample configuration
 file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
@@ -311,7 +311,7 @@ how to set them up.
 * Outlook via Oauth2
 * Gmail via Oauth2   
   
-https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 Comment out to disable email notifications. If one wants to use an
 alternative form of notifcation either instead of emails or inaddtion
@@ -513,7 +513,7 @@ scrub_age=7
 
 ```
 See a more detailed example with explanatory comments here:    
-https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
+* https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
 
 ## Setting up Email Notifications
 
@@ -528,7 +528,7 @@ The following 3 sample configurations are provided in the docs directory below.
 * Outlook via Oauth2
 * Gmail via Oauth2
  
-https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/
+* https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/
 
 Detailed instructions are provided in the above link on how to set **mutt** up
 to send emails with the script.
@@ -601,12 +601,12 @@ necessary to edit them directly.
 Some further examples are provided in the docs directory for both the
 main service/timer file and also drop-in files that can be used to configure
 automatic restarts or systemd hardening (see below).    
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples   
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples   
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
 
 Note that some examples are also provided in the docs for using **cron**
 to run the script.   
-https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/CRON_README.md
+* https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/CRON_README.md
 
 ## Running as a Standard User with Systemd
 
@@ -640,8 +640,8 @@ sudo systemctl daemon-reload
 
 As before, futher example drop-in files and unit files for systemd and some
 notes are included here:      
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
-https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
 
 # External Hooks
 
@@ -659,7 +659,7 @@ export service1="smbd"
 ```
 
 A collection of Hook scripts that integrate into the main script is provided here:    
-https://github.com/zoot101/snapraid-daily-hooks
+* https://github.com/zoot101/snapraid-daily-hooks
 
 ## Notification Hook
 
@@ -726,7 +726,12 @@ echo "Test Command Logfile" > test_file2.txt
 ```
 
 See the collection of hook scripts provided here for some samples that can be used:    
-https://github.com/zoot101/snapraid-daily-hooks
+* https://github.com/zoot101/snapraid-daily-hooks
+
+The following hook scripts are provided there currently:
+
+- Hook script for Notifications via ntfy - https://ntfy.sh
+- Hook script for use with Healthchecks.io - https://healthchecks.io
 
 # Start and End Hooks
 
@@ -791,7 +796,7 @@ source /etc/snarpaid-daily.conf
 ```
 
 See the collection of hook scripts provided here:    
-https://github.com/zoot101/snapraid-daily-hooks
+* https://github.com/zoot101/snapraid-daily-hooks
 
 # SnapRAID Sync and Scrub Options
 
@@ -945,7 +950,7 @@ This is to serve as an additional safeguard against silent errors
 during what is an extreme condition for the machine whereby all
 disks are spinning at the same time. See the SnapRAID documentation here for
 more information:     
-https://www.snapraid.it
+* https://www.snapraid.it
 
 The output is monitored for errors and if any are detected, the script
 will exit, send a notification email to the user and/or call the notification
@@ -1024,7 +1029,7 @@ Lastly the notification hook is called here if specified in the config file.
 # Sample Output
 
 A sample output of the script is shown below, this uses the service hook from here:    
-https://github.com/zoot101/snapraid-daily-hooks
+* https://github.com/zoot101/snapraid-daily-hooks
 
 ```bash
 ##############################
@@ -1213,14 +1218,14 @@ Most of the script is entirely from the author, but a lot of inspiration was
 got from the following similar scripts:
 
 Original Bash Script (from Zack Reed):   
-https://zackreed.me/snapraid-split-parity-sync-script/
+* https://zackreed.me/snapraid-split-parity-sync-script/
 
 Snapraid-Runner:   
-https://github.com/Chronial/snapraid-runner
+* https://github.com/Chronial/snapraid-runner
 
 Also a bit thank you to Andrea Mazzoleni for this excellent software:    
-https://github.com/amadvance/snapraid     
-https://www.snapraid.it    
+* https://github.com/amadvance/snapraid     
+* https://www.snapraid.it    
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
