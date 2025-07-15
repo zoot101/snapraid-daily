@@ -304,14 +304,16 @@ email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
 See the notes provided in the docs directory here to set up the email
-notifications. Three sample configs are provided along with instructions on
+notifications.
+
+* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
+
+Three sample configs are provided along with instructions on
 how to set them up.
 
 * Gmail via App Passwords
 * Outlook via Oauth2
 * Gmail via Oauth2   
-  
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
 
 Comment out to disable email notifications. If one wants to use an
 alternative form of notifcation either instead of emails or inaddtion
