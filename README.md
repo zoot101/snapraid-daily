@@ -628,7 +628,7 @@ Group=groupname
 ```
 
 Where **username** and **groupname** are the user and group names of the
-user one wants to run SnapRAID, and thus **snapraid-daily** as.
+user one wants to run SnapRAID, and thus **SnapRAID-DAILY** as.
 
 The naming of the **/etc/systemd/system/snapraid-.service.d/** directory
 will cause it to be picked up by all of the systemd service unit files
@@ -665,7 +665,7 @@ A collection of Hook scripts that integrate into the main script is provided her
 
 ## Notification Hook
 
-This allows the user to use an alternative form of notification with **snapraid-daily**
+This allows the user to use an alternative form of notification with **SnapRAID-DAILY**
 if desired. It can be used as an alternative to the standard email notifications
 or can be used in addition to them.
 
@@ -673,7 +673,7 @@ A bash script is probably what is best to use here, but this hook script can be 
 that is ran from the command line and accepts the below arguments - it doesn't have to
 be a bash script.
 
-If the **snapraid-daily** script ends in success, the notification hook is called on
+If the **SnapRAID-DAILY** script ends in success, the notification hook is called on
 the command line like so:
 
 ```bash
@@ -709,7 +709,7 @@ export ntfy_url="https://ntfy.sh/channelname"
 ```
 
 Its a good idea to test the notification hook on its own before using it with
-**snapraid-daily** to make sure it works as desired. To do that call it directly like
+**SnapRAID-DAILY** to make sure it works as desired. To do that call it directly like
 above with a test email subject and body file like so:
 
 ```bash
@@ -737,13 +737,13 @@ The following hook scripts are provided there currently:
 
 # Start and End Hooks
 
-The main **snapraid-daily** script can also be configured to execute a hook upon startup and also
+The main **SnapRAID-DAILY** script can also be configured to execute a hook upon startup and also
 after all sync/scrub operations have been completed. Again, these hooks can be bash
 scripts, or anything that can be called from the command line.
 
 A check is carried out for a non-zero (error) return code on the start hook, and the main
 script will exit if this condition is encountered. This same error check on
-on the end hook with however not cause **snapraid-daily** to exit, this to ensure the script
+on the end hook with however not cause **SnapRAID-DAILY** to exit, this to ensure the script
 runs to end and the final notification is sent as expected.
 
 The Start/End hooks are primarily intended to start and stop a list of services that can access files
@@ -770,7 +770,7 @@ also passed an "end"argument and is called like so:
 ```
 
 The use of the "start" and "end" arguments allows the same hook to
-be used at both the start and end of **snapraid-daily**. Note that
+be used at both the start and end of **SnapRAID-DAILY**. Note that
 it is also possible to use different hooks at the start and end of
 the script if desired.
 
@@ -783,7 +783,7 @@ To use either of these set the **start_hook** or **end_hook** parameter in
 the config file **/etc/snapraid-daily.conf** 
 
 As before, it's good idea to test the start/end hooks on their own before using them with
-**snapraid-daily** to make sure they work as desired. To do that call it directly like
+**SnapRAID-DAILY** to make sure they work as desired. To do that call it directly like
 below with the "start" and "end" arguments.
 
 ```bash
@@ -817,7 +817,7 @@ SnapRAID scrub is invoked with the following options:
 
 # Detailed Operation
 
-A detailed description of all the steps carried out by **snapraid-daily** are outlined below:
+A detailed description of all the steps carried out by **SnapRAID-DAILY** are outlined below:
 
 ## Step 1 - Initial Checks
 
@@ -977,7 +977,7 @@ and finish time are computed such that is can be added to the main log.
 Before the scrub is carried out, the array is once again checked for
 changes since the last sync so the scrub can correctly run.
 
-In the default setup where **snapraid-daily** is called with no arguments,
+In the default setup where **SnapRAID-DAILY** is called with no arguments,
 this check should not find any changes since a sync was carried
 out moments ago. However when one is using the **-c, --scrub-only**
 option this may not be the case.
