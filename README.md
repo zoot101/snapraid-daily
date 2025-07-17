@@ -5,8 +5,10 @@ in-built email notifications and monitoring of the number of deletions/moves.
 
 Customisable through the use of external hooks. See some examples here:    
 * https://github.com/zoot101/snapraid-daily-hooks
+* Hooks are provided above for **Apprise**, **Healthchecks.io**, and to manage a list of services
 
 # Introduction 
+
 Thank you for your interest in this script! SnapRAID is very good software,
 but lacks any default automation or notification ability.
 
@@ -58,11 +60,15 @@ SnapRAID functions that can be scheduled accordingly and do it in a simple manne
 - [Credits](#credits)
 
 # Scope
-This script is intended to focus just on SnapRAID and simple email notifications,
-rather than adding many different features. Additional functionality is accomplished
-through the use of Start/End and Notification Hooks.
 
-This is keeping in the traditional unix philosophy of do one thing and do it well.
+This script is intended to focus just on SnapRAID and simple email notifications,
+rather than adding many different features. This is keeping in the traditional unix
+philosophy of do one thing and do it well.
+
+Additional functionality is accomplished through the use of Start/End and
+Notification Hooks. See the additional repo here:
+
+* https://github.com/zoot101/snapraid-daily-hooks
 
 # Description
 
@@ -166,10 +172,14 @@ snapraid-daily -f /path/to/user.conf
 If an invalid argument is specified, the script will exit.
 
 # Installation and Setup
+
 A package is provided for Debian and its derivatives. Note that the author
 has mainly tested this just on Debian itself (Bullseye, Bookworm and Trixie),
 but it should work on other Debian based distros ok too. The script has also
 been tested on Fedora via manual installation.
+
+Its highly recommended to use the package if one is running a debian based
+distro so the dependencies are handled automatically.
 
 To install the package download it from the releases page and do the following.
 It's better to use **apt** rather than **dpkg** so the dependencies will be
@@ -182,13 +192,19 @@ sudo apt install ./snapraid-daily_1.4.1-1_amd64.deb
 Alternatively to install manually, do the following:
 
 ```bash
+# Install git
 sudo apt install git # (On Debian based distros)
 sudo dnf install git-core # (On Fedora)
 
+# Clone the Repo
 git clone https://github.com/zoot101/snapraid-daily
 cd snapraid-daily
+
+# Install the main script
 chmod +x snapraid-daily
 sudo cp snapraid-daily /usr/bin/
+
+# Install the manual entries
 sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
 sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
 ```
@@ -477,8 +493,6 @@ a snapraid-daily.conf config file for all functionality. Feel free to add
 comments using **\#** accordingly.
 
 ```bash
-#!/usr/bin/env bash
-
 # Snapraid Config Path
 snapraid_config_file_path="/etc/snapraid.conf"    
 
@@ -537,7 +551,7 @@ to send emails with the script.
 
 If desired, to disable emails entirely and rely upon an alternative form of notification comment
 out the **muttrc_path** or **email_address** in the config file and use the
-**notification_hook** instead.
+**notification_hook** instead (see below).
 
 ## Automation with Systemd
 
@@ -665,7 +679,13 @@ A collection of Hook scripts that integrate into the main script is provided her
 
 ## Notification Hook
 
-This allows the user to use an alternative form of notification with **SnapRAID-DAILY**
+Hook Scripts for **Apprise** and **Healthchecks.io** are provided here. Apprise is
+highly recommended as its very easy to use and can send notifications to many services.
+See here for instructions on how to set it up with **SnapRAID-DAILY**.
+
+* https://github.com/zoot101/snapraid-daily-hooks
+
+The Notification Hook allows the user to use an alternative form of notification with **SnapRAID-DAILY**
 if desired. It can be used as an alternative to the standard email notifications
 or can be used in addition to them.
 
@@ -727,19 +747,17 @@ echo "Test Command Logfile" > test_file2.txt
 /path/to/notification/hook "SnapRAID-DAILY: Test Warning" "test_file1.txt" "test_file2.txt"
 ```
 
-See the collection of hook scripts provided here for some samples that can be used:    
-* https://github.com/zoot101/snapraid-daily-hooks
-
-The following hook scripts are provided there currently:
-
-- Hook script for Notifications via ntfy - https://ntfy.sh
-- Hook script for use with Healthchecks.io - https://healthchecks.io
-
 # Start and End Hooks
 
 The main **SnapRAID-DAILY** script can also be configured to execute a hook upon startup and also
 after all sync/scrub operations have been completed. Again, these hooks can be bash
 scripts, or anything that can be called from the command line.
+
+A hook script that stops a list of services via systemd when **SnapRAID-DAILY** starts
+and then re-starts them when **SnapRAID-DAILY** completes that integrates nicely into the
+main script is provided here:
+
+* https://github.com/zoot101/snapraid-daily-hooks
 
 A check is carried out for a non-zero (error) return code on the start hook, and the main
 script will exit if this condition is encountered. This same error check on
@@ -796,9 +814,6 @@ source /etc/snarpaid-daily.conf
 # Test End Hook
 /path/to/hook end
 ```
-
-See the collection of hook scripts provided here:    
-* https://github.com/zoot101/snapraid-daily-hooks
 
 # SnapRAID Sync and Scrub Options
 
@@ -1231,3 +1246,6 @@ Also a bit thank you to Andrea Mazzoleni for this excellent software:
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
+
+Bug reports here on Github are welcome - don't hestitate if you find something wrong.
+
