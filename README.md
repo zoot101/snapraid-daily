@@ -770,7 +770,7 @@ A hook script that stops a list of services via systemd when **SnapRAID-DAILY** 
 and then re-starts them when **SnapRAID-DAILY** completes that integrates nicely into the
 main script is provided here:
 
-* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hook)
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 A check is carried out for a non-zero (error) return code on the start hook, and the main
 script will exit if this condition is encountered. This same error check on
