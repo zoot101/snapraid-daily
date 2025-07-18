@@ -181,11 +181,16 @@ been tested on Fedora via manual installation.
 Its highly recommended to use the package if one is running a debian based
 distro so the dependencies are handled automatically.
 
-To install the package download it from the releases page and do the following.
+To install the package download it from the releases page below and do the following.
 It's better to use **apt** rather than **dpkg** so the dependencies will be
 automatically installed.
 
+* [https://github.com/zoot101/snapraid-daily/releases](https://github.com/zoot101/snapraid-daily/releases)
+
+Install the package like so:
+
 ```bash
+sudo apt update
 sudo apt install ./snapraid-daily_1.4.1-1_amd64.deb
 ```
 
