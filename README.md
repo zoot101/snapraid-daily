@@ -681,7 +681,7 @@ to use an alternative form of notifcation than standard emails. See below for De
 
 Note that if any of the hooks require any variables to be passed into them (for example a service
 to stop/start), that can be accomplished by doing the following
-in the config file (**/etc/snapraid-daily.conf**). This is much more elegant that using
+in the config file (**/etc/snapraid-daily.conf**). This is much more elegant than using
 another seperate config file for the hook script. Don't forget the **"export"**!
 
 ```bash
