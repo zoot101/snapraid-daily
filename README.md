@@ -1238,6 +1238,12 @@ carry out further actions depending on the code.
 * 3: Files Modified During Sync    
 * 5: Thresholds Exceeded   
 
+# Issues
+
+Bug reports here on Github are welcome - don't hestitate if you find something wrong.
+
+* [https://github.com/zoot101/snapraid-daily/issues](https://github.com/zoot101/snapraid-daily/issues)
+
 # Credits
 
 Most of the script is entirely from the author, but a lot of inspiration was
@@ -1258,7 +1264,3 @@ Also a bit thank you to Andrea Mazzoleni for this excellent software:
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
-
-Bug reports here on Github are welcome - don't hestitate if you find something wrong.
-
-* [https://github.com/zoot101/snapraid-daily/issues](https://github.com/zoot101/snapraid-daily/issues)
