@@ -68,7 +68,7 @@ philosophy of do one thing and do it well.
 Additional functionality is accomplished through the use of Start/End and
 Notification Hooks. See the additional repo here:
 
-* https://github.com/zoot101/snapraid-daily-hooks
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 # Description
 
@@ -90,7 +90,7 @@ any error being encountered.
 3. **snapraid scrub**   
 
 See the snapraid documentation here:   
-* https://www.snapraid.it
+* [https://www.snapraid.it](https://www.snapraid.it)
 
 The script will run out of the box with the default config file, or
 no config file. However for best operation, a config file is required - see below.
@@ -204,6 +204,10 @@ cd snapraid-daily
 chmod +x snapraid-daily
 sudo cp snapraid-daily /usr/bin/
 
+# Install the sample config file to the
+# default location
+sudo cp ./config/snapraid-daily.conf /etc/
+
 # Install the manual entries
 sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
 sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
@@ -255,29 +259,25 @@ are present in this file.
 8. Scrub Age     
 
 See the sample here:
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf)
 
 If installed via the debian package, a sample configuration
 file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
 edited directly by the user.
-
-If installing manually do the below and then manually edit it using the above
-example.
-```bash
-sudo cp ./config/snapraid-daily.conf /etc/
-```
 
 As mentioned before, overriding the default config file can be accomplished by
 using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
 to the script. In this case the name of the config file does not have to be **snapraid-daily.conf**.
 
 The debian package installation will also place a sample file in the docs
-location below.    
-**/usr/share/doc/snapraid-daily/sample-configs/snapraid-daily.conf**
+location below.
+
+* **/usr/share/doc/snapraid-daily/sample-configs/snapraid-daily.conf**
 
 This can also be used as a template to generate the optimum config file in 
-the default location:    
-**/etc/snapraid-daily.conf**
+the default location:
+
+* **/etc/snapraid-daily.conf**
 
 Finally if the script cannot find any configuration file it will
 continue with the defaults - see the below:
@@ -322,7 +322,7 @@ The default is empty, whereby no emails are sent.
 See the notes provided in the docs directory here to set up the email
 notifications.
 
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples)
 
 Three sample configs are provided along with instructions on
 how to set them up.
@@ -528,8 +528,14 @@ scrub_age=7
 #notification_hook="/path/to/notification/hook"
 
 ```
-See a more detailed example with explanatory comments here:    
-* https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf
+See a more detailed example with explanatory comments here:
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf) 
+
+See also an example that uses the hook scripts from the SnapRAID-DAILY-Hooks repo
+here: [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf)   
 
 ## Setting up Email Notifications
 
@@ -543,11 +549,11 @@ The following 3 sample configurations are provided in the docs directory below.
 * Gmail via App Passwords
 * Outlook via Oauth2
 * Gmail via Oauth2
- 
-* https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/
 
-Detailed instructions are provided in the above link on how to set **mutt** up
+Detailed instructions are provided in the below link on how to set **mutt** up
 to send emails with the script.
+ 
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/](https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/)
 
 If desired, to disable emails entirely and rely upon an alternative form of notification comment
 out the **muttrc_path** or **email_address** in the config file and use the
@@ -616,13 +622,15 @@ necessary to edit them directly.
 
 Some further examples are provided in the docs directory for both the
 main service/timer file and also drop-in files that can be used to configure
-automatic restarts or systemd hardening (see below).    
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples   
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
+automatic restarts or systemd hardening (see below).
+
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)   
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)
 
 Note that some examples are also provided in the docs for using **cron**
-to run the script.   
-* https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/CRON_README.md
+to run the script.
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/](https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/)
 
 ## Running as a Standard User with Systemd
 
@@ -655,9 +663,10 @@ sudo systemctl daemon-reload
 ```
 
 As before, futher example drop-in files and unit files for systemd and some
-notes are included here:      
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins    
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples       
+notes are included here:
+
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)       
 
 # External Hooks
 
@@ -674,16 +683,15 @@ another seperate config file for the hook script. Don't forget the **"export"**!
 export service1="smbd"
 ```
 
-A collection of Hook scripts that integrate into the main script is provided here:    
-* https://github.com/zoot101/snapraid-daily-hooks
+A collection of Hook scripts that integrate into the main script is provided here:
+
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 ## Notification Hook
 
 Hook Scripts for **Apprise** and **Healthchecks.io** are provided here. Apprise is
 highly recommended as its very easy to use and can send notifications to many services.
-See here for instructions on how to set it up with **SnapRAID-DAILY**.
-
-* https://github.com/zoot101/snapraid-daily-hooks
+See the above link.
 
 The Notification Hook allows the user to use an alternative form of notification with **SnapRAID-DAILY**
 if desired. It can be used as an alternative to the standard email notifications
@@ -757,7 +765,7 @@ A hook script that stops a list of services via systemd when **SnapRAID-DAILY** 
 and then re-starts them when **SnapRAID-DAILY** completes that integrates nicely into the
 main script is provided here:
 
-* https://github.com/zoot101/snapraid-daily-hooks
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hook)
 
 A check is carried out for a non-zero (error) return code on the start hook, and the main
 script will exit if this condition is encountered. This same error check on
@@ -1045,8 +1053,9 @@ Lastly the notification hook is called here if specified in the config file.
 
 # Sample Output
 
-A sample output of the script is shown below, this uses the service hook from here:    
-* https://github.com/zoot101/snapraid-daily-hooks
+A sample output of the script is shown below, this uses the service hook from here:
+
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 ```bash
 ##############################
@@ -1191,13 +1200,13 @@ For examples on how to automate via systemd timers, set up a valid muttrc
 config for emails, some notes on SnapRAID itself, a sample hook script, 
 or notes on how to use cron instead of systemd have a look here.
 
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/cron
-* https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff](https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config](https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/cron](https://github.com/zoot101/snapraid-daily/tree/main/docs/cron)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example](https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example)
 
 # Creating your own Debian Package
 
@@ -1234,18 +1243,22 @@ carry out further actions depending on the code.
 Most of the script is entirely from the author, but a lot of inspiration was
 got from the following similar scripts:
 
-Original Bash Script (from Zack Reed):   
-* https://zackreed.me/snapraid-split-parity-sync-script/
+Original Bash Script (from Zack Reed):
 
-Snapraid-Runner:   
-* https://github.com/Chronial/snapraid-runner
+* [https://zackreed.me/snapraid-split-parity-sync-script/](https://zackreed.me/snapraid-split-parity-sync-script/)
 
-Also a bit thank you to Andrea Mazzoleni for this excellent software:    
-* https://github.com/amadvance/snapraid     
-* https://www.snapraid.it    
+Snapraid-Runner:
+
+* [https://github.com/Chronial/snapraid-runner](https://github.com/Chronial/snapraid-runner)
+
+Also a bit thank you to Andrea Mazzoleni for this excellent software:
+
+* [https://github.com/amadvance/snapraid](https://github.com/amadvance/snapraid)     
+* [https://www.snapraid.it](https://www.snapraid.it)    
 
 Lastly - Thank you for your interest in this script. Hopefully it can be of
 use to other people also.
 
 Bug reports here on Github are welcome - don't hestitate if you find something wrong.
 
+* [https://github.com/zoot101/snapraid-daily/issues](https://github.com/zoot101/snapraid-daily/issues)
