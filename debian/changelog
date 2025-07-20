@@ -1,3 +1,16 @@
+snapraid-daily (1.4.2-1) stable; urgency=medium
+
+  * Minor cosmetic improvements to printouts
+
+  * Documentation improvmenents.
+
+  * Added a Result to the End of the Email log/Script print out,
+    script will now explictly print out "Success" or "Warning(s)"
+    as the overall result. Email/Notification Subjects remain
+    unchanged.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 21 Jul 2025 10:07:41 +0100
+
 snapraid-daily (1.4.1-1) stable; urgency=medium
 
   * Fixed order of email printouts for error conditions when the end
