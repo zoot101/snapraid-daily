@@ -2,11 +2,15 @@
 ###################################################
 # SnapRAID DAILY
 ###################################################
-# COPYRIGHT (C) Mark Finnan 2021
+# COPYRIGHT (C) Mark Finnan 2021-2025
+###################################################
+#
+# Github Page: https://github.com/zoot101/snapraid-daily
+#
 ###################################################
 
 # VERSION
-version="1.4.1"
+version="1.4.2"
 
 ###################################################
 # RETURN CODES
@@ -129,9 +133,12 @@ snapraid_status_cmd() {
 
 snapraid_status_to_email() {
   # Call Snapraid status and pipe the output into the email
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY: Array Status"
+  log_to_email "##############################"
   log_to_email_time "Current Status of the Array is as below:"
-  log_to_email ""
   snapraid -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
+  log_to_email ""
 }
 
 snapraid_touch_cmd() {
@@ -790,7 +797,7 @@ run_touch_if_needed() {
       clean_up_logfiles
       exit $error_code
     else
-      log_to_email_time "Touch Completed"
+      log_to_email_time "Touch Completed on" $touch_required_count "files"
       log_to_email ""
     fi
   fi
@@ -1105,6 +1112,11 @@ notify_of_warning() {
     snapraid_status_to_email
   fi
 
+  # Print Warning Banner here
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
+  log_to_email "##############################"
+
   # Send Email Notification if Emails are Enabled and include attachment if present
   if [ $enable_emails == 1 ] && [ ! -z "${2}" ]
   then
@@ -1176,12 +1188,9 @@ notify_of_success() {
   # Print out that the Email will be sent or not
   if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]
   then
-    echo "Sending Final Notification Email..."
+    echo "Sending Final Notification Email to ${email_address}..."
     echo ""
   fi
-  log_to_email "##############################"
-  log_to_email "# SnapRAID-DAILY: Array Status"
-  log_to_email "##############################"
 
   # Call Snapraid Status to Put the Final Array Status into the Email
   snapraid_status_to_email
@@ -1206,11 +1215,16 @@ notify_of_success() {
   else
     if [ $sync_required -eq 0 ] && [ $nothing_to_scrub -eq 1 ]
     then
-      success_subject="SnapRAID-DAILY: Nothing to Sync and Scrub"
+      success_subject="SnapRAID-DAILY: Nothing to Sync OR Scrub"
     else
       success_subject="SnapRAID-DAILY: All OK"
     fi
   fi
+
+  # Print Success Banner here
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Result: SUCCESS"
+  log_to_email "##############################"
 
   # Send the Success Email
   if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]
@@ -1250,10 +1264,10 @@ send_email() {
 
   # Check if the email is sent successfully for the systemd logs
   if [ $? -eq 0 ]; then
-    echo "Email Sent Successfully..."
+    echo "Email Sent Successfully to ${email_address}..."
     echo ""
   else
-    echo "Problem Sending Email..."
+    echo "Problem Sending Email to ${email_address}..."
     echo ""
   fi
 }
