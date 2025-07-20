@@ -1064,7 +1064,7 @@ A sample output of the script is shown below, this uses the service hook from he
 
 ```bash
 ##############################
-# SnapRAID-DAILY Version: 1.4.1
+# SnapRAID-DAILY Version: 1.4.2
 ##############################
 Initialized at 06:00:01 on 07/07/2025
  * Hostname: server.example.org
@@ -1193,6 +1193,10 @@ You have 15 files with a zero sub-second timestamp.
 Run 'snapraid touch' to set their sub-second timestamps to a non-zero value.
 No rehash is in progress or needed.
 No error detected.
+
+##############################
+# SnapRAID-DAILY Result: SUCCESS
+##############################
 
 Regards,
 server.example.org
