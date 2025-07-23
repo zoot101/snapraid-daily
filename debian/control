@@ -34,4 +34,7 @@ Description: Bash Script to automate SnapRAID with email notifications
  * If at any point, errors are encountered, then the user
    is notified via email.
  * Mutt is used for sending emails.
+ * Customizable through the use of hooks - see the SnapRAID-DAILY-Hooks
+   package to integrate additional notifications to services like Telegram
+   or ntfy, along with the ability to stop/start services if required.
 

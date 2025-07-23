@@ -26,7 +26,8 @@ function stop-service-if-running() {
 
   # Check if the service is enabled, for this script
   # the service shouldn't be enabled as its just a oneshot
-  # service - stop it if it's running
+  # service - stop it if it's running. Note the below command will
+  # also handle the case where the service file doesn't exist
   if systemctl is-active "${1}"".service" | grep -qw "active"
   then
     echo "Stopping" "${1}"".service"
