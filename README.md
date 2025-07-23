@@ -216,6 +216,13 @@ sudo cp ./config/snapraid-daily.conf /etc/
 # Install the manual entries
 sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1/
 sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1/
+
+# Install the systemd unit files
+sudo cp ./systemd-files/snapraid-*.service /etc/systemd/system/
+sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
+
+# Lastly - Reload Systemd
+sudo systemctl daemon-reload
 ```
 
 Next ensure all dependencies are installed:
@@ -538,7 +545,7 @@ See a more detailed example with explanatory comments here:
 * [https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf) 
 
 See also an example that uses the hook scripts from the SnapRAID-DAILY-Hooks repo
-here: [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
+[HERE.](https://github.com/zoot101/snapraid-daily-hooks)
 
 * [https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf)   
 
@@ -569,52 +576,83 @@ out the **muttrc_path** or **email_address** in the config file and use the
 By default the below systemd files are bundled with the debian package
 installation, but are not enabled by default. 
 
-* **/etc/systemd/system/snapraid-daily.service**    
-* **/etc/systemd/system/snapraid-daily.timer**    
-* **/etc/systemd/system/snapraid-sync.service**    
-* **/etc/systemd/system/snapraid-sync.timer**    
-* **/etc/systemd/system/snapraid-scrub.service**    
-* **/etc/systemd/system/snapraid-scrub.timer**    
+* **/lib/systemd/system/snapraid-daily.service**    
+* **/lib/systemd/system/snapraid-daily.timer**    
+* **/lib/systemd/system/snapraid-sync.service**    
+* **/lib/systemd/system/snapraid-sync.timer**    
+* **/lib/systemd/system/snapraid-scrub.service**    
+* **/lib/systemd/system/snapraid-scrub.timer**    
+
+If one installed using the manual procedure above, the above files are
+in **/etc/systemd/system** instead, the procedure is the same regardless.
 
 These files do the following:
 
-1. **snapraid-daily.service** does a sync,then a scrub (the default).    
-2. **snapraid-sync.service** syncs the array only (uses the -s argument).    
-3. **snapraid-scrub.service** scrubs the array only (uses the -c argument).    
+1. **snapraid-daily.service** : Runs a sync, then a scrub (the default).    
+2. **snapraid-sync.service** : Syncs the array only (uses the -s argument).    
+3. **snapraid-scrub.service** : Scrubs the array only (uses the -c argument).    
 
-If installing manually copy the above files to the
-**/etc/systemd/system/** location from the cloned directory above. Note
-that this is not required if installing via the debian package.
+These are intended to cover both of the following cases:
 
-```bash
-# From the earlier directory created by "git clone" do:
-sudo cp ./systemd-files/snapraid-*.service /etc/systemd/system/
-sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
+* Default behaviour of Sync followed by a Scrub each time the script is called
+* Completely seperate Sync and Scrub operations
 
-# Then Reload Systemd
-sudo systemctl daemon-reload
-```
+Firstly, it's a good idea to test the service works correctly by starting the desired
+one manually like so:
 
-It's a good idea to test the service works correctly by starting the desired
-one manually.
 ```bash
 sudo systemctl start snapraid-daily.service
 ```
 
-To get detailed information one can use **journalctl**.
+Then, to get detailed information one can use **journalctl** to inspect the logs.
+
 ```bash
 sudo journalctl -u snapraid-daily.service --since today
 ```
 
 If the service runs without issue, the next step is to enable the timers to
-run the service automatically.
+run the corresponding service automatically.
 
 To enable any one of the timers do the below - enabling the services is not required,
 since they are configured as oneshots and are not intended to be ran at start up. 
 
+If one wishes to run the script with the default behaviour (Run a sync, followed by
+a scrub), then start and enable the **snapraid-daily.timer** file as below.
+
 ```bash
+sudo systemctl start snapraid-daily.timer
 sudo systemctl enable snapraid-daily.timer
 ```
+
+If one wishes to schedule seperate sync and scrub operations start and enable both the
+**snapraid-scrub.timer** and **snapraid-sync.timer** files as shown below.
+
+```bash
+sudo systemctl start snapraid-sync.timer
+sudo systemctl enable snapraid-sync.timer
+sudo systemctl start snapraid-scrub.timer
+sudo systemctl enable snapraid-scrub.timer
+```
+
+The default timer run times are :
+
+* **snapraid-sync.timer** : Twice daily - At 06:00 and 18:00    
+* **snapraid-scrub.timer** : Twice weekly - Mondays and Fridays at 21:00    
+* **snapraid-daily.timer** : Daily - At 06:00    
+
+To adjust any of these, if the script was installed by the package, it's best to
+create a copy of the timer file in **/etc/systemd/system** instead.
+
+```bash
+sudo cp /lib/systemd/system/snapraid-daily.timer /etc/systemd/system/snapraid-daily.timer
+```
+
+This is because systemd will take precedence for files in **/etc/systemd/system**
+over **/lib/systemd/system**. This way, any user modifications are not undone when
+upgrading to new versions of the package installation.
+
+On the other hand if one installed via the manual procedure above, then the timer
+file(s) can be edited directly in **/etc/systemd/system**.
 
 It is not recommended to edit any of the service files directly. It is instead better
 to create drop-in files by using:    
@@ -622,8 +660,12 @@ to create drop-in files by using:
 sudo systemctl edit snapraid-daily.service
 ```
 
-Although to get the expected results with the timer files, it might be
-necessary to edit them directly.
+Lastly, if one does change anything in the service files or the timer files above,
+remember to reload systemd afterwards like so:
+
+```bash
+systemctl daemon-reload
+```
 
 Some further examples are provided in the docs directory for both the
 main service/timer file and also drop-in files that can be used to configure
