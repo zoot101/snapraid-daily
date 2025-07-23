@@ -1,27 +1,54 @@
 #!/usr/bin/env bash
 
-# Detect if it's a 1st time installation, if so the
-# systemd-unit files are copied into the /etc/systemd/system
-# directory
+############################
+# SnapRAID-DAILY postint script
+############################
+# Copyright (C) Mark Finnan 2025
+############################
+# For new installs print a greeting,
+# and then check if an old systemd unit file exists with no user
+# modification in /etc/systemd/system/, if so delete it in favor
+# of /lib/systemd/system
+# For upgrades, reconfigures, just check for the old systemd unit
+# files
+############################
 
 # Recommended by debian policy manual
 set -e
 
-# Reload systemd if its a 1st time system install
-# Here the script is called with the configure argument
-# but not provided with a version like so:
-# postinst configure
-# For upgrades, reconfigures, and everything else its:
-# postinst configure 1.2-1
+# For later versions, the service and timer files were
+# moved to /lib/systemd/system from /etc/systemd/system
+# Check if the old file exists in /etc/systemd/system and
+# is exactly the same as the new file in /lib/systemd/system
+# If so delete the old file, if not some user modification has
+# taken place so preserve the old file. Systemd by default will
+# take precendence with files in /etc/systemd/system as opposed
+# to /lib/systemd/system anyway
+delete_old_systemd_file() {
+  if [ -f "/lib/systemd/system/${1}" ] && [ -f "/etc/systemd/system/${1}" ]
+  then
+    # Can use md5sum as coreutils is a dependency for the package
+    old_file_md5sum=$(md5sum "/etc/systemd/system/${1}" | awk '{print $1}')
+    new_file_md5sum=$(md5sum "/lib/systemd/system/${1}" | awk '{print $1}')
 
-if [ "${1}" == "configure" ] && [ -z "${2}" ]
-then
-  systemctl daemon-reload
+    # Check both are the same file, if so delete the old file and
+    # reload systemd
+    if [ "${old_file_md5sum}" == "${new_file_md5sum}" ]
+    then
+      echo "Removing old /etc/systemd/system/${1} in favor of /lib/systemd/system/${1}"
+      rm "/etc/systemd/system/${1}"
+      systemd_file_changes="yes"
+    fi
+  fi
+}
+
+# Print a Greeting for new installs
+print_greeting() {
 
   # Print a Get Started Message
   echo ""
   echo "################################"
-  echo "# SnapRAID-Daily"
+  echo "# SnapRAID-DAILY"
   echo "################################"
   echo "# Simple Bash Script to automate"
   echo "# SnapRAID functions"
@@ -36,8 +63,64 @@ then
   echo "  that may prove useful:"
   echo "  /usr/share/doc/snapraid-daily/" 
   echo ""
+}
+
+# Reload systemd if its a 1st time system install
+# Here the script is called with the configure argument
+# but not provided with a version like so:
+# postinst configure
+# For upgrades, reconfigures, and everything else its:
+# postinst configure 1.2-1
+
+# New Install
+if [ "${1}" == "configure" ] && [ -z "${2}" ]
+then
+  # Print Greeting
+  print_greeting
+
+  # Delete the old systemd files if present without modifications
+  # Should not be detected for a new install though
+  systemd_file_changes="no"
+  delete_old_systemd_file "snapraid-sync.service"
+  delete_old_systemd_file "snapraid-sync.timer"
+  delete_old_systemd_file "snapraid-scrub.service"
+  delete_old_systemd_file "snapraid-scrub.timer"
+  delete_old_systemd_file "snapraid-daily.service"
+  delete_old_systemd_file "snapraid-daily.timer"
+
+  # Reload Systemd (Always done for a new install)
+  echo "Reloading systemd..."
+  systemctl daemon-reload
+
+  # Exit with Success
   exit 0
+
+# Updates, reconfigures etc.
+elif [ "${1}" == "configure" ]
+then
+
+  # Delete the old systemd files if present without modifications
+  systemd_file_changes="no"
+  delete_old_systemd_file "snapraid-sync.service"
+  delete_old_systemd_file "snapraid-sync.timer"
+  delete_old_systemd_file "snapraid-scrub.service"
+  delete_old_systemd_file "snapraid-scrub.timer"
+  delete_old_systemd_file "snapraid-daily.service"
+  delete_old_systemd_file "snapraid-daily.timer"
+
+  # Reload Systemd but only if one of the above checks
+  # changed a file
+  if [ "${systemd_file_changes}" == "yes" ]
+  then
+    echo "Reloading systemd..."
+    systemctl daemon-reload
+  fi
+
+  # Exit with Success
+  exit 0
+
 else
+  # Exit with Success for all other arguments
   exit 0
 fi
 

@@ -1,3 +1,31 @@
+snapraid-daily (1.4.3-1) stable; urgency=medium
+
+  * In the unlikely case for the default run of a sync followed by a 
+    scrub, the script would report everything is okay if changes in
+    the array were still found directly after the sync operation. Now
+    the script will exit with an error and report this to the user. 
+
+  * Moved default systemd unit files to /lib/systemd/system from 
+    /etc/systemd/system
+
+  * The debian/postinst script has been updated to check for service and
+    timer files in /etc/systemd/system and handle the change in location.
+    - If user modification of those files is found, the old files are
+      left behind untouched.
+    - If on the other hand, user modification is not found, the old files
+      are deleted in favor of the new location.
+    - This should be seemless as by default precedence is given to
+      /etc/systemd/system by systemd.
+
+  * Update manpage to mention the new default location for the service
+    unit files, add details about the default run times for the 
+    bundled timer files, and how to adjust them as this was previously
+    not discussed.
+
+  * Update description in debian/control.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 23 Jul 2025 15:11:09 +0100
+
 snapraid-daily (1.4.2-1) stable; urgency=medium
 
   * Minor cosmetic improvements to printouts

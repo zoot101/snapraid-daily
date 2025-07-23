@@ -10,7 +10,7 @@
 ###################################################
 
 # VERSION
-version="1.4.2"
+version="1.4.3"
 
 ###################################################
 # RETURN CODES
@@ -1069,39 +1069,24 @@ scrub_array() {
       nothing_to_scrub=0
     fi
   else
-    # Array is not up to date - Exit the Script if --scrub-only was given
-    if [ $scrub_only -eq 1 ]
-    then
-      log_to_email_time "Array not up-to-date - Sync Required"
-      log_to_email_time "Changes detected are:"
-      log_to_email " * Equal:" $number_equal
-      log_to_email " * Added:" $number_added
-      log_to_email " * Removed:" $number_removed
-      log_to_email " * Updated:" $number_updated
-      log_to_email " * Moved:" $number_moved
-      log_to_email " * Copied:" $number_copied
-      log_to_email " * Restored:" $number_restored
-      log_to_email_time "Cannot Proceed with Scrub - Stopping"
-      log_to_email_time "Diff Command Logfile is attached."
-      log_to_email ""
-      run_end_hook
-      notify_of_warning "SnapRAID-DAILY: Sync Required" "${diff_command_logfile}" include_status
-      clean_up_logfiles
-      exit $error_code
-
-    else
-      # Probably impossible to get to here as sync was just ran
-      log_to_email_time "Array not up-to-date - Sync Required"
-      log_to_email_time "Changes detected are:"
-      log_to_email " * Equal:" $number_equal
-      log_to_email " * Added:" $number_added
-      log_to_email " * Removed:" $number_removed
-      log_to_email " * Updated:" $number_updated
-      log_to_email " * Moved:" $number_moved
-      log_to_email " * Copied:" $number_copied
-      log_to_email " * Restored:" $number_restored
-      log_to_email ""
-    fi
+    # Array is not up to date and can't be scrubbed without the risk of an error
+    # Exit the Script with a warning
+    log_to_email_time "Array not up-to-date - Sync Required"
+    log_to_email_time "Changes detected are:"
+    log_to_email " * Equal:" $number_equal
+    log_to_email " * Added:" $number_added
+    log_to_email " * Removed:" $number_removed
+    log_to_email " * Updated:" $number_updated
+    log_to_email " * Moved:" $number_moved
+    log_to_email " * Copied:" $number_copied
+    log_to_email " * Restored:" $number_restored
+    log_to_email_time "Cannot Proceed with Scrub - Stopping"
+    log_to_email_time "Diff Command Logfile is attached."
+    log_to_email ""
+    run_end_hook
+    notify_of_warning "SnapRAID-DAILY: Sync Required" "${diff_command_logfile}" include_status
+    clean_up_logfiles
+    exit $error_code
   fi
 }
 
