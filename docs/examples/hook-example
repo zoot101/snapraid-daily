@@ -3,9 +3,9 @@
 # Simple bash script example to stop and restart
 # a number of services.
 
-# Specify List of Services here or in /etc/snapraid-daily.conf
-# using export
-services=( "sonarr" "radarr" "lidarr" )
+# Specify List of Services here or in a seperate
+# config file
+services=( "smbd" "sonarr" "radarr" "lidarr" "readarr" "bazarr")
 
 # Check for Root
 if [ $UID != 0 ]
