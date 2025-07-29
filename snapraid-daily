@@ -10,7 +10,12 @@
 ###################################################
 
 # VERSION
-version="1.4.3"
+version="1.5.0"
+
+###################################################
+# VARIABLES
+###################################################
+max_hooks=5
 
 ###################################################
 # RETURN CODES
@@ -42,7 +47,7 @@ main() {
   initial_status_check
   
   # Run Start Hook (if given)
-  run_start_hook
+  run_start_hooks
  
   # Run Touch if it is required, check for deletion/moved thresholds
   # and then sync the array. Only if the --scrub-only is not selected
@@ -60,7 +65,7 @@ main() {
   fi
   
   # Run End Hook (if given)
-  run_end_hook
+  run_end_hooks
 
   # Send Final Notification Email if No Errors were detected, clean up
   # /tmp logfiles and exit with success
@@ -185,7 +190,7 @@ snapraid_diff_cmd() {
     log_to_email_time "Problem with Diff Command - Stopping"
     log_to_email_time "Diff Command Logfile Is attached..."
     log_to_email ""
-    run_end_hook
+    run_end_hooks
     notify_of_warning "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
     clean_up_logfiles
     exit $error_code
@@ -196,7 +201,7 @@ snapraid_diff_cmd() {
     log_to_email_time "It should be either \"diff\" or \"equal\""
     log_to_email_time "Diff Command Logfile Is attached..."
     log_to_email ""
-    run_end_hook
+    run_end_hooks
     notify_of_warning "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
     clean_up_logfiles
     exit $error_code
@@ -371,7 +376,7 @@ read_config_file() {
     if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]; then
       error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
     elif [ "${disable_emails_on_success}" == "yes" ]; then
-      echo "INFO: Notification Emails & Hook disabled on Success"
+      echo "INFO: Notification Emails & Hook(s) disabled on Success"
     fi
   fi
 
@@ -411,33 +416,11 @@ read_config_file() {
     fi
   fi
 
-  # Hook Checks
-  # Check Start Hook exists and if it does that it is executable
-  if [ ! -z "${start_hook}" ] && [ ! -f "${start_hook}" ]; then
-    error "Start Hook defined in config file:" "${start_hook}" "does not exist - Exiting"
-  elif [ ! -z "${start_hook}" ] && [ ! -x "${start_hook}" ]; then
-    error "Start Hook:" "${start_hook}" "is not executable - Exiting"
-  elif [ ! -z "${start_hook}" ]; then
-    echo "INFO: Start Hook:" "${start_hook}"
-  fi
-
-  # Check End Hook exists and if it does that it is executable
-  if [ ! -z "${end_hook}" ] && [ ! -f "${end_hook}" ]; then
-    error "End Hook defined in config file:" "${end_hook}" "does not exist - Exiting"
-  elif [ ! -z "${end_hook}" ] && [ ! -x "${end_hook}" ]; then
-    error "End Hook:" "${end_hook}" "is not executable - Exiting"
-  elif [ ! -z "${end_hook}" ]; then
-    echo "INFO: End Hook:" "${end_hook}"
-  fi
-
-  # Check Notification Hook exists and if it does that it is executable
-  if [ ! -z "${notification_hook}" ] && [ ! -f "${notification_hook}" ]; then
-    error "Notification Hook defined in config file:" "${notification_hook}" "does not exist - Exiting"
-  elif [ ! -z "${notification_hook}" ] && [ ! -x "${notification_hook}" ]; then
-    error "Notification Hook:" "${notification_hook}" "is not executable - Exiting"
-  elif [ ! -z "${notification_hook}" ]; then
-    echo "INFO: Notification Hook:" "${notification_hook}"
-  fi
+  # Check Start/End/Notfication hooks to see if they are defined
+  # correctly as executable files and how many of them there are
+  get_number_of_hooks "start_hook"
+  get_number_of_hooks "end_hook"
+  get_number_of_hooks "notification_hook"
 }
 
 # Sanity Check for Dependencies
@@ -648,21 +631,21 @@ print_greeting() {
   fi
 
   # Print Start and Stop Hooks if Being Used
-  if [ ! -z "${start_hook}" ] || [ ! -z "${end_hook}" ] || [ ! -z "${notification_hook}" ]
+  if [ ! -z "${start_hook1}" ] || [ ! -z "${end_hook1}" ] || [ ! -z "${notification_hook1}" ]
   then
     log_to_email "Hooks:"
-    if [ ! -z "${start_hook}" ]; then
-      log_to_email " * Start-Hook: YES"
+    if [ ! -z "${start_hook1}" ]; then
+      log_to_email " * Start-Hook: YES ($N_start_hooks)"
     else
       log_to_email " * Start-Hook: NO"
     fi
-    if [ ! -z "${end_hook}" ]; then
-      log_to_email " * End-Hook: YES"
+    if [ ! -z "${end_hook1}" ]; then
+      log_to_email " * End-Hook: YES ($N_end_hooks)"
     else
       log_to_email " * End-Hook: NO"
     fi
-    if [ ! -z "${notification_hook}" ]; then
-      log_to_email " * Notification Hook: YES"
+    if [ ! -z "${notification_hook1}" ]; then
+      log_to_email " * Notification Hook: YES ($N_notification_hooks)"
     else
       log_to_email " * Notification Hook: NO"
     fi
@@ -792,7 +775,7 @@ run_touch_if_needed() {
       log_to_email_time "Touch Encountered Issues - Please Investigate..."
       log_to_email_time "Touch Command Logfile is attached"
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Touch Warning(s)" "${touch_command_logfile}" include_status
       clean_up_logfiles
       exit $error_code
@@ -864,7 +847,7 @@ check_array_for_changes_and_thresholds() {
       log_to_email_time "Stopping..."
       log_to_email_time "Diff Command Logfile is attached."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Threshold(s) Exceeded" "${diff_command_logfile}"
       clean_up_logfiles
       exit $thresholds_exceeded_code
@@ -933,7 +916,7 @@ sync_array() {
       log_to_email_time "Sync - File(s) Modified During Sync"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: File(s) Modified during Sync" $sync_command_logfile include_status
       clean_up_logfiles
       exit $files_modified_during_sync_code
@@ -944,7 +927,7 @@ sync_array() {
       log_to_email_time "Unexpected Output from Sync - Please Investigate"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile include_status
       clean_up_logfiles
       exit $error_code
@@ -959,7 +942,7 @@ sync_array() {
       log_to_email_time " * Exit Status:" "${sync_exit_status}"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile include_status
       clean_up_logfiles
       exit $error_code
@@ -1041,7 +1024,7 @@ scrub_array() {
       log_to_email_time "Unexpected output from Scrub - Please Investigate"
       log_to_email_time "Scrub Output Log is attached..."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}" include_status
       clean_up_logfiles
       exit $error_code
@@ -1056,7 +1039,7 @@ scrub_array() {
       log_to_email_time " * Exit Status:" "${scrub_exit_status}"
       log_to_email_time "Scrub Output Log is attached..."
       log_to_email ""
-      run_end_hook
+      run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}" include_status
       clean_up_logfiles
       exit $error_code
@@ -1083,87 +1066,200 @@ scrub_array() {
     log_to_email_time "Cannot Proceed with Scrub - Stopping"
     log_to_email_time "Diff Command Logfile is attached."
     log_to_email ""
-    run_end_hook
+    run_end_hooks
     notify_of_warning "SnapRAID-DAILY: Sync Required" "${diff_command_logfile}" include_status
     clean_up_logfiles
     exit $error_code
   fi
 }
 
-# Warning Notification
-notify_of_warning() {
-  # Include the output of the status command in the email if required
-  if [ ! -z "${3}" ]; then
-    snapraid_status_to_email
-  fi
+# Get the number of start, end and notification hooks defined in
+# the configuration file
+get_number_of_hooks() {
 
-  # Print Warning Banner here
-  log_to_email "##############################"
-  log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
-  log_to_email "##############################"
+  # $1 = start_hook,end_hook,notification_hook
+  local N_hooks=0
 
-  # Send Email Notification if Emails are Enabled and include attachment if present
-  if [ $enable_emails == 1 ] && [ ! -z "${2}" ]
+  # Loop Through Defined Hooks in Config File
+  # to find out how many are defined
+  for i in $(seq 1 1 $((max_hooks+1)))
+  do
+    local hook="${1}"$i
+
+    # Check the hook script exists and is executable
+    if [ ! -z "${!hook}" ] && [ -x "${!hook}" ]
+    then
+      N_hooks=$((N_hooks+1))
+
+      # Check if the max number of suppVorted hooks has been reached
+      if [ $i -gt $max_hooks ]
+      then
+        echo "WARNING: Only $max_hooks are supported, ignoring above numbered \"${1}\" hooks"
+        if [ "${1}" == "start_hook" ]; then
+          N_start_hooks=$max_hooks
+        elif [ "${1}" == "end_hook" ]; then
+          N_end_hooks=$max_hooks
+        elif [ "${1}" == "notification_hook" ]; then
+          N_notification_hooks=$max_hooks
+        fi
+        # Return 0 to exit the function and avoid the if/elif
+        # setting the number of hooks below
+        return 0
+      fi
+
+      # Print that the Hook was found
+      if [ "${1}" == "start_hook" ]; then
+        echo "INFO: Start Hook $i: ${!hook}"
+      elif [ "${1}" == "end_hook" ]; then
+        echo "INFO: End Hook $i: ${!hook}"
+      elif [ "${1}" == "notification_hook" ]; then
+        echo "INFO: Notification Hook $i: ${!hook}"
+      fi
+
+    # Otherwise exit if it is not executable or doesn't exist
+    elif [ ! -z "${!hook}" ] && [ ! -x "${!hook}" ]
+    then
+      error "${1}$i defined in config file: ${!hook} does not exist or is not executable - Exiting"
+
+    # Otherwise Break
+    else
+      break
+    fi
+  done
+
+  # Set the Hook Number depending on 1st argument
+  if [ "${1}" == "start_hook" ]
   then
-    send_email "${1}" "${2}"
-  elif [ $enable_emails == 1 ] 
+    N_start_hooks=$N_hooks
+  elif [ "${1}" == "end_hook" ]
   then
-    send_email "${1}"
-  fi
-
-  # If a Custom Notification Hook is present - Call it here
-  if [ ! -z "${notification_hook}" ]; then
-    echo "Calling Notification Hook:" "${notification_hook}"
-    "${notification_hook}" "${1}" "${main_logfile}" "${2}"
+    N_end_hooks=$N_hooks
+  elif [ "${1}" == "notification_hook" ]
+  then
+    N_notification_hooks=$N_hooks
   fi
 }
 
-# Call Start Hook
-run_start_hook() {
+# Call Start Hook(s)
+run_start_hooks() {
   # Run the Start Hook Directly if it was specified in the config file
-  if [ ! -z "${start_hook}" ]
+  if [ $N_start_hooks != 0 ]
   then
     log_to_email "##############################"
-    log_to_email "# SnapRAID-DAILY: Start Hook"
+    log_to_email "# SnapRAID-DAILY: Start Hook(s)"
     log_to_email "##############################"
-    log_to_email_time "Calling Start Hook..."
-    "${start_hook}" "start"
+
+    # Loop through each start hook
+    for i in $(seq 1 1 $N_start_hooks)
+    do
+      local start_hook="start_hook"$i
+
+      log_to_email_time "Calling Start Hook $i/$N_start_hooks..."
+      "${!start_hook}" "start"
   
-    # Check Error Code
-    if [ $? != 0 ]
-    then
-      log_to_email_time "Start Hook ended in error"
-      notify_of_warning "SnapRAID-DAILY: Start Hook Error(s)"
-      clean_up_logfiles
-      exit $error_code
-    else
-      log_to_email_time "Start Hook completed successfully"
-      log_to_email ""
-    fi
+      # Check Error Code
+      if [ $? != 0 ]
+      then
+        log_to_email_time "Start Hook $i/$N_start_hooks ended in error"
+        log_to_email ""
+        notify_of_warning "SnapRAID-DAILY: Start Hook Error(s)"
+        clean_up_logfiles
+        exit $error_code
+      else
+        log_to_email_time "Start Hook $i/$N_start_hooks Done"
+        # Check all hooks have been completed
+        if [ $i == $N_start_hooks ]
+        then
+          log_to_email_time "All Start Hooks completed successfully"
+          log_to_email ""
+        else
+          log_to_email ""
+        fi
+      fi
+    done
   fi
 }
 
 # Call End Hook
-run_end_hook() {
+run_end_hooks() {
   # Run the End Hook Directly if it was specifed in the config file
-  if [ ! -z "${end_hook}" ]
+  if [ $N_end_hooks != 0 ]
   then
     log_to_email "##############################"
-    log_to_email "# SnapRAID-DAILY: End Hook"
+    log_to_email "# SnapRAID-DAILY: End Hook(s)"
     log_to_email "##############################"
-    log_to_email_time "Calling End Hook..."
+
+    local error_count=0
+ 
+    # Loop through each end hook
+    for i in $(seq 1 1 $N_end_hooks)
+    do
+      local end_hook="end_hook"$i
+ 
+      log_to_email_time "Calling End Hook $i/$N_end_hooks..."
+      # Run End Hook Directly with "end" argument
+      "${!end_hook}" "end"
   
-    # Run End Hook Directly with "end" argument
-    "${end_hook}" "end"
-  
-    # Check Error Code - Script Continues if the End Hook Results in an Error
-    if [ $? != 0 ]
+      # Check Error Code - Script Continues if the End Hook Results in an Error
+      if [ $? != 0 ]
+      then
+        error_count=$((error_count+1))
+        log_to_email_time "End Hook $i/$N_end_hooks ended in error"
+        log_to_email ""
+      else
+        log_to_email_time "End Hook $i/$N_start_hooks Done"
+        log_to_email ""
+      fi
+
+      # Check all hooks have been completed
+      if [ $i == $N_end_hooks ] && [ $error_count == 0 ]
+      then
+        log_to_email_time "All End Hooks completed successfully"
+        log_to_email ""
+        end_hook_errors="no"
+      elif [ $i == $N_end_hooks ] && [ $error_count != 0 ]
+      then
+        log_to_email_time "One or more errors running End Hook(s)"
+        log_to_email ""
+        end_hook_errors="yes"
+      fi
+    done
+  else
+    end_hook_errors="no"
+  fi
+}
+
+# Call Notification Hook(s)
+run_notification_hooks() {
+
+  # Run any defined notification hooks
+  if [ $N_notification_hooks != 0 ]
+  then
+    local notification_title="${1}"
+    local notification_body="${2}"
+    local notification_attachment="${3}"
+
+    # Only run the notification hooks if enabled or in the case of a warning
+    if [[ ( "${disable_emails_on_success}" == "no" ) || \
+          ( "${disable_emails_on_success}" == "yes" && ! -z "${notification_attachment}" ) ]]
     then
-      log_to_email_time "End Hook ended in error"
-      log_to_email ""
-    else
-      log_to_email_time "End Hook completed successfully"
-      log_to_email ""
+      echo "##############################"
+      echo "# SnapRAID-DAILY: Notification Hook(s)"
+      echo "##############################"
+
+      # Loop through all defined hooks
+      for i in $(seq 1 1 $N_notification_hooks)
+      do
+        local notification_hook="notification_hook"$i
+
+        # Call the Custom Notification Hook Script if one was given
+        if [ -x "${!notification_hook}" ]
+        then
+          echo " * Calling Notification Hook $i/$N_notification_hooks :" "${!notification_hook}"
+          "${!notification_hook}" "${notification_title}" "${notification_body}" "${notification_attachment}"
+          echo ""
+        fi
+      done
     fi
   fi
 }
@@ -1207,9 +1303,16 @@ notify_of_success() {
   fi
 
   # Print Success Banner here
-  log_to_email "##############################"
-  log_to_email "# SnapRAID-DAILY Result: SUCCESS"
-  log_to_email "##############################"
+  if [ "${end_hook_errors}" == "no" ]
+  then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY Result: SUCCESS"
+    log_to_email "##############################"
+  else
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
+    log_to_email "##############################"
+  fi
 
   # Send the Success Email
   if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]
@@ -1218,11 +1321,32 @@ notify_of_success() {
   fi
 
   # Call the Custom Notification Hook Script if one was given
-  if [ ! -z "${notification_hook}" ] && [ "${disable_emails_on_success}" == "no" ]
-  then
-    echo "Calling Notification Hook:" "${notification_hook}"
-    "${notification_hook}" "$success_subject" "${main_logfile}"
+  run_notification_hooks "${success_subject}" "${main_logfile}"
+}
+
+# Warning Notification
+notify_of_warning() {
+  # Include the output of the status command in the email if required
+  if [ ! -z "${3}" ]; then
+    snapraid_status_to_email
   fi
+
+  # Print Warning Banner here
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
+  log_to_email "##############################"
+
+  # Send Email Notification if Emails are Enabled and include attachment if present
+  if [ $enable_emails == 1 ] && [ ! -z "${2}" ]
+  then
+    send_email "${1}" "${2}"
+  elif [ $enable_emails == 1 ] 
+  then
+    send_email "${1}"
+  fi
+
+  # If a Custom Notification Hook is present - Call it here
+  run_notification_hooks "${1}" "${main_logfile}" "${2}"
 }
 
 # Send Emails using mutt 
