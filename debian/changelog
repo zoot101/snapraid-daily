@@ -1,3 +1,71 @@
+snapraid-daily (1.5.0-1) stable; urgency=medium
+
+  * Added support for multiple hooks! The script can now call up to 5
+    start, end and notification hooks. This greatly expands the ability
+    for customisation. Closes [#2].
+
+  * Renamed hook script variables to add numbers to enable this change:
+    - start_hook to start_hook1
+    - end_hook to end_hook1
+    - notification_hook to notification_hook1
+    If installed via the package, the debian/postinst script will make an
+    edit to the config file to update the naming, such that the upgrade
+    should be seamless. If not installed via the package, one will have to
+    manually change the hook naming in the config file.
+
+  * Note however the update of the config file will only work on the default
+    config file location - /etc/snapraid-daily.conf. If one is using a 
+    config file in another location, updating the config file manually is
+    required.
+    - See the updated documentation on the hooks.
+
+  * The User is now prompted to enter a user name and group upon installing
+    the debian package. This is to automate running the service as a user
+    other than root if desired.
+
+  * Script result is now printed as "Warning" if errors are encountered
+    while running the end hook(s). However the script will still run to the
+    end as before.
+
+  * Updates to Manual Entries: snapraid-daily(1) and snapraid-daily.conf(1)
+
+  * Fixed issue where the notification hooks were not called if the script
+    ended in a Warning condition with the disable_emails_on_success parameter
+    enabled.
+
+  * Systemd unit files are now installed in /usr/lib/systemd/system as is
+    now the case with Debian, updated postinst script to handle this.
+    - On older versions, if installed via the package the unit files were
+      installed in /etc/systemd/system. If they still exist there without
+      modification, the postinst script will move them to the new location,
+      otherwise they are left unchanged.
+    - Does not effect manual installations.
+
+  * Debian Package updates:
+    - Fixed dpkg-source warnings while building the package. Package is no
+      longer regarded as a native debian package.
+    - Updated debian/control dependencies, snapraid-daily-hooks (>=0.3.3)
+      is now suggested instead for full compatibility.
+    - Removed unused dependency for findutils. It was originally included
+      for xargs which is no longer used.
+    - Added a Pre-Depends dependency for debconf to implement the prompts
+      during installation.
+    - Updated debian/postinst script to implement the prompts for a user
+      and group, and also to handle checking the config file for new
+      hook naming syntax.
+    - Added a postrm script to purge debconf and also remove config files
+      not already removed through the purge operation.
+    - Removed printouts from prerm script.
+    - Moved sample config to examples folder to fix .conf extension having
+      it converted to a different format on package based installs.
+    - Lintian check completed on package.
+
+  * The pace of updates should now slow down, as most features that were
+    planned to be added have now been added.
+    - Feel free to raise an issue on Github if you have any suggestions! 
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Tue, 29 Jul 2025 21:12:41 +0100
+
 snapraid-daily (1.4.3-1) stable; urgency=medium
 
   * In the unlikely case for the default run of a sync followed by a 
@@ -910,7 +978,7 @@ snapraid-daily (0.1.1-1) stable; urgency=medium
 
  -- Mark Finnan <mfinnan101@gmail.com>  Mon, 09 Aug 2021 17:37:09 +0100
  
- snapraid-daily (0.1.0-1) stable; urgency=medium
+snapraid-daily (0.1.0-1) stable; urgency=medium
 
   * Initial release.
   

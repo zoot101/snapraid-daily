@@ -1,9 +1,9 @@
 #! /usr/bin/dh-exec
 snapraid-daily /usr/bin/
 config/snapraid-daily.conf /etc
-systemd-files/snapraid-daily.service /lib/systemd/system
-systemd-files/snapraid-daily.timer /lib/systemd/system
-systemd-files/snapraid-sync.service /lib/systemd/system
-systemd-files/snapraid-sync.timer /lib/systemd/system
-systemd-files/snapraid-scrub.service /lib/systemd/system
-systemd-files/snapraid-scrub.timer /lib/systemd/system
+systemd-files/snapraid-daily.service usr/lib/systemd/system
+systemd-files/snapraid-daily.timer usr/lib/systemd/system
+systemd-files/snapraid-sync.service usr/lib/systemd/system
+systemd-files/snapraid-sync.timer usr/lib/systemd/system
+systemd-files/snapraid-scrub.service usr/lib/systemd/system
+systemd-files/snapraid-scrub.timer usr/lib/systemd/system
