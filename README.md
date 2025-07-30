@@ -954,15 +954,13 @@ The script carries out an initial check of everything before it will even attemp
 Initially the config file **snapraid-daily.conf** is read, and its contents are checked. If anything is undefined, a default
 value is assumed.
 
-If the main config file for SnapRAID itself is not present in the default location or doesn't exist, the script will exit.
+If the main config file for SnapRAID itself is not present in the default location or doesn't exist, the script will continue with all defaults.
 
 Next checks are carried out for the script dependencies: awk, grep, sed, mktemp, tee and SnapRAID itself. It will exit if any of these
 are not present.
 
 Next, a check on the first defined content file in the SnapRAID config (**/etc/snapraid.conf**) is checked to see if it exists and is
-writable.
-
-This is to ensure the script is being ran as the right user, and serves as a good sanity check to see if the content files exist and
+writable. This is to ensure the script is being ran as the right user, and serves as a good sanity check to see if the content files exist and
 are writable.
 
 One could check all config files exist,  but given that there is usually a copy on each disk, that would mean potentially
@@ -971,8 +969,8 @@ waking all the disks from standby which would be undesirable if a sync/scrub is 
 Likewise, it was decided not to check if the parity files exist to again prevent waking the disks unless a sync or a
 scrub operation are **actually** going to be carried out.
 
-If there is an issue with not being able to access the parity files or content files, the sync or scrub will fail and the
-user will be notified anyway.
+If there is an issue with not being able to access the parity files or content files, the status command will flag this in the case of
+a missing content file, and the sync or scrub will fail in the case of a missing parity file, and the user will be notified anyway.
 
 ## Step 2 - Check SnapRAID Array Current Status
 
@@ -981,7 +979,7 @@ Checks the Array for Errors or if Touch is required using `snapraid status`
 If errors are encountered at this point, the script will exit and send a notification email to the user. It will continue to
 do this each time the script is invoked, and stop here until the user intervenes to address whatever the error is.
 
-If a sync was found to be in progress (this is - the last sync was interrupted), and **\--scrub-only** is NOT specified, the
+If a sync was found to be in progress (that is - the last sync was interrupted), and **\--scrub-only** is NOT specified, the
 script will continue as the solution to this is usually to let the sync complete. If **\--scrub-only** is specified, the script
 will exit here.
 
@@ -993,7 +991,7 @@ The script will exit in this case and the user is also notified explicity of thi
 ## Step 3 - Run Start Hooks If Given
 
 After all checks are completed, and SnapRAID's status looks okay, the start hooks are called here one-by-one if specified in the config file.
-If any of the start hook report an error, the script will exit here and notify the user via email or notification hooks.
+If any of the start hooks report an error, the script will exit here and notify the user via email or notification hooks.
 
 ## Step 4 - Run Touch if Required
 
@@ -1006,7 +1004,7 @@ SnapRAID is invoked with **-v** & **-l** switches to turn on verbose mode and lo
 errors are detected during the touch.
 
 The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user or call
-the notification hook and attach the output of the log created with the "-l" argument to SnapRAID.
+the notification hooks and attach the output of the log created with the "-l" argument to SnapRAID.
 
 The idea here is that one can quickly know what the error is via the notification email alone.
 
@@ -1022,7 +1020,7 @@ If no changes are detected, the script will skip the sync entirely. If changes a
 the **-s, --sync-only** is used, the script will exit here if no changes are detected.
 
 However if either the threshold for deletions, moves or updates that are defined in the config file **snapraid-daily.conf** are found to be
-exceeded, the script will exit and notify the user via email and/or call the notification hook if present.
+exceeded, the script will exit and notify the user via email and/or call the notification hook(s) if present.
 
 The theory is that if excess deletions, moves or updates are detected, it could very well be accidental, and a subsequent sync could prevent
 the recovery of that data.
@@ -1033,7 +1031,7 @@ For subsequent runs, the script will continue to do this and stop at this point 
 ## Step 6 - Run Sync to Update the Array
 
 Runs **snapraid sync** to update the array. The start-time and finish time are monitored to compute the duration so it can be added to the
-main log.
+main log that will form the email body.
 
 The **-v** and **-l** switches are used to turn on verbose mode and logging, this is to aid in quick debugging if errors are detected
 during the sync operation.
@@ -1056,7 +1054,7 @@ This step is also skipped if **\--scrub-only** is active.
 ## Step 7 - Run Scrub to Check for Silent Corruption
 
 Runs Scrub using the **scrub_percent** & **scrub_age** input parameters specified in the config file **snapraid-daily.conf**. The start-time
-and finish time are computed such that is can be added to the main log.
+and finish time are computed such that is can be added to the main log that will form the email body.
 
 Before the scrub is carried out, the array is once again checked for changes since the last sync so the scrub can correctly run.
 
@@ -1065,12 +1063,12 @@ out moments ago. However when one is using the **-c, --scrub-only** option this 
 
 This is required as **SnapRAID** will exit with an error during a scrub if it finds files that have been modified and not synced.
 
-In this case, the script will exit and the user will be notified via email explicitly that a sync is required.
+In this case, the script will exit and the user will be notified via email/notification hook(s) explicitly that a sync is required.
 
 The scrub is then called with the **-v** & **-l** switches to turn on verbose mode and logging, this is to aid in quick debugging if errors
 are detected during the scrub operation.
 
-The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user and/or call the hook,
+The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user and/or call the notification hook(s),
 and attach the logfile from the output of the log created with the **-l** argument to SnapRAID.
 
 Once again, this is to allow for quick debugging to know exactly what the error is from the notification email alone.
@@ -1083,15 +1081,16 @@ and the script will subsequently exit each time it is invoked until the user int
 The end hooks are now called here one-by-one if specified in the config file. If the any of the end hooks exit in error, the script will print a warning and
 still continue so that the final notification(s) are sent.
 
-The end hooks are also ran in the event of error conditions for SnapRAID touch/diff/sync/scrub operations above.
+The end hooks are also ran in the event of error conditions for SnapRAID touch/diff/sync/scrub operations above. If for example one stops a list of services
+with the start hook(s), this means that the services are always restarted via the end hook(s) regardless of the outcome of the script.
 
 ## Step 9 - Send Final Notification Email
 
 If no errors are detected during the touch, sync and scrub, or just touch & sync, or just scrub (depending on whether the **-s, \--sync-only**
 or **-c, \--scrub-only** arguments are used):
 
-If emails are enabled, the final condensed log file for the email is sent to the user. This will contain an concise output of all the operations carried
-out and what the result was.
+If emails on success are not disabled, the final condensed log file for the email is sent to the user. This will contain an concise output of all the operations carried
+out and what the result was (an example is shown below).
 
 ## Step 10 - Run Notification Hooks if Given
 
@@ -1099,15 +1098,15 @@ Lastly the notification hooks are called here one-by-one if specified in the con
 
 # Sample Output
 
-A sample output of the script is shown below, this uses the service hook from here:
+A sample email notification of the script is shown below, this uses the service hook from here:
 
 * [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 ```bash
 ##############################
-# SnapRAID-DAILY Version: 1.4.2
+# SnapRAID-DAILY Version: 1.5.0
 ##############################
-Initialized at 06:00:01 on 07/07/2025
+Initialized at 06:00:01 on 30/07/2025
  * Hostname: server.example.org
  * Host OS: Debian GNU/Linux 13 (trixie)
  * SnapRAID Version: none
@@ -1122,9 +1121,9 @@ Input Options:
  * Moved Threshold: 1000
  * Updated Threshold: 1000
 Hooks:
- * Start-Hook: YES
- * End-Hook: YES
- * Notification Hook: NO
+ * Start-Hook: YES (1)
+ * End-Hook: YES (1)
+ * Notification Hook: YES (1)
 Run-Log is Below:
 
 ##############################
@@ -1138,10 +1137,11 @@ Run-Log is Below:
 ##############################
 # SnapRAID-DAILY: Start Hook
 ##############################
-06:00:34 : Calling Start Hook...
+06:00:34 : Calling Start Hook 1/1...
 06:00:34 : 1 Service(s) defined in config
 06:00:34 : Stopped Service 1/1: smbd
-06:00:34 : Start Hook completed successfully
+06:00:34 : Start Hook 1/1 Done
+06:00:34 : All Start Hooks completed successfully
 
 ##############################
 # SnapRAID-DAILY: Difference Check
@@ -1160,8 +1160,8 @@ Run-Log is Below:
 ##############################
 # SnapRAID-DAILY: Sync
 ##############################
-06:01:23 : Starting Sync on 07/07/2025...
-06:06:44 : Sync Completed on 07/07/2025
+06:01:23 : Starting Sync on 30/07/2025...
+06:06:44 : Sync Completed on 30/07/2025
 06:06:44 : Duration: 0 hours, 5 minutes, 21 seconds
 06:06:44 : Sync was Successful
 06:06:44 : Array Changes Found & Updated:
@@ -1177,9 +1177,9 @@ Run-Log is Below:
 ##############################
 06:06:44 : Checking if Array is still up to date...
 06:07:17 : Array is Up-to-Date - Proceeding
-06:07:17 : Starting Scrub on 07/07/2025
+06:07:17 : Starting Scrub on 30/07/2025
 06:07:17 : Scrubbing 15% older than 2 days...
-07:18:35 : Scrub Completed at 07/07/2025
+07:18:35 : Scrub Completed at 30/07/2025
 07:18:35 : Duration: 1 hours, 11 minutes, 18 seconds
 07:18:35 : Scrub was successful
 07:18:35 : Scrubbed 15% older than 2 days
@@ -1187,10 +1187,11 @@ Run-Log is Below:
 ##############################
 # SnapRAID-DAILY: End Hook
 ##############################
-07:18:35 : Calling End Hook...
+07:18:35 : Calling End Hook 1/1...
 07:18:35 : 1 Service(s) defined in config
 07:18:35 : Started Service 1/1: smbd
-07:18:35 : End Hook completed successfully
+07:18:35 : End Hook 1/1 Done
+07:18:35 : All End Hooks completed successfully
 
 ##############################
 # SnapRAID-DAILY: Array Status
