@@ -918,8 +918,6 @@ start_hook1="/usr/bin/snapraid-daily-service-hook"
 end_hook1="/usr/bin/snapraid-daily-service-hook"
 ```
 
-See the **snapraid-daily.conf(1)** manual page for more information.
-
 As before, if any variables are required to be passed into the notification hook, they can be set in **snapraid-daily.conf** like so:
 
 ```bash
