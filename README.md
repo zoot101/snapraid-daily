@@ -837,7 +837,7 @@ If installed via package, the script is already setup to run as a non-root
 user depending on what was selected for the prompts, thus the below procedure
 need not be followed.
 
-However if one wishes to change the user that the script is ran as, that can
+However if one wishes to change the user that the script is ran as after installation, that can
 be done like so:
 
 ```bash
@@ -847,7 +847,7 @@ sudo dpkg-reconfigure snapraid-daily
 For manual installations, in the instructions above a drop-in file was
 already generated here, and also the below procedure need not be followed.
 
-* /etc/systemd/system/snapraid-.service/user.conf
+* `/etc/systemd/system/snapraid-.service/user.conf`
 
 Regardless, setting up the script to run as a non-root user is explained
 below.
@@ -887,9 +887,8 @@ notes are included here:
 # External Hooks
 
 The script supports the use of external hooks when the script starts, completes or exits in
-error. Also the use of custom notification hooks if a user wishes
-to use an alternative form of notifcation than standard emails are also supported. Up to 5 of
-each are supported which gives a lot of room for customisation.
+error. The use of custom notification hooks if a user wishes to use an alternative form of notifcation than standard
+emails are also supported. Up to 5 of each are supported which gives a lot of room for customisation.
 
 A collection of Hook scripts that integrate into the main script are provided here:
 
@@ -901,13 +900,12 @@ The following hook scripts are provided at the above link:
 * Notification hook to use **Healthchecks.io**     
 * Hook to stop and restart a list of services while **SnapRAID-DAILY** is running    
 
-Detailed instructions are provided above on how to set them up with **SnapRAID-DAILY**.
+Detailed instructions are provided above on how to set them up with **SnapRAID-DAILY**. Using **Apprise**
+comes highly recommended from the author!
 
 ## Notification Hooks
 
-The script supports the use of custom notification hooks, to allow the user to integrate
-an alternative form of notification into the script if desired. Up to 5 seperate
-notification hooks are supported.
+Up to 5 seperate notification hooks are supported.
 
 The notification hook(s) can be used instead of the standard email notifications via **mutt** or used in
 addition to them.
@@ -915,7 +913,7 @@ addition to them.
 A bash script is probably what is best to use here, but the hooks can be anything
 that is ran from the command line - it doesn't have to be a bash script per se.
 
-If the **snapraid-daily** script ends in success, the notification hooks are called
+If the **SnapRAID-DAILY** script ends in success, the notification hooks are called
 one-by-one on the command line like so:
 
 ```bash
@@ -950,7 +948,7 @@ notification_hook2="/usr/bin/snapraid-daily-healthchecks-hook"
 notification_hookN="/path/to/hook"
 ```
 
-Note that it is required that all of the above hooks be executable.
+Again, note that it is required that all of the above hooks be executable.
 
 Start with **notification_hook1** and continue to **notification_hookN** where N
 is the number of hooks that are desired. Up to 5 are supported. 
@@ -966,14 +964,14 @@ For most usage cases, it is likely that only one is required. In that case one c
 notification_hook1="/usr/bin/snapraid-daily-apprise-hook"
 ```
 
-See the **snapraid-daily.conf(1)** manual page for more information.
-
 If any variables are required to be passed into the notification hook(s), they
 can be set in **snapraid-daily.conf** like so:
 
-* export var1="whatever"
+```bash
+export var1="whatever"
+```
 
-See the package **snapraid-daily-hooks** for some additional hook scripts that integrate 
+See the package **SnapRAID-DAILY-Hooks** for some additional hook scripts that integrate 
 alongside the main script for alternative notification methods and start/end hooks.
 
 An example config file that uses the start, end and notification hooks can be found here:
@@ -982,7 +980,7 @@ An example config file that uses the start, end and notification hooks can be fo
 
 # Start and End Hooks
 
-he script can also be configured to execute a hook upon startup and also
+The script can also be configured to execute a hook upon startup and also
 after all sync/scrub operations have been completed. As before, these hooks can be bash
 scripts, or anything that can be called from the command line. Again up to 5 are
 supported.
@@ -1092,211 +1090,152 @@ SnapRAID scrub is invoked with the following options:
 
 # Detailed Operation
 
-A detailed description of all the steps carried out by **SnapRAID-DAILY** are outlined below:
+As optional reading, a detailed description of all the steps carried out by **SnapRAID-DAILY** are outlined below:
 
 ## Step 1 - Initial Checks
 
-The script carries out an initial check of everything
-before it will even attempt to interact with **SnapRAID**.
+The script carries out an initial check of everything before it will even attempt to interact with **SnapRAID**.
 
-Initially the config file **snapraid-daily.conf** is read,
-and its contents are checked. If anything is undefined,
-a default value is assumed.
+Initially the config file **snapraid-daily.conf** is read, and its contents are checked. If anything is undefined, a default
+value is assumed.
 
-If the main config file for SnapRAID itself is not present in
-the default location or doesn't exist, the script will exit.
+If the main config file for SnapRAID itself is not present in the default location or doesn't exist, the script will exit.
 
-Next checks are carried out for the script dependencies:
-awk, grep, sed, mktemp, tee and SnapRAID itself. It will exit if
-any of these are not present.
+Next checks are carried out for the script dependencies: awk, grep, sed, mktemp, tee and SnapRAID itself. It will exit if any of these
+are not present.
 
-Next, a check on the first defined content file in the
-SnapRAID config (**/etc/snapraid.conf**) is checked to
-see if it exists and is writable.
+Next, a check on the first defined content file in the SnapRAID config (**/etc/snapraid.conf**) is checked to see if it exists and is
+writable.
 
-This is to ensure the script is being ran as the right user,
-and serves as a good sanity check to see if the content files
-exist and are writable.
+This is to ensure the script is being ran as the right user, and serves as a good sanity check to see if the content files exist and
+are writable.
 
-One could check all config files exist,  but given that there
-is usually a copy on each disk, that would mean potentially
-waking all the disks from standby which would be undesirable
-if a sync/scrub is not ran because of a subsequent issue.
+One could check all config files exist,  but given that there is usually a copy on each disk, that would mean potentially
+waking all the disks from standby which would be undesirable if a sync/scrub is not ran because of a subsequent issue.
 
-Likewise, it was decided not to check if the parity files
-exist to again prevent waking the disks unless a sync or a
+Likewise, it was decided not to check if the parity files exist to again prevent waking the disks unless a sync or a
 scrub operation are **actually** going to be carried out.
 
-If there is an issue with not being able to access the parity
-files or content files, the sync or scrub will fail and the
+If there is an issue with not being able to access the parity files or content files, the sync or scrub will fail and the
 user will be notified anyway.
 
 ## Step 2 - Check SnapRAID Array Current Status
 
-Checks the Array for Errors or if Touch is required using
-**snapraid status**
+Checks the Array for Errors or if Touch is required using `snapraid status`
 
-If errors are encountered at this point, the script will exit
-and send a notification email to the user. It will continue to
-do this each time the script is invoked, and stop here until the
-user intervenes to address whatever the error is.
+If errors are encountered at this point, the script will exit and send a notification email to the user. It will continue to
+do this each time the script is invoked, and stop here until the user intervenes to address whatever the error is.
 
-If a sync was found to be in progress (this is - the last sync
-was interrupted), and **\--scrub-only** is NOT specified, the
-script will continue as the solution to this is usually to let
-the sync complete. If **\--scrub-only** is specified, the script
+If a sync was found to be in progress (this is - the last sync was interrupted), and **\--scrub-only** is NOT specified, the
+script will continue as the solution to this is usually to let the sync complete. If **\--scrub-only** is specified, the script
 will exit here.
 
-A check is also carried out if **SnapRAID** is already in use,
-ie. whether a **sync** or **scrub** etc. is currently running.
-SnapRAID will not allow multiple instances of itself processing
-the same array.
+A check is also carried out if **SnapRAID** is already in use, ie. whether a **sync** or **scrub** etc. is currently running.
+SnapRAID will not allow multiple instances of itself processing the same array.
 
-The script will exit in this case and the user is also notified
-explicity of this.
+The script will exit in this case and the user is also notified explicity of this.
 
 ## Step 3 - Run Start Hooks If Given
 
-After all checks are completed, and SnapRAID's status looks okay,
-the start hooks are called here one-by-one if specified in the config file.
-If any of the start hook report an error, the script will exit here and
-notify the user via email or notification hooks.
+After all checks are completed, and SnapRAID's status looks okay, the start hooks are called here one-by-one if specified in the config file.
+If any of the start hook report an error, the script will exit here and notify the user via email or notification hooks.
 
 ## Step 4 - Run Touch if Required
 
-If it is determined from the initial check that 1 or more files
-do not have sub-zero timestamps, **snapraid touch** is ran to
+If it is determined from the initial check that 1 or more files do not have sub-zero timestamps, **snapraid touch** is ran to
 add the sub-zero timestamps.
 
-Touch of files added to the array by default will run the next
-time the script is executed after the files have been added.
+Touch of files added to the array by default will run the next time the script is executed after the files have been added.
 
-SnapRAID is invoked with **-v** & **-l** switches to turn on
-verbose mode and logging, this is to aid in quick debugging if
+SnapRAID is invoked with **-v** & **-l** switches to turn on verbose mode and logging, this is to aid in quick debugging if
 errors are detected during the touch.
 
-The output is monitored for errors and if any are detected,
-the script will exit, send a notification email to the user or call
-the notification hook and attach the output of the log created with
-the "-l" argument to SnapRAID.
+The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user or call
+the notification hook and attach the output of the log created with the "-l" argument to SnapRAID.
 
-The idea here is that one can quickly know what the error is via
-the notification email alone.
+The idea here is that one can quickly know what the error is via the notification email alone.
 
-If it is determined that the touch operation is not required, this
-step will be skipped entirely.
+If it is determined that the touch operation is not required, this step will be skipped entirely.
 
-This step is also skipped if the **\--scrub-only** argument to the
-script is used.
+This step is also skipped if the **\--scrub-only** argument to the script is used.
 
 ## Step 5 - Check Array for Changes
 
-Runs **snapraid diff** to check the array for changes to determine
-if a sync is required or not.
+Runs **snapraid diff** to check the array for changes to determine if a sync is required or not.
 
-If no changes are detected, the script will skip the sync entirely.
-If changes are detected, the sync will proceed. In the event that
-the **-s, --sync-only** is used, the script will exit here if no changes
-are detected.
+If no changes are detected, the script will skip the sync entirely. If changes are detected, the sync will proceed. In the event that
+the **-s, --sync-only** is used, the script will exit here if no changes are detected.
 
-However if either the threshold for deletions, moves or updates that are
-defined in the config file **snapraid-daily.conf** are found to be
-exceeded, the script will exit and notify the user via email and/or call
-the notification hook if present.
+However if either the threshold for deletions, moves or updates that are defined in the config file **snapraid-daily.conf** are found to be
+exceeded, the script will exit and notify the user via email and/or call the notification hook if present.
 
-The theory is that if excess deletions, moves or updates are detected, it
-could very well be accidental, and a subsequent sync could prevent
+The theory is that if excess deletions, moves or updates are detected, it could very well be accidental, and a subsequent sync could prevent
 the recovery of that data.
 
-For subsequent runs, the script will continue to do this and stop
-at this point until the user intervenes. This step is skipped if the
+For subsequent runs, the script will continue to do this and stop at this point until the user intervenes. This step is skipped if the
 **\--scrub-only** argument is used.
 
 ## Step 6 - Run Sync to Update the Array
 
-Runs **snapraid sync** to update the array. The start-time and finish
-time are monitored to compute the duration so it can be added to the
+Runs **snapraid sync** to update the array. The start-time and finish time are monitored to compute the duration so it can be added to the
 main log.
 
-The **-v** and **-l** switches are used to turn on verbose mode and
-logging, this is to aid in quick debugging if errors are detected
+The **-v** and **-l** switches are used to turn on verbose mode and logging, this is to aid in quick debugging if errors are detected
 during the sync operation.
 
-The **-h** option is also used to read data a 2nd time during the sync.
-This is to serve as an additional safeguard against silent errors
-during what is an extreme condition for the machine whereby all
-disks are spinning at the same time. See the SnapRAID documentation here for
+The **-h** option is also used to read data a 2nd time during the sync. This is to serve as an additional safeguard against silent errors
+during what is an extreme condition for the machine whereby all disks are spinning at the same time. See the SnapRAID documentation here for
 more information:     
-* https://www.snapraid.it
+* [https://www.snapraid.it](https://www.snapraid.it)
 
-The output is monitored for errors and if any are detected, the script
-will exit, send a notification email to the user and/or call the notification
-hook and attach the output of the log created with the **-l** argument
-to SnapRAID.
+The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user and/or call the notification
+hook and attach the output of the log created with the **-l** argument to SnapRAID.
 
-The idea here is that one can quickly know what the error is via the
-notification email/other method alone.
+The idea here is that one can quickly know what the error is via the notification email/other method alone.
 
-If it is determined that the sync operation is **NOT** required from
-the above Step of checking for changes, this step will be skipped
+If it is determined that the sync operation is **NOT** required from the above Step of checking for changes, this step will be skipped
 entirely.
 
 This step is also skipped if **\--scrub-only** is active.
 
 ## Step 7 - Run Scrub to Check for Silent Corruption
 
-Runs Scrub using the **scrub_percent** & **scrub_age** input parameters
-specified in the config file **snapraid-daily.conf**. The start-time
+Runs Scrub using the **scrub_percent** & **scrub_age** input parameters specified in the config file **snapraid-daily.conf**. The start-time
 and finish time are computed such that is can be added to the main log.
 
-Before the scrub is carried out, the array is once again checked for
-changes since the last sync so the scrub can correctly run.
+Before the scrub is carried out, the array is once again checked for changes since the last sync so the scrub can correctly run.
 
-In the default setup where **SnapRAID-DAILY** is called with no arguments,
-this check should not find any changes since a sync was carried
-out moments ago. However when one is using the **-c, --scrub-only**
-option this may not be the case.
+In the default setup where **SnapRAID-DAILY** is called with no arguments, this check should not find any changes since a sync was carried
+out moments ago. However when one is using the **-c, --scrub-only** option this may not be the case.
 
-This is required as **SnapRAID** will exit with an error during a
-scrub if it finds files that have been modified and not synced.
+This is required as **SnapRAID** will exit with an error during a scrub if it finds files that have been modified and not synced.
 
-In this case, the script will exit and the user will be notified
-via email explicitly that a sync is required.
+In this case, the script will exit and the user will be notified via email explicitly that a sync is required.
 
-The scrub is then called with the **-v** & **-l** switches to turn
-on verbose mode and logging, this is to aid in quick debugging if errors
+The scrub is then called with the **-v** & **-l** switches to turn on verbose mode and logging, this is to aid in quick debugging if errors
 are detected during the scrub operation.
 
-The output is monitored for errors and if any are detected, the script
-will exit, send a notification email to the user and/or call the hook,
-and attach the logfile from the output of the log created with the
-**-l** argument to SnapRAID.
+The output is monitored for errors and if any are detected, the script will exit, send a notification email to the user and/or call the hook,
+and attach the logfile from the output of the log created with the **-l** argument to SnapRAID.
 
-Once again, this is to allow for quick debugging to know exactly what the
-error is from the notification email alone.
+Once again, this is to allow for quick debugging to know exactly what the error is from the notification email alone.
 
-If the scrub does encounter issues such as silent corruption, the status
-check at the start of the script when ran the next time will flag them,
-and the script will subsequently exit each time it is invoked until the
-user intervenes to attempt a manual fix.
+If the scrub does encounter issues such as silent corruption, the status check at the start of the script when ran the next time will flag them,
+and the script will subsequently exit each time it is invoked until the user intervenes to attempt a manual fix.
 
 ## Step 8 - Run End Hooks If Given
 
-The end hooks are now called here one-by-one if specified in the config
-file. If the any of the end hooks exit in error, the script will print a warning and
+The end hooks are now called here one-by-one if specified in the config file. If the any of the end hooks exit in error, the script will print a warning and
 still continue so that the final notification(s) are sent.
 
-The end hooks are also ran in the event of error conditions for
-SnapRAID touch/diff/sync/scrub operations above.
+The end hooks are also ran in the event of error conditions for SnapRAID touch/diff/sync/scrub operations above.
 
 ## Step 9 - Send Final Notification Email
 
-If no errors are detected during the touch, sync and scrub, or just
-touch & sync, or just scrub (depending on whether the **-s, \--sync-only**
+If no errors are detected during the touch, sync and scrub, or just touch & sync, or just scrub (depending on whether the **-s, \--sync-only**
 or **-c, \--scrub-only** arguments are used):
 
-If emails are enabled, the final condensed log file for the email is sent
-to the user. This will contain an concise output of all the operations carried
+If emails are enabled, the final condensed log file for the email is sent to the user. This will contain an concise output of all the operations carried
 out and what the result was.
 
 ## Step 10 - Run Notification Hooks if Given
@@ -1452,8 +1391,7 @@ server.example.org
 
 # Further Examples
 
-For examples on how to automate via systemd timers, set up a valid muttrc
-config for emails, some notes on SnapRAID itself, a sample hook script, 
+For examples on how to automate via systemd timers, set up a valid muttrc config for emails, some notes on SnapRAID itself, a sample hook script, 
 or notes on how to use cron instead of systemd have a look here.
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)
@@ -1466,11 +1404,9 @@ or notes on how to use cron instead of systemd have a look here.
 
 # Creating your own Debian Package
 
-Given the author uses debian as their daily driver, a debian directory containing
-what is required to build a debian package is included here.
+Given the author uses debian as their daily driver, a debian directory containing what is required to build a debian package is included here.
 
-While it's not necessary, if one wants to build their own debian package, they can
-do the following if they are running a debian based distribution.
+While it's not necessary, if one wants to build their own debian package, they can do the following if they are running a debian based distribution.
 
 ```bash
 # Install build dependencies
@@ -1480,18 +1416,18 @@ sudo apt install debhelper dh-exec debconf
 git clone https://github.com/zoot101/snapraid-daily
 cd snapraid-daily
 
-# Build the Package - Accept the default prompt for dh_make
+# Create a source archive using dh_make
 dh_make -s --createorig
+
+# Build the package
 dpkg-buildpackage -uc -us
 ```
 
-A new debian package should be created in the parent directory that can be installed
-with **dpkg** or with **apt** as shown above.
+A new debian package should be created in the parent directory that can be installed with **dpkg** or with **apt** as shown above.
 
 # Return Codes
 
-The Script Returns the following codes for the following conditions.
-This can be useful to direct systemd or a seperate master script to
+The Script Returns the following codes for the following conditions. This can be useful to direct systemd or a seperate master script to
 carry out further actions depending on the code. 
 
 * 0: Success    
@@ -1508,8 +1444,7 @@ Bug reports here on Github are welcome - don't hestitate if you find something w
 
 # Credits
 
-Most of the script is entirely from the author, but a lot of inspiration was
-got from the following similar scripts:
+Most of the script is entirely from the author, but a lot of inspiration was got from the following similar scripts:
 
 Original Bash Script (from Zack Reed):
 
@@ -1524,5 +1459,4 @@ Also a bit thank you to Andrea Mazzoleni for this excellent software:
 * [https://github.com/amadvance/snapraid](https://github.com/amadvance/snapraid)     
 * [https://www.snapraid.it](https://www.snapraid.it)    
 
-Lastly - Thank you for your interest in this script. Hopefully it can be of
-use to other people also.
+Lastly - Thank you for your interest in this script. Hopefully it can be of use to other people also.
