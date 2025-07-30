@@ -34,7 +34,7 @@ First, ensure **SnapRAID** is functioning okay on your system - that is, you can
 To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
 
 * Download the latest Debian package from the release page [HERE](https://github.com/zoot101/snapraid-daily/releases)
-* Install it like so - all dependencies should be installed automatically. Answer the prompts if you want to run the script as a different user. 
+* Install it like so - all dependencies should be installed automatically. Answer the prompts if you want to run the script as a different user other than root. 
   - `sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb`
 * Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, check out the installed manual entry for the config file like so, or read on below. Note that the script should run out of the box with the default config file, but will not send any emails.
   - `man snapraid-daily.conf`
