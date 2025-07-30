@@ -1,11 +1,12 @@
 # SnapRAID-DAILY
 
-Simple Bash Script for the automation of all essential SnapRAID functions with
-in-built email notifications and monitoring of the number of deletions/moves.
+Simple Bash Script to automate all essential SnapRAID functions.
+
+In built email notifications with monitoring of the number of deletes/moves/updates.
 
 Customisable through the use of external hooks. See some examples here:    
 * https://github.com/zoot101/snapraid-daily-hooks
-* Hooks are provided above for **Apprise**, **Healthchecks.io**, and to manage a list of services
+* Hooks are provided above for **Apprise**, **Healthchecks.io**, and to manage a list of services.
 
 # Introduction 
 
@@ -30,10 +31,41 @@ hence the reason for publishing it here in Github.
 The broad goal here is to be an all-in-one script to automate the necessary
 SnapRAID functions that can be scheduled accordingly and do it in a simple manner.
 
+# Quick-Start
+
+I've tried to make the readme here as detailed as possible, and I encourage reading it through
+entirely. However nothing beats getting something up and running quickly, so to get started quickly
+with the script do the following:
+
+If on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
+
+* Download the latest Debian package from the release page [HERE](https://github.com/zoot101/snapraid-daily/releases)
+* Install it like so and answer the prompts if you want to run the script as a different user. All dependencies should be installed automatically.
+  - `sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb`
+* Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, if not read on below.
+* Call the script directly to test it out.
+* Start the systemd-timer with **sudo systemctl start snapraid-daily.timer**
+
+If using a non-Debian based distro, install the script manually like so:
+
+* Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
+* Place it somewhere and make it executable.
+  - `chmod +x snapraid-daily && cp snapraid-daily /usr/bin/` 
+* Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below.
+* Call the script directly to test it out.
+  - `snapraid-daily`
+* Copy the snapraid-daily.timer from the systemd-files folder here to **/etc/systemd/system**
+  - See the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
+* Reload systemd and start the timer like so
+  - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
+
+For detailed instructions on each step of the way read on below.
+
 # Table of Contents
 
 - [Scope](#scope)
 - [Description](#description)
+- [Quick Start](#quick-start)
 - [Usage](#usage)
   * [Examples](#examples)
 - [Installation](#installation)
@@ -69,12 +101,11 @@ SnapRAID functions that can be scheduled accordingly and do it in a simple manne
 
 # Scope
 
-This script is intended to focus just on **SnapRAID** and simple email notifications,
-rather than adding many different features. This is keeping in the traditional unix
-philosophy of do one thing and do it well.
+This script is intended to focus just on **SnapRAID** and simple email notifications.
+This is keeping in the traditional unix philosophy of do one thing and do it well.
 
-Additional functionality is accomplished through the use of Start/End and
-Notification Hooks. See the additional repo here, and the section on the hooks
+Additional functionality such as alternative forms of notificatoins are accomplished through
+the use of Start/End and Notification Hooks. See the additional repo here, and the section on the hooks
 below.
 
 * [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
