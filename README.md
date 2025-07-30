@@ -115,10 +115,12 @@ Note that no attempts are made here to automate the correction of errors, the us
 
 Before attempting to use this script, one should ensure that **SnapRAID** is normally functioning. That is one can run the following commands without
 any error being encountered.
- 
-1. **snapraid status**   
-2. **snapraid sync**   
-3. **snapraid scrub**   
+
+```bash
+snapraid status
+snapraid sync
+snapraid scrub 
+```
 
 See the SnapRAID documentation here:
  
