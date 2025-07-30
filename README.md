@@ -49,7 +49,7 @@ To install the script on a non-Debian based distro, install the script manually 
 * Place it somewhere and make it executable. For Example:
   - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/` 
 * Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should run out of the box with the default config file, but will not send any emails.
-* Call the script directly to test it out. See the [Usage](#usage)
+* Call the script directly to test it out. See the [Usage](#usage) section below.
   - `snapraid-daily`
 * Download the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder here to **/etc/systemd/system**
   - See the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
