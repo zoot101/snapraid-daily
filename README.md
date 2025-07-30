@@ -34,32 +34,38 @@ SnapRAID functions that can be scheduled accordingly and do it in a simple manne
 # Quick-Start
 
 I've tried to make the readme here as detailed as possible, and I encourage reading it through
-entirely. However nothing beats getting something up and running quickly, so to get started quickly
-with the script do the following:
+entirely but over time it has grown in size. As nothing beats getting something up and running quickly,
+below is a brief guide to get started quickly with the script.
 
-If on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
+First, ensure **SnapRAID** is functioning okay on your system - that is, you can run sync and scrub
+operations without errors.
+
+To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
 
 * Download the latest Debian package from the release page [HERE](https://github.com/zoot101/snapraid-daily/releases)
-* Install it like so and answer the prompts if you want to run the script as a different user. All dependencies should be installed automatically.
+* Install it like so - all dependencies should be installed automatically. Answer the prompts if you want to run the script as a different user. 
   - `sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb`
-* Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, if not read on below.
-* Call the script directly to test it out.
-* Start the systemd-timer with **sudo systemctl start snapraid-daily.timer**
+* Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, check out the installed manual entry for the config file like so, or read on below. Note that the script should run out of the box with the default config file.
+  - `man snapraid-daily.conf`
+* Call the script directly to test it out. See the [Usage](#usage) section below.
+  - `snapraid-daily`
+* Start the systemd-timer like so:
+  - `sudo systemctl start snapraid-daily.timer`
 
-If using a non-Debian based distro, install the script manually like so:
+To install the script on a non-Debian based distro, install the script manually like so:
 
 * Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
-* Place it somewhere and make it executable.
-  - `chmod +x snapraid-daily && cp snapraid-daily /usr/bin/` 
-* Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below.
-* Call the script directly to test it out.
+* Place it somewhere and make it executable. For Example:
+  - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/` 
+* Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should run out of the box with the default config file.
+* Call the script directly to test it out. See the [Usage](#usage)
   - `snapraid-daily`
-* Copy the snapraid-daily.timer from the systemd-files folder here to **/etc/systemd/system**
+* Download the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder here to **/etc/systemd/system**
   - See the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
 * Reload systemd and start the timer like so
   - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
 
-For detailed instructions on each step of the way read on below.
+For detailed instructions on each step of the way or to use the more advanced features like the start/end/notification hooks, read on below.
 
 # Table of Contents
 
@@ -104,7 +110,7 @@ For detailed instructions on each step of the way read on below.
 This script is intended to focus just on **SnapRAID** and simple email notifications.
 This is keeping in the traditional unix philosophy of do one thing and do it well.
 
-Additional functionality such as alternative forms of notificatoins are accomplished through
+Additional functionality such as alternative forms of notifications are accomplished through
 the use of Start/End and Notification Hooks. See the additional repo here, and the section on the hooks
 below.
 
@@ -130,7 +136,7 @@ any error being encountered.
 2. **snapraid sync**   
 3. **snapraid scrub**   
 
-See the snapraid documentation here:
+See the SnapRAID documentation here:
  
 * [https://www.snapraid.it](https://www.snapraid.it)
 
@@ -229,12 +235,12 @@ debian package for Debian and its derivatives or manually.
 ## Package Installation
 
 A package is provided for Debian and its derivatives. Note that the author
-has tested this most on Debian itself (Bullseye, Bookworm and Trixie), and
-also tested it out on Linux Mint and Ubuntu. Tt should work on other Debian
+has tested this most on Debian itself (Bookworm and Trixie), and
+also tested it out on Linux Mint and Ubuntu. It should work on other Debian
 based distros ok too. The script has also been tested on Fedora via manual
 installation.
 
-Its highly recommended to use the package if one is running a debian based
+Its highly recommended to use the package if one is running a Debian based
 distro so the dependencies are handled automatically.
 
 To install the package download it from the releases page below and do the following.
@@ -255,7 +261,7 @@ as a service via systemd.
 
 Input your desired user and group. If you're not sure about the group, leave
 it blank to use the default group for the user that was input. Alternatively, one can specify
-root to have the script run as root, or leave the user blank to automatically
+root as the user to have the script run as root, or leave the user blank to automatically
 select root.
 
 If one wants to change the user and group that runs the service after the install,
@@ -329,7 +335,7 @@ After installation, the next step is to create the config file as discussed belo
 
 ## Config File Setup
 
-As mentioned above, the script will run out of the box without a config file
+As mentioned above, the script will run out of the box without a config file,
 but for best operation it will require a configuration file set up.
 
 The location for the config file **(snapraid-daily.conf)** is tried in the
@@ -342,7 +348,7 @@ following order of preference:
 If the config file is not found in any of the above locations, the defaults
 will be used. Note that this will disable the email functionality.
 
-The contents of **snapraid-daily.conf** should contain the following and the
+The minimum contents of **snapraid-daily.conf** should contain the following and the
 syntax should be correct as per bash. The script will again exit if errors
 are present in this file.
 
@@ -362,19 +368,22 @@ If installed via the debian package, a sample configuration
 file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
 edited directly by the user.
 
+A manual entry is also provided for the config file here:
+* `man snapraid-daily.conf`
+
 As mentioned before, overriding the default config file can be accomplished by
 using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
 to the script. In this case the name of the config file does not have to be **snapraid-daily.conf**.
 
-The debian package installation will also place a sample file in the docs
-location below.
+The debian package installation will also place a sample file that does more with
+the script in the docs location below.
 
-* **/usr/share/doc/snapraid-daily/sample-configs/snapraid-daily.conf**
+* `/usr/share/doc/snapraid-daily/examples/snapraid-daily.conf`
 
 This can also be used as a template to generate the optimum config file in 
 the default location:
 
-* **/etc/snapraid-daily.conf**
+* `/etc/snapraid-daily.conf`
 
 Finally if the script cannot find any configuration file it will
 continue with the defaults - see the below:
@@ -429,39 +438,39 @@ how to set them up.
 * Gmail via Oauth2   
 
 Comment out to disable email notifications. If one wants to use an
-alternative form of notifcation either instead of emails or inaddtion
-to them see the Notification Hook below.
+alternative form of notifcation either instead of emails or in addtion
+to them see the Notification Hooks section below.
 
 ### email\_address
 
-Main email address to send the notification emails to. The
-default is none, thus disabling email notifications.
-
-This can also be commented out to disable email notifications.
+Main email address to send the notification emails to. This can also be commented out to
+disable email notifications.
 
 ### deletion\_threshold
 
 If the number of files deleted since the last sync is
 found to be greater than this number, then the script
 will exit and notify the user via email. Must be a postive
-number. The default is **100**. To disable permanently and
+number. The default is **100** if omitted or commented out.
+
+On the other hand, to disable permanently and
 sync every time regardless of the number deleted, set to 0.
 
 ### moved\_threshold
 
 As above, but for files moved. Must be a positive number.
-The default is **100**. As before, to disable permanently and
+The default is **100** if omitted or commented out. As before, to disable permanently and
 sync every time regardless of the number moved, set to 0.
 
 ### updated\_threshold
 
 Also as above, but for files updated. Must be a positive number. Set to
 zero to disable permanently and sync each time regardless of the number
-of updated files. If omitted, the default is **100**
+of updated files. If omitted or commented out, the default is **100**.
 
 ### sync\_pre\_hash
 
-Allows disabling of the use of the "-h" or "--pre-hash" option for snapraid
+Allows disabling of the use of the "-h" or "--pre-hash" option for SnapRAID
 during sync operations. This will speed up sync operations but forfeit the
 added safeguard that the extra preliminary hash operation provided. Set to
 **no** to disable. On by default if omitted. It is recommended to leave it
@@ -494,16 +503,15 @@ about an error during sync/touch/scrub or exceeded thresholds,
 those are still sent as normal.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
-disable. Note that if one is using the custom notification hook
-(see below), this option also disables calls to that on successful
-runs.
+disable. Note that if one is using the notification hooks
+(see below), they are also disabled on successful runs.
 
 ### force\_zero
 
 By default during **sync**, if SnapRAID encounters a file of zero
 size that was not previously of zero size, it will report this as
 an error and exit the sync. This is possible to happen during a
-system crash in Linux systems, so is **NOT RECOMMENDED**. This option
+system crash in Linux systems, so is **NOT RECOMMENDED** to user. This option
 causes SnapRAID to continue to sync anyway in this condition.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
@@ -513,7 +521,7 @@ disable.
 
 If one or more of the disks are found to now be empty whereby in
 the past they were not SnapRAID will report this as an error and
-stop the sync. This is **NOT RECOMMENDED** but is included for
+stop the sync. This is **NOT RECOMMENDED** to use, but is included for
 certain edge conditions that may require it. This option causes
 SnapRAID to continue to sync anyway in this condition.
 
@@ -525,7 +533,7 @@ disable.
 If the UUID of one or more disks is found to change, usually
 SnapRAID will report this as an error and stop the sync. This option causes
 SnapRAID to continue to sync anyway in this condition. This is also
-**NOT RECOMMENDED** but is again included for certain edge conditions
+**NOT RECOMMENDED** to use, but is again included for certain edge conditions
 that may require it.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
@@ -720,12 +728,12 @@ out the **muttrc_path** or **email_address** in the config file and use the
 By default the below systemd files are bundled with the debian package
 installation, but are not enabled by default. 
 
-* **/usr/lib/systemd/system/snapraid-daily.service**    
-* **/usr/lib/systemd/system/snapraid-daily.timer**    
-* **/usr/lib/systemd/system/snapraid-sync.service**    
-* **/usr/lib/systemd/system/snapraid-sync.timer**    
-* **/usr/lib/systemd/system/snapraid-scrub.service**    
-* **/usr/lib/systemd/system/snapraid-scrub.timer**    
+* `/usr/lib/systemd/system/snapraid-daily.service`    
+* `/usr/lib/systemd/system/snapraid-daily.timer`    
+* `/usr/lib/systemd/system/snapraid-sync.service`    
+* `/usr/lib/systemd/system/snapraid-sync.timer`    
+* `/usr/lib/systemd/system/snapraid-scrub.service`    
+* `/usr/lib/systemd/system/snapraid-scrub.timer`    
 
 If one installed using the manual procedure above, the above files are
 in **/etc/systemd/system** instead, the procedure is the same regardless.
