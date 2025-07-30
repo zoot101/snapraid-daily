@@ -1,6 +1,6 @@
 # SnapRAID-DAILY
 
-Simple Bash Script to automate all essential SnapRAID functions.
+Simple Bash Script to automate all essential SnapRAID functions on Linux.
 
 In built email notifications with monitoring of the number of deletes/moves/updates.
 
