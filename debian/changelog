@@ -58,6 +58,7 @@ snapraid-daily (1.5.0-1) stable; urgency=medium
     - Removed printouts from prerm script.
     - Moved sample config to examples folder to fix .conf extension having
       it converted to a different format on package based installs.
+    - Removed build dependency on dh-exec.
     - Lintian check completed on package.
 
   * The pace of updates should now slow down, as most features that were
