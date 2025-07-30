@@ -10,35 +10,26 @@ Customisable through the use of external hooks. See some examples here:
 
 # Introduction 
 
-Thank you for your interest in this script! SnapRAID is very good software,
-but lacks any default automation or notification ability.
+Thank you for your interest in this script! SnapRAID is very good software, but lacks any default automation or notification ability.
 
-That is where this script comes in, it is intended to be an all-in-one
-script for the automation of SnapRAID.
+That is where this script comes in, it is intended to be an all-in-one script for the automation of SnapRAID.
 
-There are other scripts out there that essentially do the same thing. However, none
-of them had exactly had the features the author wanted.
+There are other scripts out there that essentially do the same thing. However, none of them had exactly had the features the author wanted.
 
-Some of the other scripts also enforce running them and **SnapRAID** as root. In the
-opinion of the author, this is not needed and best avoided if possible. This script
-does not require running as root, and prompts the user during installation to automate
-running the script as a different user as desired. 
+Some of the other scripts also enforce running them and **SnapRAID** as root. In the opinion of the author, this is not needed and best avoided if possible. This script
+does not require running as root, and prompts the user during installation to automate running the script as a different user as desired. 
 
-This led to this script being created by the author. It has worked extremely well
-for the author for many years up to this date, and hopefully prove useful to others,
+This led to this script being created by the author. It has worked extremely well for the author for many years up to this date, and hopefully prove useful to others,
 hence the reason for publishing it here in Github.
 
-The broad goal here is to be an all-in-one script to automate the necessary
-SnapRAID functions that can be scheduled accordingly and do it in a simple manner.
+The broad goal here is to be an all-in-one script to automate the necessary SnapRAID functions that can be scheduled accordingly and do it in a simple manner.
 
 # Quick-Start
 
-I've tried to make the readme here as detailed as possible, and I encourage reading it through
-entirely but over time it has grown in size. As nothing beats getting something up and running quickly,
-below is a brief guide to get started quickly with the script.
+I've tried to make the readme here as detailed as possible, and I encourage reading it through entirely but over time it has grown in size. As nothing beats
+getting something up and running quickly, below is a brief guide to get started quickly with the script.
 
-First, ensure **SnapRAID** is functioning okay on your system - that is, you can run sync and scrub
-operations without errors.
+First, ensure **SnapRAID** is functioning okay on your system - that is, you can run sync and scrub operations without errors.
 
 To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
 
@@ -107,29 +98,22 @@ For detailed instructions on each step of the way or to use the more advanced fe
 
 # Scope
 
-This script is intended to focus just on **SnapRAID** and simple email notifications.
-This is keeping in the traditional unix philosophy of do one thing and do it well.
+This script is intended to focus just on **SnapRAID** and simple email notifications. This is keeping in the traditional unix philosophy of do one thing and do it well.
 
-Additional functionality such as alternative forms of notifications are accomplished through
-the use of Start/End and Notification Hooks. See the additional repo here, and the section on the hooks
-below.
+Additional functionality such as alternative forms of notifications are accomplished through the use of Start/End and Notification Hooks.
+See the additional repo here, and the section on the hooks below.
 
 * [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 # Description
 
-The script is intended to be ran as a scheduled task via Systemd Timers, but 
-can also easily be installed and ran manually if need be.
+The script is intended to be ran as a scheduled task via Systemd Timers, but  can also easily be installed and ran manually if need be.
 
-If errors are detected, the user is notified by email and the script will
-exit. **Mutt** is used for sending the emails.
+If errors are detected, the user is notified by email and the script will exit. **Mutt** is used for sending the emails.
 
-Note that no attempts are made here to automate the correction of
-errors, the user will have to intervene in each case if they
-are detected.
+Note that no attempts are made here to automate the correction of errors, the user will have to intervene in each case if they are detected.
 
-Before attempting to use this script, one should ensure that **SnapRAID** is
-normally functioning. That is one can run the following commands without
+Before attempting to use this script, one should ensure that **SnapRAID** is normally functioning. That is one can run the following commands without
 any error being encountered.
  
 1. **snapraid status**   
@@ -140,20 +124,15 @@ See the SnapRAID documentation here:
  
 * [https://www.snapraid.it](https://www.snapraid.it)
 
-The script will run out of the box with the default config file, or with
-no config file. However for best operation, a config file is required.
+The script will run out of the box with the default config file, or with no config file. However for best operation, a config file is required.
 
-The number of files deleted, moved, or updated are monitored and if any exceed
-the threshold values specified in the **snapraid-daily.conf** config file, the script
-will exit and notify the user via email, and use the notification hooks if
-specified in the config file.
+The number of files deleted, moved, or updated are monitored and if any exceed the threshold values specified in the **snapraid-daily.conf** config file, the script
+will exit and notify the user via email, and use the notification hooks if specified in the config file.
 
-The idea here is that if a large number of accidental moves, deletions or updates
-are detected, it is probably an accident, and a sync would be a bad idea
+The idea here is that if a large number of accidental moves, deletions or updates are detected, it is probably an accident, and a sync would be a bad idea
 as it will prevent the recovery of those files.
 
-If errors are detected, the script will notify the user via email and attach
-the logfile generated by the SnapRAID command itself that generated the error,
+If errors are detected, the script will notify the user via email and attach the logfile generated by the SnapRAID command itself that generated the error,
 so the user can quickly see what the problem is from the email notification alone.
 
 # Usage
@@ -186,8 +165,7 @@ Manual Entries:
   Config File:                snapraid-daily.conf(1) $ man snapraid-daily.conf
 ```
 
-By default if no arguments are invoked the script will execute the following
-functions in the below order. This will accomplish everything and is
+By default if no arguments are invoked the script will execute the following functions in the below order. This will accomplish everything and is
 sufficient to run once a day or however often is desired.
 
 1. Check for Inital Errors    
@@ -195,8 +173,7 @@ sufficient to run once a day or however often is desired.
 3. Sync the array (If Changes are Present)    
 4. Scrub the array
 
-This can also be tweaked by the supported arguments to the script if one wants
-to sync the array only or scrub the array only.
+This can also be tweaked by the supported arguments to the script if one wants to sync the array only or scrub the array only.
 
 ## Examples
 
@@ -229,22 +206,17 @@ If an invalid argument is specified, the script will exit.
 
 # Installation
 
-There are two ways to install and use this script - via the provided
-debian package for Debian and its derivatives or manually.
+There are two ways to install and use this script - via the provided Debian Package for Debian and its derivatives or manually.
 
 ## Package Installation
 
-A package is provided for Debian and its derivatives. Note that the author
-has tested this most on Debian itself (Bookworm and Trixie), and
-also tested it out on Linux Mint and Ubuntu. It should work on other Debian
-based distros ok too. The script has also been tested on Fedora via manual
+A package is provided for Debian and its derivatives. Note that the author has tested this most on Debian itself (Bookworm and Trixie), and
+also tested it out on Linux Mint and Ubuntu. It should work on other Debian based distros ok too. The script has also been tested on Fedora via manual
 installation.
 
-Its highly recommended to use the package if one is running a Debian based
-distro so the dependencies are handled automatically.
+Its highly recommended to use the package if one is running a Debian based distro so the dependencies are handled automatically.
 
-To install the package download it from the releases page below and do the following.
-It's better to use **apt** rather than **dpkg** so the dependencies will be
+To install the package download it from the releases page below and do the following. It's better to use **apt** rather than **dpkg** so the dependencies will be
 automatically installed.
 
 * [https://github.com/zoot101/snapraid-daily/releases](https://github.com/zoot101/snapraid-daily/releases)
@@ -256,16 +228,12 @@ sudo apt update
 sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb
 ```
 
-During installation, one will be prompted for a user and group to run the script
-as a service via systemd.
+During installation, one will be prompted for a user and group to run the script as a service via systemd.
 
-Input your desired user and group. If you're not sure about the group, leave
-it blank to use the default group for the user that was input. Alternatively, one can specify
-root as the user to have the script run as root, or leave the user blank to automatically
-select root.
+Input your desired user and group. If you're not sure about the group, leave it blank to use the default group for the user that was input. Alternatively, one can specify
+root as the user to have the script run as root, or leave the user blank to automatically select root.
 
-If one wants to change the user and group that runs the service after the install,
-the following command can be issued to be prompted again.
+If one wants to change the user and group that runs the service after the install, the following command can be issued to be prompted again.
 
 ```bash
 sudo dpkg-reconfigure snapraid-daily
@@ -335,21 +303,17 @@ After installation, the next step is to create the config file as discussed belo
 
 ## Config File Setup
 
-As mentioned above, the script will run out of the box without a config file,
-but for best operation it will require a configuration file set up.
+As mentioned above, the script will run out of the box without a config file, but for best operation it will require a configuration file set up.
 
-The location for the config file **(snapraid-daily.conf)** is tried in the
-following order of preference:
+The location for the config file **(snapraid-daily.conf)** is tried in the following order of preference:
 
 1. Via the **-f** or **\--config option** if specified    
 2. **/etc/snapraid-daily.conf**    
 3. **snapraid-daily.conf** in the script directory    
 
-If the config file is not found in any of the above locations, the defaults
-will be used. Note that this will disable the email functionality.
+If the config file is not found in any of the above locations, the defaults will be used. Note that this will disable the email functionality.
 
-The minimum contents of **snapraid-daily.conf** should contain the following and the
-syntax should be correct as per bash. The script will again exit if errors
+The minimum contents of **snapraid-daily.conf** should contain the following and the syntax should be correct as per bash. The script will again exit if errors
 are present in this file.
 
 1. MuttRC File Path for Notification Emails    
@@ -364,29 +328,24 @@ are present in this file.
 See the sample here:
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config/snapraid-daily.conf)
 
-If installed via the debian package, a sample configuration
-file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
+If installed via the debian package, a sample configuration file is already placed at the 1st location above (/etc/snapraid-daily.conf) that can be
 edited directly by the user.
 
 A manual entry is also provided for the config file here:
 * `man snapraid-daily.conf`
 
-As mentioned before, overriding the default config file can be accomplished by
-using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
+As mentioned before, overriding the default config file can be accomplished by using the **-f, \--config [PATH-TO-CONFIG]** as an input argument
 to the script. In this case the name of the config file does not have to be **snapraid-daily.conf**.
 
-The debian package installation will also place a sample file that does more with
-the script in the docs location below.
+The debian package installation will also place a sample file that does more with the script in the docs location below.
 
 * `/usr/share/doc/snapraid-daily/examples/snapraid-daily.conf`
 
-This can also be used as a template to generate the optimum config file in 
-the default location:
+This can also be used as a template to generate the optimum config file in  the default location:
 
 * `/etc/snapraid-daily.conf`
 
-Finally if the script cannot find any configuration file it will
-continue with the defaults - see the below:
+Finally if the script cannot find any configuration file it will continue with the defaults - see the below:
 
 ## Config File Contents
 
@@ -406,23 +365,18 @@ If any of the above are missing, defaults are loaded, see below:
 
 ### snapraid\_config\_file\_path
 
-This is the path to the main config file defining the array
-for SnapRAID itself. It is usually **/etc/snapraid.conf**
-but in the event that it is at a different location, it
+This is the path to the main config file defining the array for SnapRAID itself. It is usually **/etc/snapraid.conf** but in the event that it is at a different location, it
 can be specified here. The default is **/etc/snapraid.conf**
 
-This is useful for the situation where the user may be running
-multiple SnapRAID arrays on the same system, but for the vast
+This is useful for the situation where the user may be running multiple SnapRAID arrays on the same system, but for the vast
 majority of users it'll be **/etc/snapraid.conf**.
 
-To run with multiple SnapRAID arrays, one could create a copy of
-the config file (snapraid-daily.conf), change this setting and
+To run with multiple SnapRAID arrays, one could create a copy of the config file (snapraid-daily.conf), change this setting and
 pass it to the script with the **-f, --config** option.
 
 ### muttrc\_path
 
-This is the path for the muttrc file that is used for sending
-email notifications. No emails are sent if this is omitted.
+This is the path for the muttrc file that is used for sending email notifications. No emails are sent if this is omitted.
 The default is empty, whereby no emails are sent.
 
 See the notes provided in the docs directory here to set up the email
@@ -430,15 +384,13 @@ notifications.
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples)
 
-Three sample configs are provided along with instructions on
-how to set them up.
+Three sample configs are provided along with instructions on how to set them up.
 
 * Gmail via App Passwords
 * Outlook via Oauth2
 * Gmail via Oauth2   
 
-Comment out to disable email notifications. If one wants to use an
-alternative form of notifcation either instead of emails or in addtion
+Comment out to disable email notifications. If one wants to use an alternative form of notifcation either instead of emails or in addtion
 to them see the Notification Hooks section below.
 
 ### email\_address
@@ -448,70 +400,54 @@ disable email notifications.
 
 ### deletion\_threshold
 
-If the number of files deleted since the last sync is
-found to be greater than this number, then the script
-will exit and notify the user via email. Must be a postive
-number. The default is **100** if omitted or commented out.
+If the number of files deleted since the last sync is found to be greater than this number, then the script
+will exit and notify the user via email. Must be a postive number. The default is **100** if omitted or commented out.
 
-On the other hand, to disable permanently and
-sync every time regardless of the number deleted, set to 0.
+On the other hand, to disable permanently and sync every time regardless of the number deleted, set to 0.
 
 ### moved\_threshold
 
-As above, but for files moved. Must be a positive number.
-The default is **100** if omitted or commented out. As before, to disable permanently and
+As above, but for files moved. Must be a positive number. The default is **100** if omitted or commented out. As before, to disable permanently and
 sync every time regardless of the number moved, set to 0.
 
 ### updated\_threshold
 
-Also as above, but for files updated. Must be a positive number. Set to
-zero to disable permanently and sync each time regardless of the number
+Also as above, but for files updated. Must be a positive number. Set to zero to disable permanently and sync each time regardless of the number
 of updated files. If omitted or commented out, the default is **100**.
 
 ### sync\_pre\_hash
 
-Allows disabling of the use of the "-h" or "--pre-hash" option for SnapRAID
-during sync operations. This will speed up sync operations but forfeit the
-added safeguard that the extra preliminary hash operation provided. Set to
-**no** to disable. On by default if omitted. It is recommended to leave it
+Allows disabling of the use of the "-h" or "--pre-hash" option for SnapRAID during sync operations. This will speed up sync operations but forfeit the
+added safeguard that the extra preliminary hash operation provided. Set to **no** to disable. On by default if omitted. It is recommended to leave it
 on.
 
 ### scrub\_percent
 
-The percentage of the array to scrub - should be a number between 1 and 100.
-The default is **8** (or 8%).
+The percentage of the array to scrub - should be a number between 1 and 100. The default is **8** (or 8%).
 
 ### scrub\_age
 
-The age of files in days to scrub. Should be a standard posive number.
-The default is **21** (or 21 days).
+The age of files in days to scrub. Should be a standard posive number. The default is **21** (or 21 days).
 
 ## Additional Options
 
-A number of additional options are provided to address some potential
-edge cases. None of these are required to be specified and can be omitted.
+A number of additional options are provided to address some potential edge cases. None of these are required to be specified and can be omitted.
 
 ### disable\_emails\_on\_success
 
-Disable the notification emails on successful runs. It is the
-preference of the author to always have emails sent on success
-so one always knows the script is running and doing its job without
-explicity checking it.
+Disable the notification emails on successful runs. It is the preference of the author to always have emails sent on success
+so one always knows the script is running and doing its job without explicity checking it.
 
-Note that this does not effect any emails sent to notify the user
-about an error during sync/touch/scrub or exceeded thresholds,
+Note that this does not effect any emails sent to notify the user about an error during sync/touch/scrub or exceeded thresholds,
 those are still sent as normal.
 
-Set to \"yes\" to use, leave commented out or set to \"no\" to
-disable. Note that if one is using the notification hooks
+Set to \"yes\" to use, leave commented out or set to \"no\" to disable. Note that if one is using the notification hooks
 (see below), they are also disabled on successful runs.
 
 ### force\_zero
 
-By default during **sync**, if SnapRAID encounters a file of zero
-size that was not previously of zero size, it will report this as
-an error and exit the sync. This is possible to happen during a
-system crash in Linux systems, so is **NOT RECOMMENDED** to user. This option
+By default during **sync**, if SnapRAID encounters a file of zero size that was not previously of zero size, it will report this as
+an error and exit the sync. This is possible to happen during a system crash in Linux systems, so is **NOT RECOMMENDED** to user. This option
 causes SnapRAID to continue to sync anyway in this condition.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
@@ -519,10 +455,8 @@ disable.
 
 ### force\_empty
 
-If one or more of the disks are found to now be empty whereby in
-the past they were not SnapRAID will report this as an error and
-stop the sync. This is **NOT RECOMMENDED** to use, but is included for
-certain edge conditions that may require it. This option causes
+If one or more of the disks are found to now be empty whereby in the past they were not SnapRAID will report this as an error and
+stop the sync. This is **NOT RECOMMENDED** to use, but is included for certain edge conditions that may require it. This option causes
 SnapRAID to continue to sync anyway in this condition.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
@@ -530,10 +464,8 @@ disable.
 
 ### force\_uuid
 
-If the UUID of one or more disks is found to change, usually
-SnapRAID will report this as an error and stop the sync. This option causes
-SnapRAID to continue to sync anyway in this condition. This is also
-**NOT RECOMMENDED** to use, but is again included for certain edge conditions
+If the UUID of one or more disks is found to change, usually SnapRAID will report this as an error and stop the sync. This option causes
+SnapRAID to continue to sync anyway in this condition. This is also **NOT RECOMMENDED** to use, but is again included for certain edge conditions
 that may require it.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to
@@ -541,22 +473,16 @@ disable.
 
 ### start\_hook1-N
 
-Specify the path to a number of hook scripts that are called when the script
-completes its initial checks and determines the intial status of the
-array is OK but before **SnapRAID** touch/diff/sync/scrub operations
-are carried out. All must be executable. Up to 5 are supported.
+Specify the path to a number of hook scripts that are called when the script completes its initial checks and determines the intial status of the
+array is OK but before **SnapRAID** touch/diff/sync/scrub operations are carried out. All must be executable. Up to 5 are supported.
 
-These are primarily intended to stop a list of services that could interact with
-files in the **SnapRAID** array and thus cause sync/scrub operations to exit 
-with an error while the script is running. However they could be used for anything
-else as desired.
+These are primarily intended to stop a list of services that could interact with files in the **SnapRAID** array and thus cause sync/scrub operations to exit 
+with an error while the script is running. However they could be used for anything else as desired.
 
-Note also that these can be anything that is called from the command line, they do
-not have to take the form of a bash script. Python scripts, Perl scripts or executables
+Note also that these can be anything that is called from the command line, they do not have to take the form of a bash script. Python scripts, Perl scripts or executables
 should also work too.
 
-To use single or multiple start hooks, set the **start_hook1-N** parameters in
-the config file **/etc/snapraid-daily.conf** like so:
+To use single or multiple start hooks, set the **start_hook1-N** parameters in the config file **/etc/snapraid-daily.conf** like so:
 
 ```bash
 start_hook1="/usr/bin/snapraid-daily-service-hook"
@@ -567,8 +493,7 @@ start_hookN="/path/to/hook5"
 
 Recall that it is required that all of the above hooks be executable.
 
-Start with **start_hook1** and continue to **start_hookN** where N
-is the number of hooks that are desired. Up to 5 are supported.
+Start with **start_hook1** and continue to **start_hookN** where N is the number of hooks that are desired. Up to 5 are supported.
 
 See the section on hooks later for more information.
 
@@ -576,17 +501,13 @@ Comment out if not using.
 
 ### end\_hook1-N
 
-Specify a path to a number of hook scripts that are called when the script completes all
-sync/scrub operations and before sending the final notification email. They are also
+Specify a path to a number of hook scripts that are called when the script completes all sync/scrub operations and before sending the final notification email. They are also
 called if the script exits in an error condition. Up to 5 are supported. All must be executable.
 
-Like the start hook(s) above, these are primarily intended to re-start a list of services
-that have been previously stopped and that could interact with files in the **SnapRAID** array
-and thus cause sync/scrub operations to exit in an error while the script is running.
-However again they could be used for anything else as desired.
+Like the start hook(s) above, these are primarily intended to re-start a list of services that have been previously stopped and that could interact with files in the **SnapRAID** array
+and thus cause sync/scrub operations to exit in an error while the script is running. However again they could be used for anything else as desired.
 
-As before, note also that these can be anything that is called from the command line, they do
-not have to take the form of a bash script. Python scripts, Perl scripts or executables
+As before, note also that these can be anything that is called from the command line, they do not have to take the form of a bash script. Python scripts, Perl scripts or executables
 should also work too.
 
 As before, to use single or multiple end hooks, set the **end_hook1-N** parameters in
@@ -601,26 +522,21 @@ end_hookN="/path/to/hook5"
 
 Recall that it is required that all of the above hooks be executable.
 
-Start with **end_hook1** and continue to **end_hookN** where N
-is the number of hooks that are desired. Up to 5 are supported.
+Start with **end_hook1** and continue to **end_hookN** where N is the number of hooks that are desired. Up to 5 are supported.
 
-These can be the same as the start hook(s) used if they accept the "start"
-and "end" arguments. See the section on hooks later for more information.
+These can be the same as the start hook(s) used if they accept the "start" and "end" arguments. See the section on hooks later for more information.
 
 Comment out if not using.
 
 ### notification\_hook1-N
 
-Specify a path to a number of custom notification hooks here if an alternative form of
-notification to emails with **mutt** is preferred. All must be executable. They
+Specify a path to a number of custom notification hooks here if an alternative form of notification to emails with **mutt** is preferred. All must be executable. They
 can used instead of or in addition to the emails if desired. Up to 5 are supported.
 
-As before, note also that these can be anything that is called from the command line, they do
-not have to take the form of a bash script. Python scripts, Perl scripts or executables
+As before, note also that these can be anything that is called from the command line, they do not have to take the form of a bash script. Python scripts, Perl scripts or executables
 should also work too.
 
-To use the notification hook(s), set the **notification_hook1-N** parameters in the
-config file (**snapraid-daily.conf**) like so:
+To use the notification hook(s), set the **notification_hook1-N** parameters in the config file (**snapraid-daily.conf**) like so:
 
 ```bash
 notification_hook1="/usr/bin/snapraid-daily-apprise-hook"
@@ -631,8 +547,7 @@ notification_hookN="/path/to/hook"
 
 Again, recall that it is required that all of the above hooks be executable.
 
-Start with **notification_hook1** and continue to **notification_hookN** where N
-is the number of hooks that are desired. Up to 5 are supported. 
+Start with **notification_hook1** and continue to **notification_hookN** where N is the number of hooks that are desired. Up to 5 are supported. 
 
 As above, see the section on hooks later for more information.
 
@@ -640,20 +555,17 @@ Comment out if not using.
 
 ### Hook Variables
 
-If any variables are required for the start/end or notification hooks they can be
-specified in the config file through the use of "export" - Example:
+If any variables are required for the start/end or notification hooks they can be specified in the config file through the use of "export" - Example:
 
 ```bash
 export var1="whatever etc."
 ```
 
-This is better than requiring additional configuration files for hook scripts.
-Remember not to forget the "export"!
+This is better than requiring additional configuration files for hook scripts. Remember not to forget the "export"!
 
 ## Sample Config File
 
-Shown below is the bare minimum that is required in
-a snapraid-daily.conf config file for all functionality. Feel free to add
+Shown below is the bare minimum that is required in a snapraid-daily.conf config file for all functionality. Feel free to add
 comments using **\#** accordingly.
 
 ```bash
@@ -703,8 +615,7 @@ See also an example that uses the hook scripts from the SnapRAID-DAILY-Hooks rep
 
 ## Setting up Email Notifications
 
-The main notification method the script uses is emails. In the opinion of the author,
-email is be best way to get detailed information.
+The main notification method the script uses is emails. In the opinion of the author, email is be best way to get detailed information.
 
 A valid muttrc configuration is required to send email notifications.
 
@@ -714,19 +625,16 @@ The following 3 sample configurations are provided in the docs directory below.
 * Outlook via Oauth2
 * Gmail via Oauth2
 
-Detailed instructions are provided in the below link on how to set **mutt** up
-to send emails with the script.
+Detailed instructions are provided in the below link on how to set **mutt** up to send emails with the script.
  
 * [https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/](https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/)
 
-If desired, to disable emails entirely and rely upon an alternative form of notification comment
-out the **muttrc_path** or **email_address** in the config file and use the
-**notification_hook** instead (see below).
+If desired, to disable emails entirely and rely upon an alternative form of notification comment out the **muttrc_path** or **email_address** in the config file and use the
+**notification_hook1-N** instead (see below).
 
 ## Automation with Systemd
 
-By default the below systemd files are bundled with the debian package
-installation, but are not enabled by default. 
+By default the below systemd files are bundled with the debian package installation, but are not enabled by default. 
 
 * `/usr/lib/systemd/system/snapraid-daily.service`    
 * `/usr/lib/systemd/system/snapraid-daily.timer`    
@@ -735,8 +643,7 @@ installation, but are not enabled by default.
 * `/usr/lib/systemd/system/snapraid-scrub.service`    
 * `/usr/lib/systemd/system/snapraid-scrub.timer`    
 
-If one installed using the manual procedure above, the above files are
-in **/etc/systemd/system** instead, the procedure is the same regardless.
+If one installed using the manual procedure above, the above files are in **/etc/systemd/system** instead, the procedure is the same regardless.
 
 These files do the following:
 
@@ -749,8 +656,7 @@ These are intended to cover both of the following cases:
 * Default behaviour of Sync followed by a Scrub each time the script is called
 * Completely seperate Sync and Scrub operations
 
-Firstly, it's a good idea to test the service works correctly by starting the desired
-one manually like so:
+Firstly, it's a good idea to test the service works correctly by starting the desired one manually like so:
 
 ```bash
 sudo systemctl start snapraid-daily.service
@@ -762,22 +668,18 @@ Then, to get detailed information one can use **journalctl** to inspect the logs
 sudo journalctl -u snapraid-daily.service --since today
 ```
 
-If the service runs without issue, the next step is to enable the timers to
-run the corresponding service automatically.
+If the service runs without issue, the next step is to enable the timers to run the corresponding service automatically.
 
-To enable any one of the timers do the below - enabling the services is not required,
-since they are configured as oneshots and are not intended to be ran at start up. 
+To enable any one of the timers do the below - enabling the services is not required, since they are configured as oneshots and are not intended to be ran at start up. 
 
-If one wishes to run the script with the default behaviour (Run a sync, followed by
-a scrub), then start and enable the **snapraid-daily.timer** file as below.
+If one wishes to run the script with the default behaviour (Run a sync, followed by a scrub), then start and enable the **snapraid-daily.timer** file as below.
 
 ```bash
 sudo systemctl start snapraid-daily.timer
 sudo systemctl enable snapraid-daily.timer
 ```
 
-If one wishes to schedule seperate sync and scrub operations start and enable both the
-**snapraid-scrub.timer** and **snapraid-sync.timer** files as shown below.
+If one wishes to schedule seperate sync and scrub operations start and enable both the **snapraid-scrub.timer** and **snapraid-sync.timer** files as shown below.
 
 ```bash
 sudo systemctl start snapraid-sync.timer
@@ -792,35 +694,30 @@ The default timer run times are :
 * **snapraid-scrub.timer** : Twice weekly - Mondays and Fridays at 21:00    
 * **snapraid-daily.timer** : Daily - At 06:00    
 
-To adjust any of these, if the script was installed by the package, it's best to
-create a copy of the timer file in **/etc/systemd/system** instead.
+To adjust any of these, if the script was installed by the package, it's best to create a copy of the timer file in **/etc/systemd/system** instead.
 
 ```bash
 sudo cp /usr/lib/systemd/system/snapraid-daily.timer /etc/systemd/system/snapraid-daily.timer
 ```
 
-This is because systemd will take precedence for files in **/etc/systemd/system**
-over **/usr/lib/systemd/system**. This way, any user modifications are not undone when
+This is because systemd will take precedence for files in **/etc/systemd/system** over **/usr/lib/systemd/system**. This way, any user modifications are not undone when
 upgrading to new versions of the package installation.
 
-On the other hand if one installed via the manual procedure above, then the timer
-file(s) can be edited directly in **/etc/systemd/system**.
+On the other hand if one installed via the manual procedure above, then the timer file(s) can be edited directly in **/etc/systemd/system**.
 
-It is not recommended to edit any of the service files directly. It is instead better
-to create drop-in files by using:    
+It is not recommended to edit any of the service files directly. It is instead better to create drop-in files by using:
+
 ```bash
 sudo systemctl edit snapraid-daily.service
 ```
 
-Lastly, if one does change anything in the service files or the timer files above,
-remember to reload systemd afterwards like so:
+Lastly, if one does change anything in the service files or the timer files above, remember to reload systemd afterwards like so:
 
 ```bash
 systemctl daemon-reload
 ```
 
-Some further examples are provided in the docs directory for both the
-main service/timer file and also drop-in files that can be used to configure
+Some further examples are provided in the docs directory for both the main service/timer file and also drop-in files that can be used to configure
 automatic restarts or systemd hardening (see below).
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)   
@@ -833,27 +730,22 @@ to run the script.
 
 ## Running as a Standard User with Systemd
 
-If installed via package, the script is already setup to run as a non-root
-user depending on what was selected for the prompts, thus the below procedure
+If installed via package, the script is already setup to run as a non-root user depending on what was selected for the prompts, thus the below procedure
 need not be followed.
 
-However if one wishes to change the user that the script is ran as after installation, that can
-be done like so:
+However if one wishes to change the user that the script is ran as after installation, that can be done like so:
 
 ```bash
 sudo dpkg-reconfigure snapraid-daily
 ```
 
-For manual installations, in the instructions above a drop-in file was
-already generated here, and also the below procedure need not be followed.
+For manual installations, in the instructions above a drop-in file was already generated here, and also the below procedure need not be followed.
 
 * `/etc/systemd/system/snapraid-.service/user.conf`
 
-Regardless, setting up the script to run as a non-root user is explained
-below.
+Regardless, setting up the script to run as a non-root user is explained below.
 
-To set systemd up to run the script as a user other than root, do the
-following:
+To set systemd up to run the script as a user other than root, do the following:
 
 * First, create a directory **/etc/systemd/snapraid-.service.d/**    
 * Next, create a file called **user.conf**    
@@ -865,30 +757,25 @@ User=username
 Group=groupname
 ```
 
-Where **username** and **groupname** are the user and group names of the
-user one wants to run SnapRAID, and thus **SnapRAID-DAILY** as.
+Where **username** and **groupname** are the user and group names of the user one wants to run SnapRAID, and thus **SnapRAID-DAILY** as.
 
-The naming of the **/etc/systemd/system/snapraid-.service.d/** directory
-will cause it to be picked up by all of the systemd service unit files
-installed by the script, or any services with a name of the structure:     
-**snapraid-\[something\].service**
+The naming of the **/etc/systemd/system/snapraid-.service.d/** directory will cause it to be picked up by all of the systemd service unit files
+installed by the script, or any services with a name of the structure: **snapraid-\[something\].service**
 
 Lastly, reload systemd:     
 ```bash
 sudo systemctl daemon-reload
 ```
 
-As before, futher example drop-in files and unit files for systemd and some
-notes are included here:
+As before, futher example drop-in files and unit files for systemd and some notes are included here:
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)       
 
 # External Hooks
 
-The script supports the use of external hooks when the script starts, completes or exits in
-error. The use of custom notification hooks if a user wishes to use an alternative form of notifcation than standard
-emails are also supported. Up to 5 of each are supported which gives a lot of room for customisation.
+The script supports the use of external hooks when the script starts, completes or exits in error. The use of custom notification hooks if a user
+wishes to use an alternative form of notifcation than standard emails are also supported. Up to 5 of each are supported which gives a lot of room for customisation.
 
 A collection of Hook scripts that integrate into the main script are provided here:
 
@@ -907,22 +794,17 @@ comes highly recommended from the author!
 
 Up to 5 seperate notification hooks are supported.
 
-The notification hook(s) can be used instead of the standard email notifications via **mutt** or used in
-addition to them.
+The notification hook(s) can be used instead of the standard email notifications via **mutt** or used in addition to them.
 
-A bash script is probably what is best to use here, but the hooks can be anything
-that is ran from the command line - it doesn't have to be a bash script per se.
+A bash script is probably what is best to use here, but the hooks can be anything that is ran from the command line - it doesn't have to be a bash script per se.
 
-If the **SnapRAID-DAILY** script ends in success, the notification hooks are called
-one-by-one on the command line like so:
+If the **SnapRAID-DAILY** script ends in success, the notification hooks are called one-by-one on the command line like so:
 
 ```bash
 "/path/to/notification/hook" "SnapRAID-DAILY: All OK" "/path/to/email/body"
 ```
 
-The 1st argument is what would be the email subject, and the 2nd argument
-is what would be the file containing the text that would form the email
-body.
+The 1st argument is what would be the email subject, and the 2nd argument is what would be the file containing the text that would form the email body.
 
 However, if the script ends in an error/warning, the hook script is called like so:
 
@@ -930,16 +812,12 @@ However, if the script ends in an error/warning, the hook script is called like 
 "/path/to/notification/hook" "SnapRAID-DAILY: Sync Warning(s)" "/path/to/email/body" "/path/to/command/log/file"
 ```
 
-As before, the 1st argument is what would be the email subject, and the 2nd argument
-is what would be the file containing the text that would form the email
-body. The 3rd argument is the log file of the **SnapRAID** command that caused the script to exit
-with an error.
+As before, the 1st argument is what would be the email subject, and the 2nd argument is what would be the file containing the text that would form the email
+body. The 3rd argument is the log file of the **SnapRAID** command that caused the script to exit with an error.
 
-It is recommended to test the notification hook(s) by calling them directly as detailed
-above to ensure they work as desired before using them with **SnapRAID-DAILY**.
+It is recommended to test the notification hook(s) by calling them directly as detailed above to ensure they work as desired before using them with **SnapRAID-DAILY**.
 
-To use the notification hook(s), set the **notification_hook1-N** parameters in the
-config file (**snapraid-daily.conf**) like so:
+To use the notification hook(s), set the **notification_hook1-N** parameters in the config file (**snapraid-daily.conf**) like so:
 
 ```bash
 notification_hook1="/usr/bin/snapraid-daily-apprise-hook"
@@ -950,29 +828,24 @@ notification_hookN="/path/to/hook"
 
 Again, note that it is required that all of the above hooks be executable.
 
-Start with **notification_hook1** and continue to **notification_hookN** where N
-is the number of hooks that are desired. Up to 5 are supported. 
+Start with **notification_hook1** and continue to **notification_hookN** where N is the number of hooks that are desired. Up to 5 are supported. 
 
-If for example, numbers are skipped - That is, **notification_hook1**, **notification_hook2**, and
-**notification_hook4** are specified, then **notification_hook4** will be ignored as **3**
-has been skipped and not specified.
+If for example, numbers are skipped - That is, **notification_hook1**, **notification_hook2**, and **notification_hook4** are specified, then
+**notification_hook4** will be ignored as **3** has been skipped and not specified.
 
-For most usage cases, it is likely that only one is required. In that case one can specify
-**notification_hook1** only and omit the others like so:
+For most usage cases, it is likely that only one is required. In that case one can specify **notification_hook1** only and omit the others like so:
 
 ```bash
 notification_hook1="/usr/bin/snapraid-daily-apprise-hook"
 ```
 
-If any variables are required to be passed into the notification hook(s), they
-can be set in **snapraid-daily.conf** like so:
+If any variables are required to be passed into the notification hook(s), they can be set in **snapraid-daily.conf** like so:
 
 ```bash
 export var1="whatever"
 ```
 
-See the package **SnapRAID-DAILY-Hooks** for some additional hook scripts that integrate 
-alongside the main script for alternative notification methods and start/end hooks.
+See the package **SnapRAID-DAILY-Hooks** for some additional hook scripts that integrate  alongside the main script for alternative notification methods and start/end hooks.
 
 An example config file that uses the start, end and notification hooks can be found here:
 
@@ -980,55 +853,41 @@ An example config file that uses the start, end and notification hooks can be fo
 
 # Start and End Hooks
 
-The script can also be configured to execute a hook upon startup and also
-after all sync/scrub operations have been completed. As before, these hooks can be bash
-scripts, or anything that can be called from the command line. Again up to 5 are
-supported.
+The script can also be configured to execute a hook upon startup and also after all sync/scrub operations have been completed. As before, these hooks can be bash
+scripts, or anything that can be called from the command line. Again up to 5 are supported.
 
-A check is carried out for a non-zero (error) return code on the start hook(s), and the main
-script will exit if this condition is encountered on any one of them. This same error check is
-not however carried out on the end hook(s) to ensure the script runs to end and the final
-notification is sent, however the printout of the overall result will be changed to "WARNING(S)"
+A check is carried out for a non-zero (error) return code on the start hook(s), and the main script will exit if this condition is encountered on any one of them. This same error check is
+not however carried out on the end hook(s) to ensure the script runs to end and the final notification is sent, however the printout of the overall result will be changed to "WARNING(S)"
 in this case.
 
-These hooks are primarily intended to start and stop a list of services that can access files
-in the **SnapRAID** array to allow **SnapRAID** to run without the risk of files being
+These hooks are primarily intended to start and stop a list of services that can access files in the **SnapRAID** array to allow **SnapRAID** to run without the risk of files being
 modified while in use, but could be used for anything else.
 
-The start hook(s) are executed after the main script has completed all of
-its initial checks and just before it starts to run **SnapRAID**
-touch/diff/sync/scrub operations. The start hook(s) are also passed a
-"start" argument, and are called one-by-one like so:
+The start hook(s) are executed after the main script has completed all of its initial checks and just before it starts to run **SnapRAID**
+touch/diff/sync/scrub operations. The start hook(s) are also passed a "start" argument, and are called one-by-one like so:
 
 ```bash
 /path/to/hook start
 ```
 
-The end hook(s) are then executed after all sync/scrub operations have been carried
-out just before the final notification is sent. They is also executed if the
-script exits due to an error condition encountered during any of the
-main **SnapRAID** operations (touch/diff/sync/scrub). The end hook(s) are
+The end hook(s) are then executed after all sync/scrub operations have been carried out just before the final notification is sent. They is also executed if the
+script exits due to an error condition encountered during any of the main **SnapRAID** operations (touch/diff/sync/scrub). The end hook(s) are
 also passed an "end" argument and are called one-by-one like so:
 
 ```bash
 /path/to/hook end
 ```
 
-The use of the "start" and "end" arguments allows the same hook to
-be used at both the start and end of **SnapRAID-DAILY**. Note that
-it is also possible to use different hooks at the start and end of
-the script if desired.
+The use of the "start" and "end" arguments allows the same hook to be used at both the start and end of **SnapRAID-DAILY**. Note that
+it is also possible to use different hooks at the start and end of the script if desired.
 
-It is also not required to use a start **AND** end hook simultaneously, the user
-can use only the start hook(s) or end hook(s) as desired. The hooks also do not need to use the
+It is also not required to use a start **AND** end hook simultaneously, the user can use only the start hook(s) or end hook(s) as desired. The hooks also do not need to use the
 "start" or "end" arguments either.
 
-Once again its a good idea to test out the start and end hooks on
-their own by calling them directly as discussed above on the command line to ensure they
+Once again its a good idea to test out the start and end hooks on their own by calling them directly as discussed above on the command line to ensure they
 work as desired before using them directly with **SnapRAID-DAILY**.
 
-To use either of these set the **start_hook1-N** or **end_hook1-N** parameters in
-the config file **/etc/snapraid-daily.conf** like so:
+To use either of these set the **start_hook1-N** or **end_hook1-N** parameters in the config file **/etc/snapraid-daily.conf** like so:
 
 ```bash
 start_hook1="/usr/bin/snapraid-daily-service-hook"
@@ -1044,16 +903,13 @@ end_hookN="/path/to/hook5"
 
 Note that it is required that all of the above hooks be executable.
 
-Start with **start_hook1** and continue to **start_hookN** where N
-is the number of hooks that are desired. Do the same for **end_hook1** to **end_hookN**.
+Start with **start_hook1** and continue to **start_hookN** where N is the number of hooks that are desired. Do the same for **end_hook1** to **end_hookN**.
 Up to 5 are supported.
 
-If for example, numbers are skipped -  **start_hook1**, **start_hook2**, and **start_hook4** are
-specified, then **start_hook4** will be ignored as **3** has been skipped and not
+If for example, numbers are skipped -  **start_hook1**, **start_hook2**, and **start_hook4** are specified, then **start_hook4** will be ignored as **3** has been skipped and not
 specified. The same is true for the end hook.
 
-For most usage cases, it is likely that only one is required. In that case one can specify
-**start_hook1** and **end_hook1** only and omit the others like so:
+For most usage cases, it is likely that only one is required. In that case one can specify **start_hook1** and **end_hook1** only and omit the others like so:
 
 ```bash
 start_hook1="/usr/bin/snapraid-daily-service-hook"
@@ -1062,8 +918,7 @@ end_hook1="/usr/bin/snapraid-daily-service-hook"
 
 See the **snapraid-daily.conf(1)** manual page for more information.
 
-As before, if any variables are required to be passed into the notification hook, they
-can be set in **snapraid-daily.conf** like so:
+As before, if any variables are required to be passed into the notification hook, they can be set in **snapraid-daily.conf** like so:
 
 ```bash
 export var1="whatever"
