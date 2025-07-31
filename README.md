@@ -46,7 +46,7 @@ To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint
 To install the script on a non-Debian based distro, install the script manually like so:
 
 * Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
-* Place it somewhere and make it executable. For Example:
+* Place it in /usr/bin and make it executable. For Example:
   - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/` 
 * Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
 * Call the script directly to test it out. See the [Usage](#usage) section below.
