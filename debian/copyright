@@ -5,8 +5,6 @@ Upstream-Contact: Mark Finnan <mfinnan101@gmail.com>
 
 Files:
  *
-Files:
- debian/*
 Copyright:
  2021-2025 Mark Finnan <mfinnan101@gmail.com>
 License: GPL-2+
