@@ -1,3 +1,49 @@
+snapraid-daily (1.5.1-1) stable; urgency=medium
+
+  * Fixed Minor Issue where printouts were incorrectly counting
+    the number of hook scripts called at the end. Closes [#3].
+
+  * Debian Package Related Updates:
+
+    - Configured debian/rules to call dh_installsystemd with the
+      options not to start or enable the systemd service and
+      timer files upon installation, and also not to stop or
+      restart them upon upgrades. Timer files need to manually
+      started. This is of course intended as the config file
+      has to be configured anyway.
+
+    - Switched to using debhelper tokens in postinst and
+      prerm maintainer scripts.
+
+    - Deleted postrm script as its no longer required.
+
+    - Refined check on hook naming in the config file in the
+      postinst script so that the config file hook script
+      naming (start_hook -> start_hook1) is only updated if upgrading
+      from a version < 1.5.0.
+
+    - Also implemented the above check on removing old unmodified
+      systemd unit files from /etc/systemd/system.
+
+    - Changed debian/copyright to cover all files to clear up
+      lintian warning on source package.
+
+    - Modified debian/rules with comments to clear up some lintian
+      warnings.
+
+    - Added debian/po/POTFILES.in and modified templates to enable
+      translations. Unlikely that this will be translated, but good
+      to have!
+
+    - Also added a build dependency on po-debconf.
+
+    - Refined prompt messages.
+
+    - Package is now completely Lintian clean and thus fully in line
+      with Debian standards!
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 03 Aug 2025 20:17:39 +0100
+
 snapraid-daily (1.5.0-1) stable; urgency=medium
 
   * Added support for multiple hooks! The script can now call up to 5
