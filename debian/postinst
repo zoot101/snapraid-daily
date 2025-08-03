@@ -1,20 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh
 
-############################
-# SnapRAID-DAILY postint script
-############################
-# Copyright (C) Mark Finnan 2025
-############################
-# Does the following:
-# 1. Autogenerates a dropin file in /etc/systemd/system/snapraid-.service.d/
-#    to automate running the services as a non-root user
-# 2. Checks config file for old hook naming syntax and automatically
-#    updates it to the new syntax (start_hook -> start_hook1)
-# 3. Checks if systemd files are present in the old location and unmodified
-#    (/etc/systemd/system), removes them in favor of /usr/lib/systemd/system
-#    If user modification has been done on any of them, the versions in
-#    /etc/systemd/system are left untouched.
-############################
+set -e
 
 # Source debconf library.
 . /usr/share/debconf/confmodule
@@ -23,145 +9,127 @@ db_version 2.0
 action="$1"
 version="$2"
 
-# Script Variables
 package_name="snapraid-daily"
+config_file="/etc/${package_name}.conf"
+extra_unit_file1="snapraid-sync"
+extra_unit_file2="snapraid-scrub"
 dropin_dir="/etc/systemd/system/snapraid-.service.d"
 dropin_file="${dropin_dir}/user.conf"
 
-# Main Function
 main () {
   if [ "$action" = "configure" ] || [ "$action" = "reconfigure" ]
   then
-    # Generate the Drop-In File to Run the Script as a different user
+    # Read debconf, and generate Drop-In File to Run as a Different User
     get_group_and_user
     new_dropin_file="no"
     generate_dropin_file
   
-    # Delete the old systemd files if present without modifications
-    systemd_file_changes="no"
-    delete_old_systemd_file "snapraid-sync.service"
-    delete_old_systemd_file "snapraid-sync.timer"
-    delete_old_systemd_file "snapraid-scrub.service"
-    delete_old_systemd_file "snapraid-scrub.timer"
-    delete_old_systemd_file "snapraid-daily.service"
-    delete_old_systemd_file "snapraid-daily.timer"
+    # Delete the old systemd files if present without modifications, and update hook
+    # naming in config file - Required only for upgrades from versions <1.5.0
+    if dpkg --compare-versions "$version" lt "1.5.0-1" && [ ! -z "$version" ]; then
+      delete_old_systemd_file "${package_name}.service"
+      delete_old_systemd_file "${package_name}.timer"
+      delete_old_systemd_file "${extra_unit_file1}.service"
+      delete_old_systemd_file "${extra_unit_file1}.timer"
+      delete_old_systemd_file "${extra_unit_file2}.service"
+      delete_old_systemd_file "${extra_unit_file2}.timer"
+      if [ -d "/run/systemd/system" ]; then systemctl --system daemon-reload >/dev/null || true; fi
   
-    # Reload Systemd (Always done for a new install)
-    if [ -z "$version" ] || [ "$systemd_file_changes" != "no" ] || [ "$new_dropin_file" != "no" ]
-    then
-      systemctl daemon-reload
-    fi
-
-    # Update Hook Names in Config if Required
-    if grep -qEw "start_hook=|end_hook=|notification_hook=" "/etc/snapraid-daily.conf"
-    then
-      if [ -f "/etc/snapraid-daily.conf" ]
+      # Update Hook Names in Config if Required for Versions < 1.5.0
+      if grep -qEw "start_hook=|end_hook=|notification_hook=" "/etc/snapraid-daily.conf"
       then
-        update_hook_names_in_config
+        if [ -f "/etc/snapraid-daily.conf" ]
+        then
+          update_hook_names_in_config
+        fi
       fi
+    # Otherwise reload systemd if a new dropin file was generated
+    elif [ "$new_dropin_file" = "yes" ] && [ -d /run/systemd/system ]; then
+      systemctl --system daemon-reload >/dev/null || true
     fi
-    exit 0
-  else
-    # Exit with Success for all other arguments
-    exit 0
   fi
+
+  #DEBHELPER#
+
+  exit 0
 }
 
-# Delete Older Redundant Systemd files if present 
+# Delete Older Redundant Systemd files if present. Okay to use md5sum as coreutils
+# is a dependency. Unit files moved in versions >=1.5.0 
 delete_old_systemd_file() {
   if [ -f "/usr/lib/systemd/system/${1}" ] && [ -f "/etc/systemd/system/${1}" ]
   then
-    # Can use md5sum as coreutils is a dependency for the package
     old_file_md5sum=$(md5sum "/etc/systemd/system/${1}" | awk '{print $1}')
     new_file_md5sum=$(md5sum "/usr/lib/systemd/system/${1}" | awk '{print $1}')
-
-    # Check both are the same file, if so delete the old file and reload systemd
     if [ "$old_file_md5sum" = "$new_file_md5sum" ]
     then
       rm "/etc/systemd/system/${1}"
-      systemd_file_changes="yes"
     fi
   fi
 }
 
-# Update Config file hook script naming for >=1.5.0
 update_hook_names_in_config() {
-  local config="/etc/snapraid-daily.conf"
-  sed -i 's/start_hook=/start_hook1=/' "${config}"
-  sed -i 's/end_hook=/end_hook1=/' "${config}"
-  sed -i 's/notification_hook=/notification_hook1=/' "${config}"
+  sed -i 's/start_hook=/start_hook1=/' "${config_file}"
+  sed -i 's/end_hook=/end_hook1=/' "${config_file}"
+  sed -i 's/notification_hook=/notification_hook1=/' "${config_file}"
 }
 
-# Get Group and User from debconf
 get_group_and_user() {
-  # Get the User and Group Name
   db_get snapraid-daily/systemd_user || true
   systemd_user="$RET"
   db_get snapraid-daily/systemd_group || true
   systemd_group="$RET"
 }
 
-# Write the Drop-In File
+
 write_dropin_file() {
-  echo "# Autogenerated during installation - recommended not to edit!" > "$dropin_file"
-  echo "# To Change User or Group Below, issue the following command instead" >> "$dropin_file"
-  echo "# $ dpkg-reconfigure snapraid-daily" >> $dropin_file
-  echo "#" >> $dropin_file
-  echo "[Service]" >> "$dropin_file"
-  echo "User=${systemd_user}" >> "$dropin_file"
-  echo "Group=${systemd_group}" >> "$dropin_file"
+cat <<EOF > "$dropin_file"
+# Autogenerated during installation - recommended not to edit!
+# To Change User or Group Below, issue the following command instead
+# $ dpkg-reconfigure ${package_name}
+#
+# To tweak any other settings, create a different .conf drop-in file
+# in this directory
+#
+[Service]
+User=${systemd_user}
+Group=${systemd_group}
+EOF
 }
 
-# Generate the Drop-In File
 generate_dropin_file() {
-
   # Check if the user is blank, if so - use root
-  if [ -z "$systemd_user" ]
-  then
+  if [ -z "$systemd_user" ]; then
     systemd_user="root"
     systemd_group="root"
   fi
 
-  # Check if the user is invalid (doesn't exist), in this
-  # case set the group the same as the user. Its probably better
-  # to not default to root in this case so it doesnt cause issues
-  # if an invalid user is specified. The service will just fail,
-  # and the user can run dpkg-reconfigure again, otherwise the
-  # user will not know about the problem...
-  if ! grep -qw "$systemd_user" "/etc/passwd"
-  then
+  # If the user input doesn't exist, default the group to the same value
+  # Best to leave service fail so the user knows about the problem...
+  if ! id "$systemd_user" >/dev/null; then
     systemd_group="$systemd_user"
   fi
 
-  # Check if the group is empty, if it is, default to the default group
-  if [ -z "$systemd_group" ]
-  then
+  # Check if the group is empty, if it is, default to the default group for the user
+  if [ -z "$systemd_group" ]; then
     systemd_group=$(groups "$systemd_user" | awk '{print $3}')
   fi
 
   # Now Check if the drop-in file exists
-  if [ -f "$dropin_file" ]
-  then
+  if [ -f "$dropin_file" ]; then
     # Get the Group and User from the Drop-In file
     existing_user="$(grep "^User=" "$dropin_file" | sed 's/User=//;s/ *$//')"
     existing_group="$(grep "^Group=" "$dropin_file" | sed 's/Group=//;s/ *$//')"
 
-    # Check 1st if the existing_user or existing_group could not be found
-    if [ -z "$existing_user" ] || [ -z "$existing_group" ]
-    then
-      # Write the Drop-In File
+    # Generate the drop-in file if the user/group are emptry or if theres a change
+    if [ -z "$existing_user" ] || [ -z "$existing_group" ]; then
       write_dropin_file
       new_dropin_file="yes"
-
-    # Check if the User and the Group are different, if so regenerate the drop-in
-    elif [ "$existing_user" != "$systemd_user" ] || [ "$existing_group" != "$systemd_group" ]
-    then
-      # Write the Drop-In File
+    elif [ "$existing_user" != "$systemd_user" ] || [ "$existing_group" != "$systemd_group" ]; then
       write_dropin_file
       new_dropin_file="yes"
     fi
   else
-    # Write the Drop-In File
     write_dropin_file
     new_dropin_file="yes"
   fi  
