@@ -10,7 +10,7 @@
 ###################################################
 
 # VERSION
-version="1.5.0"
+version="1.5.1"
 
 ###################################################
 # VARIABLES
@@ -1207,7 +1207,7 @@ run_end_hooks() {
         log_to_email_time "End Hook $i/$N_end_hooks ended in error"
         log_to_email ""
       else
-        log_to_email_time "End Hook $i/$N_start_hooks Done"
+        log_to_email_time "End Hook $i/$N_end_hooks Done"
         log_to_email ""
       fi
 
