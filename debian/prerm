@@ -1,52 +1,6 @@
-#!/bin/sh -e
+#!/bin/sh
 
-############################
-# Copyright (C) Mark Finnan 2025
-############################
-# Simply checks if both the service/timer are running/enabled 
-# and stops/disables them accordingly.
-#
-# Ensures we don't have lingering enabled services with their
-# unit and timer file already deleted.
-###########################
-
-############################
-# Functions
-############################
-# Check if the Service is running and stop it if so
-stop_service_if_running() {
-  if systemctl is-active "${1}"".service" | grep -qw "active"
-  then
-    systemctl stop "${1}"".service"
-  elif systemctl is-active "${1}"".service" | grep -qw "activating"
-  then
-    systemctl stop "${1}"".service"
-  fi
-}
-
-# Check if the Service is enabled and disable it if so
-disable_service_if_enabled() {
-  if systemctl is-enabled "${1}"".service" | grep -qw "enabled"
-  then
-    systemctl disable "${1}"".service"
-  fi
-}
-
-# Check if the Timer is running and stop it if so
-stop_timer_if_running() {
-  if systemctl is-active "${1}"".timer" | grep -qw "active"
-  then
-    systemctl stop "${1}"".timer"
-  fi
-}
-
-# Check if the Timer is enabled and disable it if so
-disable_timer_if_enabled() {
-  if systemctl is-enabled "${1}"".timer" | grep -qw "enabled"
-  then
-    systemctl disable "${1}"".timer"
-  fi
-}
+set -e
 
 # Delete drop-in file if present
 delete_dropin_file() {
@@ -56,50 +10,39 @@ delete_dropin_file() {
   fi
 }
 
-# Package Name, Drop-In File
+# Unit File Names
 package_name="snapraid-daily"
+extra_unit_file1="snapraid-sync"
+extra_unit_file2="snapraid-scrub"
+
 dropin_dir="/etc/systemd/system/snapraid-.service.d"
 dropin_file="${dropin_dir}/user.conf"
 
 # Determine action
 action="${1}"
 
-#########
-# START #
-#########
-
-# Check if the service/timer are either active or enabled
-if [ "${action}" = "purge" ] || [ "${action}" = "remove" ]
+# Check if the service/timer are active and stop them, the postrm then
+# will disable them accordingly.
+# No DEBHELPER Snippet added below as dh_installsystemd
+# is called in debian/rules with --no-enable and --no-start
+# ...so need to add this here.
+if [ "${action}" = "remove" ]
 then
+  if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]
+  then
+    deb-systemd-invoke stop "$package_name"".service" \
+                            "$package_name"".timer" \
+                            "$extra_unit_file1"".service" \
+                            "$extra_unit_file1"".timer" \
+                            "$extra_unit_file2"".service" \
+                            "$extra_unit_file2"".timer" >/dev/null || true 
+  fi
 
-  # Disable snapraid-daily service and timer 
-  stop_timer_if_running "snapraid-daily"
-  disable_timer_if_enabled "snapraid-daily"
-  stop_service_if_running "snapraid-daily"
-  disable_service_if_enabled "snapraid-daily"
-
-  # Disable snapraid-sync service and timer
-  stop_timer_if_running "snapraid-sync"
-  disable_timer_if_enabled "snapraid-sync"
-  stop_service_if_running "snapraid-sync"
-  disable_service_if_enabled "snapraid-sync"
-
-  # Disable snapraid-scrub service and timer
-  stop_timer_if_running "snapraid-scrub"
-  disable_timer_if_enabled "snapraid-scrub"
-  stop_service_if_running "snapraid-scrub"
-  disable_service_if_enabled "snapraid-scrub"
-
-  # Delete drop-in file if present
+  # Delete Drop-In File if present
   delete_dropin_file
-
-  # Reload systemd
-  systemctl daemon-reload
-
-  # Exit with success
-  exit 0
-else 
-  # Exit with Success for all other actions
-  exit 0
 fi
+
+#DEBHELPER#
+
+exit 0
 
