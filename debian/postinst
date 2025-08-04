@@ -36,9 +36,9 @@ main () {
       if [ -d "/run/systemd/system" ]; then systemctl --system daemon-reload >/dev/null || true; fi
   
       # Update Hook Names in Config if Required for Versions < 1.5.0
-      if grep -qEw "start_hook=|end_hook=|notification_hook=" "/etc/snapraid-daily.conf"
+      if [ -f "$config_file" ]
       then
-        if [ -f "/etc/snapraid-daily.conf" ]
+        if grep -qEw "start_hook=|end_hook=|notification_hook=" "$config_file"
         then
           update_hook_names_in_config
         fi
