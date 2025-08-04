@@ -1,3 +1,11 @@
+snapraid-daily (1.5.1-2) stable; urgency=medium
+
+  * Made the postinst maintainer script more gracefully handle
+    the very unlikely event of an upgrade from a version < 1.5.0
+    where the config file doesn't exist.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 04 Aug 2025 18:31:47 +0100
+
 snapraid-daily (1.5.1-1) stable; urgency=medium
 
   * Fixed Minor Issue where printouts were incorrectly counting
