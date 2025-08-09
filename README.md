@@ -613,7 +613,7 @@ See a more detailed example with explanatory comments here:
 See also an example that uses the hook scripts from the SnapRAID-DAILY-Hooks repo
 [HERE.](https://github.com/zoot101/snapraid-daily-hooks)
 
-* [https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/docs/sample-config/snapraid-daily.conf)   
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/snapraid-daily.conf](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/snapraid-daily.conf)
 
 ## Setting up Email Notifications
 
