@@ -1270,9 +1270,14 @@ sudo apt install debhelper dh-exec debconf
 
 # Clone the Repo
 git clone https://github.com/zoot101/snapraid-daily
-cd snapraid-daily
 
-# Create a source archive using dh_make
+# Rename the Directory into what is required to build a package
+# (Package_Name-Version) Change the version number if need be
+mv snapraid-daily snapraid-daily-1.5.1
+cd snapraid-daily-1.5.1
+
+# Create a source archive using dh_make, answer "yes" to
+# the prompts
 dh_make -s --createorig
 
 # Build the package
