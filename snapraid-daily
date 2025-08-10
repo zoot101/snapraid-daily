@@ -2,13 +2,11 @@
 ###################################################
 # SnapRAID DAILY
 ###################################################
-#
 # Github Page: https://github.com/zoot101/snapraid-daily
-#
 ###################################################
 
 # VERSION
-version="1.5.1"
+version="1.5.2"
 
 ###################################################
 # VARIABLES
@@ -128,9 +126,9 @@ generate_logfiles() {
 snapraid_status_cmd() {
   # Call Snapraid Status using the "-l" option
   if [ $quiet_option == 1 ]; then
-    snapraid -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile &> /dev/null
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile &> /dev/null
   else
-    snapraid -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile
   fi
 }
 
@@ -140,7 +138,7 @@ snapraid_status_to_email() {
   log_to_email "# SnapRAID-DAILY: Array Status"
   log_to_email "##############################"
   log_to_email_time "Current Status of the Array is as below:"
-  snapraid -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
+  "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
   log_to_email ""
 }
 
@@ -152,9 +150,7 @@ snapraid_touch_cmd() {
   if [ $quiet_option == 1 ]; then
     snapraid_touch_args=$( "${snapraid_touch_args[@]}" -qqqq )
   fi
-
-  # Call SnapRAID Touch
-  snapraid "${snapraid_touch_args[@]}" touch
+  "${snapraid_binary_path}" "${snapraid_touch_args[@]}" touch
 }
 
 snapraid_diff_cmd() {
@@ -165,9 +161,7 @@ snapraid_diff_cmd() {
   if [ $quiet_option == 1 ]; then
     snapraid_diff_args=( "${snapraid_diff_args[@]}" -qqqq)
   fi
-
-  # Call SnapRAID diff
-  snapraid "${snapraid_diff_args[@]}" diff
+  "${snapraid_binary_path}" "${snapraid_diff_args[@]}" diff
 
   # Get the numbers and exit status from analyzing the command logfile
   number_equal=$( grep -w "^summary:equal" $diff_command_logfile | awk -F ":" '{print $3}')
@@ -235,7 +229,7 @@ snapraid_sync_cmd() {
   fi
 
   # Call SnapRAID Sync
-  snapraid "${snapraid_sync_args[@]}" sync
+  "${snapraid_binary_path}" "${snapraid_sync_args[@]}" sync
 }
 
 snapraid_scrub_cmd() {
@@ -246,9 +240,7 @@ snapraid_scrub_cmd() {
   if [ $quiet_option == 1 ]; then
     snapraid_scrub_args=( "${snapraid_scrub_args[@]}" -qqqq )
   fi
-
-  # Call SnapRAID Scrub
-  snapraid "${snapraid_scrub_args[@]}" scrub
+  "${snapraid_binary_path}" "${snapraid_scrub_args[@]}" scrub
 }
 
 ##################################################
@@ -423,24 +415,38 @@ read_config_file() {
 
 # Sanity Check for Dependencies
 check_dependencies() {
+  # Check for SnapRAID - if a custom binary has been specified
+  # otherwise fall back to $(which snapraid)
+  if [ -n "${snapraid_binary_path}" ]; then
+    if [ ! -x "${snapraid_binary_path}" ]; then
+      error "SnapRAID Binary Path: ${snapraid_binary_path} in Config File does not exist or is not Executable"
+    else
+      echo "INFO: SnapRAID Binary Path: ${snapraid_binary_path}"
+    fi
+  else
+    if [ -z $(which snapraid) ]; then
+      error "SnapRAID is not installed or not found in \$PATH"
+    else
+      snapraid_binary_path=$(which snapraid)
+    fi
+  fi
+
   # Check dependencies 
-  if [ -z $(which snapraid) ]; then
-    error "SnapRAID command not found in PATH - Exiting..."
-  elif [ -z $(which grep) ]; then
-    error "grep command not found in PATH - Exiting..."
+  if [ -z $(which grep) ]; then
+    error "grep command not found in \$PATH - Exiting..."
   elif [ -z $(which tee) ]; then
-    error "tee command not found in PATH - Exiting..."
+    error "tee command not found in \$PATH - Exiting..."
   elif [ -z $(which awk) ]; then
-    error "awk command not found in PATH - Exiting..."
+    error "awk command not found in \$PATH - Exiting..."
   elif [ -z $(which sed) ]; then
-    error "sed command not found in PATH - Exiting..."
+    error "sed command not found in \$PATH - Exiting..."
   elif [ -z $(which mktemp) ]; then
-    error "mktemp command not found in PATH - Exiting..."
+    error "mktemp command not found in \$PATH - Exiting..."
   fi
 
   # Check if Mutt is Installed, otherwise disable emails
   if [ -z $(which mutt) ]; then
-    echo "WARNING: mutt command not found in PATH - No emails will be sent"
+    echo "WARNING: mutt command not found in \$PATH - No emails will be sent"
     enable_emails=0
   fi
   echo ""
@@ -481,7 +487,6 @@ parse_arguments() {
   # -f, --config              : Override default config file
   # -q, --quiet               : Suppress output of touch/diff/sync/scrub
   # -h, --help                : Print Help and Exit
- 
   while (( ${#} ))
   do
     # Check for Valid Arguments
@@ -559,7 +564,7 @@ parse_arguments() {
 
 # Print Greeting in Email Log
 print_greeting() {
-  snapraid_version=$(snapraid -V | awk '{print $2}' | sed 's/v//')
+  snapraid_version=$("${snapraid_binary_path}" -V | awk '{print $2}' | sed 's/v//')
   system_hostname=$(hostname --fqdn) &> "/dev/null"
   os_name=$(grep -w "^PRETTY_NAME" "/etc/os-release" | sed 's/PRETTY_NAME="//;s/"$//') &> "/dev/null"
 
@@ -1382,8 +1387,6 @@ send_email() {
 # Clean Up Log-Files Function
 clean_up_logfiles() {
   echo "Removing /tmp files..."
-
-  # Delete all Logfiles Generated by the Script
   rm $main_logfile &> /dev/null
   rm $status_command_logfile &> /dev/null
   rm $scrub_command_logfile &> /dev/null
