@@ -473,6 +473,17 @@ that may require it.
 Set to \"yes\" to use, leave commented out or set to \"no\" to
 disable.
 
+### snapraid\_binary\_path
+
+This option is for cases where the **SnapRAID** binary is installed in a different location than the default. The vast majority of users should
+not need to use this.
+
+If, for example **SnapRAID** itself is installed from outside the offical repos or compiled from source, the main binary may not be in the users
+**PATH**. If this is the case, an alternative path to the **SnapRAID** binary can be specified here. Uncomment and set the path to the alternative
+location of the binary if required.
+
+By default if this option is not used, the output of the command **which snapraid** is used to get the path to the **SnapRAID** binary.
+
 ### start\_hook1-N
 
 Specify the path to a number of hook scripts that are called when the script completes its initial checks and determines the intial status of the
