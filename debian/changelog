@@ -1,3 +1,24 @@
+snapraid-daily (1.5.2-1) stable; urgency=medium
+
+  * Added ability to specify a different path to the SnapRAID binary
+    for cases where SnapRAID may have been installed in a non-standard
+    location through the use of an option in the main config
+    file - Closes [#4].
+
+  * Updated default config file to add the above option. Note that no
+    modification to the config file is required for existing users. The
+    script will correctly default to using the output of the which snapraid
+    if no custom SnapRAID binary path is specified in the config file.
+
+  * Updated the config file manual entry - snapraid-daily.conf(1), and
+    the main manual entry - snapraid-daily(1).
+
+  * Updated example config file to add the new option and also show a
+    sample of using the snapraid-daily-commands hook script in the
+    SnapRAID-DAILY-Hooks repository.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  Sun, 10 Aug 2025 14:27:07 +0100
+
 snapraid-daily (1.5.1-3) stable; urgency=medium
 
   * Cleaned up debian/control description.
