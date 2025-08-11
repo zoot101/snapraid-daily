@@ -451,20 +451,19 @@ Note that this does not effect any emails sent to notify the user about an error
 those are still sent as normal.
 
 Set to \"yes\" to use, leave commented out or set to \"no\" to disable. Note that if one is using the notification hooks
-(see below), they are also disabled on successful runs.
+(see below), they are also disabled on successful runs if this option is used, but still called when errors are encountered.
 
 ### force\_zero
 
 By default during **sync**, if SnapRAID encounters a file of zero size that was not previously of zero size, it will report this as
-an error and exit the sync. This is possible to happen during a system crash in Linux systems, so is **NOT RECOMMENDED** to user. This option
+an error and exit the sync. This is possible to happen during a system crash in Linux systems, so is **NOT RECOMMENDED** to use. This option
 causes SnapRAID to continue to sync anyway in this condition.
 
-Set to \"yes\" to use, leave commented out or set to \"no\" to
-disable.
+Set to \"yes\" to use, leave commented out or set to \"no\" to disable.
 
 ### force\_empty
 
-If one or more of the disks are found to now be empty whereby in the past they were not SnapRAID will report this as an error and
+If one or more of the disks are found to now be empty whereby in the past they were not, SnapRAID will report this as an error and
 stop the sync. This is **NOT RECOMMENDED** to use, but is included for certain edge conditions that may require it. This option causes
 SnapRAID to continue to sync anyway in this condition.
 
@@ -759,7 +758,7 @@ However if one wishes to change the user that the script is ran as after install
 sudo dpkg-reconfigure snapraid-daily
 ```
 
-For manual installations, in the instructions above a drop-in file was already generated here, and also the below procedure need not be followed.
+For manual installations, in the [instructions above](#manual-installation) a drop-in file was already generated here, and also the below procedure need not be followed.
 
 * `/etc/systemd/system/snapraid-.service/user.conf`
 
@@ -890,7 +889,7 @@ touch/diff/sync/scrub operations. The start hook(s) are also passed a "start" ar
 /path/to/hook start
 ```
 
-The end hook(s) are then executed after all sync/scrub operations have been carried out just before the final notification is sent. They is also executed if the
+The end hook(s) are then executed after all sync/scrub operations have been carried out just before the final notification is sent. They are also executed if the
 script exits due to an error condition encountered during any of the main **SnapRAID** operations (touch/diff/sync/scrub). The end hook(s) are
 also passed an "end" argument and are called one-by-one like so:
 
@@ -1273,12 +1272,12 @@ or notes on how to use cron instead of systemd have a look here.
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff](https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config](https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples)
-* [https://github.com/zoot101/snapraid-daily/tree/main/docs/cron](https://github.com/zoot101/snapraid-daily/tree/main/docs/cron)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/cron-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/cron-examples)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example](https://github.com/zoot101/snapraid-daily/tree/main/docs/examples/hook-example)
 
 # Creating your own Debian Package
 
-Given the author uses debian as their daily driver, a debian directory containing what is required to build a debian package is included here.
+Given the author uses Debian as their daily driver, a debian directory containing what is required to build a debian package is included here.
 
 While it's not necessary, if one wants to build their own debian package, they can do the following if they are running a debian based distribution.
 
