@@ -46,14 +46,16 @@ To install the script on a non-Debian based distro, install the script manually 
 * Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
 * Place it in /usr/bin and make it executable. For Example:
   - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/`
-* Install the manual entries (optional):
-  - `sudo cp manual/*.1.gz /usr/share/man/man1`  
-* Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
-  - `sudo cp config/snapraid-daily.conf /etc`
+* Install the manual entries (optional) - Download them from [HERE](https://github.com/zoot101/snapraid-daily/tree/main/manual) and and copy them like so:
+  - `sudo cp snapraid-daily.1.gz /usr/share/man/man1`
+  - `sudo cp snapraid-daily.conf.1.gz /usr/share/man/man1`
+* Next, download the sample config from [HERE](https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf), place it in **/etc/** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
+  - `sudo cp snapraid-daily.conf /etc`
 * Call the script directly to test it out. See the [Usage](#usage) section below.
   - `snapraid-daily`
 * Download the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder [HERE](https://github.com/zoot101/snapraid-daily/tree/main/systemd-files) to **/etc/systemd/system**
-  - See the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
+  - `sudo cp snapraid-daily.timer snapraid-daily.service /etc/systemd/system` 
+  - Then, see the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
 * Reload systemd and start the timer like so
   - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
 
