@@ -158,7 +158,7 @@ Note there is a sample edited version of the script
 in the examples folder below that can be used (mutt-oauth-mf.py), but it does have the encryption/decryption disabled,
 so I recommend editing it yourself.
 
-* **/usr/share/doc/snapraid-daily/examples/mutt-oauth2-mf.py**
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/mutt-oauth2-mf.py](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/mutt-oauth2-mf.py)
 
 Find the lines near the top that start with ENCRYPTION\_PIPE and DECRYPTION\_PIPE, and
 change them to look like this. They are near the top of the script just where the comments end.
@@ -413,7 +413,7 @@ to make the port that is used to always be the same each time the script is call
 a token.
 
 To do that, edit the following line (~line 185) like so. Just make sure that the
-port is not used by somethine else.
+port is not used by something else.
 
 ```bash
 listen_port = s.getsockname()[1]
