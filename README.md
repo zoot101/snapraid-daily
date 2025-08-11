@@ -6,13 +6,12 @@ In built email notifications with monitoring of the number of deletes/moves/upda
 
 Customisable through the use of external hooks. See some examples here:    
 * https://github.com/zoot101/snapraid-daily-hooks
-* Hooks are provided above for **Apprise**, **Healthchecks.io**, and to manage a list of services.
+* Hooks are provided above for **Apprise** (which supports sending notifications to Telegram, ntfy, Discord, Slack and many more services), **Healthchecks.io**, manage a list of services with systemd, or to issue simple commands at the start and end.
 
 # Introduction 
 
-Thank you for your interest in this script! SnapRAID is very good software, but lacks any default automation or notification ability.
-
-That is where this script comes in, it is intended to be an all-in-one script for the automation of SnapRAID.
+Thank you for your interest in this script! SnapRAID is very good software, but lacks any default automation or notification ability. That is where this script comes in,
+it is intended to be an all-in-one script for the automation of all essential SnapRAID functions and do it in a simple manner.
 
 There are other scripts out there that essentially do the same thing. However, none of them had exactly had the features the author wanted.
 
@@ -20,9 +19,8 @@ Some of the other scripts also enforce running them and **SnapRAID** as root. In
 does not require running as root, and prompts the user during installation to automate running the script as a different user as desired. 
 
 This led to this script being created by the author. It has worked extremely well for the author for many years up to this date, and hopefully prove useful to others,
-hence the reason for publishing it here in Github.
-
-The broad goal here is to be an all-in-one script to automate the necessary SnapRAID functions that can be scheduled accordingly and do it in a simple manner.
+hence the reason for publishing it here in Github. Every attempt below has also been put into making the documentation and the Readme as detailed as possible such that it is
+easy to use and quick to get started with.
 
 # Quick-Start
 
@@ -47,8 +45,11 @@ To install the script on a non-Debian based distro, install the script manually 
 
 * Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
 * Place it in /usr/bin and make it executable. For Example:
-  - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/` 
+  - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/`
+* Install the manual entries (optional):
+  - `sudo cp manual/*.1.gz /usr/share/man/man1`  
 * Copy the config to **/etc/snapraid-daily.conf** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
+  - `sudo cp config/snapraid-daily.conf /etc`
 * Call the script directly to test it out. See the [Usage](#usage) section below.
   - `snapraid-daily`
 * Download the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder [HERE](https://github.com/zoot101/snapraid-daily/tree/main/systemd-files) to **/etc/systemd/system**
@@ -57,6 +58,10 @@ To install the script on a non-Debian based distro, install the script manually 
   - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
 
 For detailed instructions on each step of the way or to use the more advanced features like the start/end/notification hooks, read on below.
+
+Or, to get notifications on services like Telegram, ntfy or others, have a look at the Apprise Hook script here:
+
+* [https://github.com/zoot101/snapraid-daily-hooks](https://github.com/zoot101/snapraid-daily-hooks)
 
 # Table of Contents
 
