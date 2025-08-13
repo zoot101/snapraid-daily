@@ -118,6 +118,13 @@ generate_logfiles() {
   diff_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
 }
 
+# Print Result
+print_result() {
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Result: ${1}"
+  log_to_email "##############################"
+}
+
 ##################################################
 # SNAPRAID COMMANDS
 ##################################################
@@ -564,8 +571,8 @@ print_greeting() {
   log_to_email "# SnapRAID-DAILY Version:" "${version}"
   log_to_email "##############################"
   log_to_email "Initialized at "$(date +%H:%M:%S)" on "$(date +%d/%m/%Y)
-  if [ ! -z "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
-  if [ ! -z "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
+  if [ -n "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
+  if [ -n "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
   log_to_email " * SnapRAID Version:" "$snapraid_version"
   log_to_email "Input Options:"
 
@@ -626,20 +633,20 @@ print_greeting() {
   fi
 
   # Print Start and Stop Hooks if Being Used
-  if [ ! -z "${start_hook1}" ] || [ ! -z "${end_hook1}" ] || [ ! -z "${notification_hook1}" ]
+  if [ -n "${start_hook1}" ] || [ -n "${end_hook1}" ] || [ -n "${notification_hook1}" ]
   then
     log_to_email "Hooks:"
-    if [ ! -z "${start_hook1}" ]; then
+    if [ -n "${start_hook1}" ]; then
       log_to_email " * Start-Hook: YES ($N_start_hooks)"
     else
       log_to_email " * Start-Hook: NO"
     fi
-    if [ ! -z "${end_hook1}" ]; then
+    if [ -n "${end_hook1}" ]; then
       log_to_email " * End-Hook: YES ($N_end_hooks)"
     else
       log_to_email " * End-Hook: NO"
     fi
-    if [ ! -z "${notification_hook1}" ]; then
+    if [ -n "${notification_hook1}" ]; then
       log_to_email " * Notification Hook: YES ($N_notification_hooks)"
     else
       log_to_email " * Notification Hook: NO"
@@ -1056,7 +1063,7 @@ get_number_of_hooks() {
     local hook="${1}"$i
 
     # Check the hook script exists and is executable
-    if [ ! -z "${!hook}" ] && [ -x "${!hook}" ]; then
+    if [ -n "${!hook}" ] && [ -x "${!hook}" ]; then
       N_hooks=$((N_hooks+1))
 
       # Check if the max number of suppVorted hooks has been reached
@@ -1085,7 +1092,7 @@ get_number_of_hooks() {
       fi
 
     # Otherwise exit if it is not executable or doesn't exist
-    elif [ ! -z "${!hook}" ] && [ ! -x "${!hook}" ]; then
+    elif [ -n "${!hook}" ] && [ ! -x "${!hook}" ]; then
       error "${1}$i defined in config file: ${!hook} does not exist or is not executable - Exiting"
 
     # Otherwise Break
@@ -1196,7 +1203,7 @@ run_notification_hooks() {
 
     # Only run the notification hooks if enabled or in the case of a warning
     if [[ ( "${disable_emails_on_success}" == "no" ) || \
-          ( "${disable_emails_on_success}" == "yes" && ! -z "${notification_attachment}" ) ]]
+          ( "${disable_emails_on_success}" == "yes" && -n "${notification_attachment}" ) ]]
     then
       echo "##############################"
       echo "# SnapRAID-DAILY: Notification Hook(s)"
@@ -1250,15 +1257,7 @@ notify_of_success() {
   fi
 
   # Print Success Banner here
-  if [ "${end_hook_errors}" == "no" ]; then
-    log_to_email "##############################"
-    log_to_email "# SnapRAID-DAILY Result: SUCCESS"
-    log_to_email "##############################"
-  else
-    log_to_email "##############################"
-    log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
-    log_to_email "##############################"
-  fi
+  if [ "${end_hook_errors}" == "no" ]; then print_result "SUCCESS"; else print_result "WARNING(S)"; fi
 
   # Send the Success Email
   if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]; then
@@ -1272,17 +1271,15 @@ notify_of_success() {
 # Warning Notification
 notify_of_warning() {
   # Include the output of the status command in the email if required
-  if [ ! -z "${3}" ]; then
+  if [ -n "${3}" ]; then
     snapraid_status_to_email
   fi
 
   # Print Warning Banner here
-  log_to_email "##############################"
-  log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
-  log_to_email "##############################"
+  print_result "WARNING(S)"
 
   # Send Email Notification if Emails are Enabled and include attachment if present
-  if [ $enable_emails == 1 ] && [ ! -z "${2}" ]; then
+  if [ $enable_emails == 1 ] && [ -n "${2}" ]; then
     send_email "${1}" "${2}"
   elif [ $enable_emails == 1 ]; then
     send_email "${1}"
@@ -1298,7 +1295,7 @@ send_email() {
   email_attachment="${2}"
 
   # Add the Hostname as a Signature to the Emails
-  if [ ! -z "${system_hostname}" ]; then
+  if [ -n "${system_hostname}" ]; then
     log_to_email ""
     log_to_email "Regards,"
     log_to_email "${system_hostname}"
