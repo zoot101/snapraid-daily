@@ -47,7 +47,7 @@ main() {
  
   # Run Touch if it is required, check for deletion/moved thresholds
   # and then sync the array. Only if the --scrub-only is not selected
-  if [ $scrub_only -eq 0 ]
+  if [ $scrub_only == 0 ]
   then
     run_touch_if_needed
     check_array_for_changes_and_thresholds
@@ -55,7 +55,7 @@ main() {
   fi
   
   # Scrub & Check the output for errors if --sync-only is not selected
-  if [ $sync_only -eq 0 ]
+  if [ $sync_only == 0 ]
   then
     scrub_array
   fi
@@ -610,7 +610,7 @@ print_greeting() {
   fi
 
   # Check if the Override Thresholds has been specified
-  if [ $override_thresholds -eq 1 ]; then
+  if [ $override_thresholds == 1 ]; then
     log_to_email " * Override Thresholds: YES"
   else
     log_to_email " * Override Thresholds: NO"
@@ -726,7 +726,7 @@ initial_status_check() {
     found_unfinished_sync=1
 
     # Although, if scrub-only is selected, exit and notify the user via email
-    if [ $scrub_only -eq 0 ]
+    if [ $scrub_only == 0 ]
     then
       log_to_email_time "Sync Already in Progress - Continuing..."
     else
@@ -747,7 +747,7 @@ initial_status_check() {
   fi
 
   # Check if Touch is Needed and if Scrub Only is Not Selected
-  if [ $scrub_only -eq 0 ] && [ $touch_required_count != 0 ] 
+  if [ $scrub_only == 0 ] && [ $touch_required_count != 0 ] 
   then
     log_to_email_time "Touch Required on" $touch_required_count "files..."
     touch_required=1
@@ -760,7 +760,7 @@ initial_status_check() {
 
 # Touch Function - Run touch if required (and scrub only is not selected)
 run_touch_if_needed() {
-  if [ $touch_required -eq 1 ]
+  if [ $touch_required == 1 ]
   then
     log_to_email "##############################"
     log_to_email "# SnapRAID-DAILY: Touch"
@@ -814,7 +814,7 @@ check_array_for_changes_and_thresholds() {
     log_to_email " * Restored:" $number_restored
 
     # Check For Deletion/Moved Thresholds
-    if [ $override_thresholds -eq 1 ]
+    if [ $override_thresholds == 1 ]
     then
       log_to_email_time "Overriding Deletion/Moved/Updated Thresholds"
       log_to_email_time "Proceeding to sync regardless..."
@@ -880,7 +880,7 @@ check_array_for_changes_and_thresholds() {
 # Sync Array Function
 sync_array() {
   # Only Run if the previous snapraid diff check found changes
-  if [ $sync_required -eq 1 ]
+  if [ $sync_required == 1 ]
   then
     log_to_email "##############################"
     log_to_email "# SnapRAID-DAILY: Sync"
@@ -984,7 +984,7 @@ scrub_array() {
   snapraid_diff_cmd
 
   # Check if We have no Moved, Removed or Updated Files. Added or Copied are OK for scrubbing
-  if [ $number_removed -eq 0 ] && [ $number_updated -eq 0 ] && [ $number_moved -eq 0 ]
+  if [ $number_removed == 0 ] && [ $number_updated == 0 ] && [ $number_moved == 0 ]
   then
     # Array is still up to date - proceeding to scrub
     log_to_email_time "Array is Up-to-Date - Proceeding"
@@ -1280,15 +1280,15 @@ notify_of_success() {
   snapraid_status_to_email
 
   # Figure out the subject for the Notification(s)
-  if [ $sync_only -eq 1 ]
+  if [ $sync_only == 1 ]
   then
-    if [ $sync_required -eq 1 ]
+    if [ $sync_required == 1 ]
     then
       success_subject="SnapRAID-DAILY: Sync OK"
     else
       success_subject="SnapRAID-DAILY: Nothing to Sync"
     fi
-  elif [ $scrub_only -eq 1 ]
+  elif [ $scrub_only == 1 ]
   then
     if [ $nothing_to_scrub == 1 ]
     then
@@ -1297,7 +1297,7 @@ notify_of_success() {
       success_subject="SnapRAID-DAILY: Scrub OK"
     fi
   else
-    if [ $sync_required -eq 0 ] && [ $nothing_to_scrub -eq 1 ]
+    if [ $sync_required == 0 ] && [ $nothing_to_scrub == 1 ]
     then
       success_subject="SnapRAID-DAILY: Nothing to Sync OR Scrub"
     else
@@ -1375,7 +1375,7 @@ send_email() {
   fi  
 
   # Check if the email is sent successfully for the systemd logs
-  if [ $? -eq 0 ]; then
+  if [ $? == 0 ]; then
     echo "Email Sent Successfully to ${email_address}..."
     echo ""
   else
