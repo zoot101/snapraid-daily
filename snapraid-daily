@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.5.2"
+version="1.5.3"
 
 ###################################################
 # VARIABLES
@@ -424,7 +424,7 @@ check_dependencies() {
       echo "INFO: SnapRAID Binary Path: ${snapraid_binary_path}"
     fi
   else
-    if [ -z $(which snapraid) ]; then
+    if ! which snapraid &>/dev/null; then
       error "SnapRAID is not installed or not found in \$PATH"
     else
       snapraid_binary_path=$(which snapraid)
@@ -432,20 +432,20 @@ check_dependencies() {
   fi
 
   # Check dependencies 
-  if [ -z $(which grep) ]; then
+  if ! which grep &>/dev/null; then
     error "grep command not found in \$PATH - Exiting..."
-  elif [ -z $(which tee) ]; then
+  elif ! which tee &>/dev/null; then
     error "tee command not found in \$PATH - Exiting..."
-  elif [ -z $(which awk) ]; then
+  elif ! which awk &>/dev/null; then
     error "awk command not found in \$PATH - Exiting..."
-  elif [ -z $(which sed) ]; then
+  elif ! which sed &>/dev/null; then
     error "sed command not found in \$PATH - Exiting..."
-  elif [ -z $(which mktemp) ]; then
+  elif ! which mktemp &>/dev/null; then
     error "mktemp command not found in \$PATH - Exiting..."
   fi
 
   # Check if Mutt is Installed, otherwise disable emails
-  if [ -z $(which mutt) ]; then
+  if ! which mutt &>/dev/null; then
     echo "WARNING: mutt command not found in \$PATH - No emails will be sent"
     enable_emails=0
   fi
