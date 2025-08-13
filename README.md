@@ -32,9 +32,9 @@ First, ensure **SnapRAID** is functioning okay on your system - that is, you can
 To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint install the provided package like so:
 
 * Download the latest Debian package from the release page [HERE](https://github.com/zoot101/snapraid-daily/releases)
-* Install it like so - all dependencies should be installed automatically. Answer the prompts if you want to run the script as a different user other than root. 
+* Install it like so - all dependencies should be installed automatically. Answer the prompts for a user and group if you want to run the script as a different user other than root. If you are okay with running it as root, enter "root" at the prompts or leave them blank.
   - `sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb`
-* Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, check out the installed manual entry for the config file like so, or read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
+* Edit the config file that was installed at **/etc/snapraid-daily.conf** to your needs. The comments included should help, check out the installed manual entry for the config file like so, or read on below. Note that the script should also run out of the box with the default config file (or with no config file), but will not send any emails.
   - `man snapraid-daily.conf`
 * Call the script directly to test it out. See the [Usage](#usage) section below.
   - `snapraid-daily`
@@ -43,19 +43,21 @@ To install the script, if on Debian or a Debian-based distro like Ubuntu or Mint
 
 To install the script on a non-Debian based distro, install the script manually like so:
 
-* Download the script from this page [HERE](https://github.com/zoot101/snapraid-daily/blob/main/snapraid-daily)
-* Place it in /usr/bin and make it executable. For Example:
+* Download the latest "Source Code" archive from the release page [HERE](https://github.com/zoot101/snapraid-daily/releases) and extract it.
+  - `unzip snapraid-daily-1.5.2.zip` or `tar xvf snapraid-daily-1.5.2.tar.gz`
+  - `cd snapraid-daily-1.5.2`
+* Place the main script in /usr/bin and make it executable. For Example:
   - `chmod +x snapraid-daily && sudo cp snapraid-daily /usr/bin/`
-* Install the manual entries (optional) - Download them from [HERE](https://github.com/zoot101/snapraid-daily/tree/main/manual) and and copy them like so:
-  - `sudo cp snapraid-daily.1.gz /usr/share/man/man1`
-  - `sudo cp snapraid-daily.conf.1.gz /usr/share/man/man1`
-* Next, download the sample config from [HERE](https://github.com/zoot101/snapraid-daily/blob/main/config/snapraid-daily.conf), place it in **/etc/** and edit it to your needs. Just like above, the comments included should help, if not read on below. Note that the script should also run out of the box with the default config file, but will not send any emails.
+* Install the manual entries (optional)
+  - `sudo cp ./manual/snapraid-daily.1.gz /usr/share/man/man1`
+  - `sudo cp ./manual/snapraid-daily.conf.1.gz /usr/share/man/man1`
+* Next, copy the sample config and place it in /etc, then edit it to your needs. Once again the comments included should help, check out the manual entry for the config file, or read on below. Note also that the script will run out of the box with the default config file (or with no config file) but will not send any emails. 
   - `sudo cp snapraid-daily.conf /etc`
 * Call the script directly to test it out. See the [Usage](#usage) section below.
   - `snapraid-daily`
-* Download the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder [HERE](https://github.com/zoot101/snapraid-daily/tree/main/systemd-files) to **/etc/systemd/system**
-  - `sudo cp snapraid-daily.timer snapraid-daily.service /etc/systemd/system` 
-  - Then, see the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. 
+* Copy the snapraid-daily.timer and snapraid-daily.service from the systemd-files folder to **/etc/systemd/system**
+  - `sudo cp ./systemd-files/snapraid-daily.timer ./systemd-files/snapraid-daily.service /etc/systemd/system` 
+  - Then, see the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. If you are okay with running it as root, this is not required. 
 * Reload systemd and start the timer like so
   - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
 
@@ -234,7 +236,7 @@ Install the package like so:
 
 ```bash
 sudo apt update
-sudo apt install ./snapraid-daily_1.5.0-1_amd64.deb
+sudo apt install ./snapraid-daily_1.5.2-1_amd64.deb
 ```
 
 During installation, one will be prompted for a user and group to run the script as a service via systemd.
@@ -254,21 +256,22 @@ Then, move on to the Config file setup section below.
 
 Alternatively to install manually, do the following:
 
-```bash
-# Install git
-sudo apt install git # (On Debian based distros)
-sudo dnf install git-core # (On Fedora)
+First download the latest source code archive from the releases page [HERE](https://github.com/zoot101/snapraid-daily/releases) and extract it as below.
+One can of course clone the whole repo with **git clone**, but there may some edits that are not fully tested in the non-released version of the script or the other config files etc.,
+so its recommended to stick with what is on the releases page instead.
 
-# Clone the Repo
-git clone https://github.com/zoot101/snapraid-daily
+```bash
+# Extract the Archive
+unzip snapraid-daily-1.5.2.zip       # For the zip file
+tar xvf snapraid-daily-1.5.2.tar.gz  # For the tar.gz file
+
 cd snapraid-daily
 
 # Install the main script
 chmod +x snapraid-daily
 sudo cp snapraid-daily /usr/bin/
 
-# Install the sample config file to the
-# default location
+# Install the sample config file to the default location
 sudo cp ./config/snapraid-daily.conf /etc/
 
 # Install the manual entries
@@ -1281,27 +1284,28 @@ Given the author uses Debian as their daily driver, a debian directory containin
 
 While it's not necessary, if one wants to build their own debian package, they can do the following if they are running a debian based distribution.
 
+Again download the latest source code archive from the releases page [HERE](https://github.com/zoot101/snapraid-daily/releases) and extract it:
+
 ```bash
 # Install build dependencies
 sudo apt install debhelper dh-exec debconf
 
-# Clone the Repo
-git clone https://github.com/zoot101/snapraid-daily
+# Extract the archive 
+unzip snapraid-daily-1.5.2.zip      # For the Zip File
+tar xvf snapraid-daily-1.5.2.tar.gz # For the Tar File
 
-# Rename the Directory into what is required to build a package
-# (Package_Name-Version) Change the version number if need be
-mv snapraid-daily snapraid-daily-1.5.1
-cd snapraid-daily-1.5.1
+cd snapraid-daily-1.5.2
 
 # Create a source archive using dh_make, answer "yes" to
-# the prompts
+# the prompts. The default maintainer details are your username and
+# hostname. This is fine for a self created package.
 dh_make -s --createorig
 
 # Build the package
 dpkg-buildpackage -uc -us
 ```
 
-A new debian package should be created in the parent directory that can be installed with **dpkg** or with **apt** as shown above.
+A new Debian package should be created in the parent directory that can be installed with **dpkg** or with **apt** as shown above.
 
 # Return Codes
 
