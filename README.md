@@ -84,6 +84,7 @@ Or, to get notifications on services like Telegram, ntfy or others, have a look 
   * [Setting Up Email Notifications](#setting-up-email-notifications)
   * [Automation with Systemd](#automation-with-systemd)
   * [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd)
+  * [Alternative - Automation with Cron](#alternative---automation-with-cron)
   * [External Hooks](#external-hooks)
     - [Notification Hooks](#notification-hooks)
     - [Start and End Hooks](#start-and-end-hooks)
@@ -749,11 +750,6 @@ Some further examples are provided in the docs directory for the drop-in files t
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
 
-Note that some examples are also provided in the docs for using **cron**
-to run the script.
-
-* [https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/](https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/)
-
 ## Running as a Standard User with Systemd
 
 If installed via package, the script is already setup to run as a non-root user depending on what was selected for the prompts, thus the below procedure
@@ -797,6 +793,17 @@ As before, futher example drop-in files and timer files for systemd along with s
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer)    
+
+## Alternative - Automation with Cron
+
+The vast majority of users are likely running a distro that uses Systemd. As a result that is what the focus has been placed on in
+the documentation here. Also, if one is running a distro that uses systemd it's recommended to stick with using systemd timers to automate
+running for the script.
+
+However, if one is using a distro that uses **cron** instead, or just wants to use **cron** instead - some examples and notes on using
+**cron** to run the script are provided in the docs directory here:
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/](https://github.com/zoot101/snapraid-daily/blob/main/docs/cron-examples/)
 
 # External Hooks
 
