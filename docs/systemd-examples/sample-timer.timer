@@ -1,3 +1,15 @@
+# If you want to change the times that any of the timers run at, do the following:
+# Rename this file depending on whether you are running seperate sync
+# and scrub operations or not.
+#
+# Default (Sync and then Scrub): snapraid-daily.timer
+# Sync Only: snapraid-sync.timer
+# Scrub Only: snapraid-scrub.timer
+#
+# Edit it using the examples below, and place a copy of it in /etc/systemd/system
+# Then reload systemd with a $ systemctl daemon-reload
+#
+
 [Unit]
 Description=Uses SnapRAID-Daily to Sync and Scrub the SnapRAID Array
 
