@@ -6,11 +6,22 @@ instead.
 
 Setting up of cron itself is left to the user and not considered here.
 
-* To emulate the default installation, put the script somewhere along most users $PATH variables - /usr/bin/ usually.   
-* Put the config file in /etc.   
-* Alternatively put the script and config file in their own directory somewhere. The config file will be read by the script if its in the same directory.   
-
 # Cron Tab Line examples
+
+Edit the crontab file as below and add the below line/lines depending on whether you wish to sync and scrub the
+array each time the script is called or to seperate the sync and scrub operations.
+
+```bash
+# If running the script as a user other than root - Edit the cron tab like so:
+crontab -e -u your_username
+
+# If running the script as root it's:
+crontab -e
+
+# Or for fcron...
+fcrontab -e -u your_username # For non-root user
+fcrontab -e                  # For root
+```
 
 The below should work assuming the script is in **/usr/bin**, change the path accordingly.
 
@@ -38,15 +49,16 @@ https://crontab-generator.org
 
 # Knowing the Script is Running
 
-The author is no expert on cron, but the logging function of systemd
-seems vastly superior (open to correction!).
+The author is not as experienced on **cron** as using systemd timers, but the logging function of systemd seems vastly superior (open to correction!).
 
-Sometimes it can be difficult to know the script is actually running,
-to help with that one can check the **/tmp** directory for the logfiles
+Sometimes if using **cron** it can be difficult to know the script is actually running, to help with that one can check the **/tmp** directory for the logfiles
 the script will generate:   
+
 ```bash
 snapraid-daily.Xu83jf.txt
 
 # etc.
 ```
+
+Alternatively the is seperate logging capability that can be used with **cron**, but that is left up to the user and not considered here.
 
