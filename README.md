@@ -716,9 +716,11 @@ The default timer run times are :
 * **snapraid-scrub.timer** : Twice weekly - Mondays and Fridays at 21:00    
 * **snapraid-daily.timer** : Daily - At 06:00    
 
-To adjust any of these, if the script was installed by the package, it's best to create a copy of the timer file in **/etc/systemd/system** instead.
+To adjust any of these, if the script was installed by the package, it's best to create a seperate copy of the timer file in **/etc/systemd/system/** like below,
+and then to edit that file directly. 
 
 ```bash
+# If installed by the package - create a copy like so:
 sudo cp /usr/lib/systemd/system/snapraid-daily.timer /etc/systemd/system/snapraid-daily.timer
 ```
 
@@ -726,6 +728,10 @@ This is because systemd will take precedence for files in **/etc/systemd/system*
 upgrading to new versions of the package installation.
 
 On the other hand if one installed via the manual procedure above, then the timer file(s) can be edited directly in **/etc/systemd/system**.
+
+An example timer file that shows different options on how to specify when it will 
+run is [HERE](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer) and can be used as example to change the default runtimes
+if desired.
 
 It is not recommended to edit any of the service files directly. It is instead better to create drop-in files by using:
 
@@ -739,11 +745,9 @@ Lastly, if one does change anything in the service files or the timer files abov
 systemctl daemon-reload
 ```
 
-Some further examples are provided in the docs directory for both the main service/timer file and also drop-in files that can be used to configure
-automatic restarts or systemd hardening (see below).
+Some further examples are provided in the docs directory for the drop-in files that can be used to configure automatic restarts or systemd hardening (see below).
 
-* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)   
-* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
 
 Note that some examples are also provided in the docs for using **cron**
 to run the script.
@@ -789,10 +793,10 @@ Lastly, reload systemd:
 sudo systemctl daemon-reload
 ```
 
-As before, futher example drop-in files and unit files for systemd and some notes are included here:
+As before, futher example drop-in files and timer files for systemd along with some notes are included here:
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)    
-* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)       
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer)    
 
 # External Hooks
 
@@ -1270,7 +1274,7 @@ server.example.org
 For examples on how to automate via systemd timers, set up a valid muttrc config for emails, some notes on SnapRAID itself, a sample hook script, 
 or notes on how to use cron instead of systemd have a look here.
 
-* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples)
+* [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-examples/sample-timer.timer)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins](https://github.com/zoot101/snapraid-daily/tree/main/docs/systemd-drop-ins)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff](https://github.com/zoot101/snapraid-daily/tree/main/docs/snapraid-stuff)
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config](https://github.com/zoot101/snapraid-daily/tree/main/docs/sample-config)
