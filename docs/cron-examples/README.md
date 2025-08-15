@@ -6,7 +6,7 @@ instead.
 
 Setting up of cron itself is left to the user and not considered here.
 
-# Cron Tab Line examples
+# Cron Tab Line Examples
 
 Edit the crontab file as below and add the below line/lines depending on whether you wish to sync and scrub the
 array each time the script is called or to seperate the sync and scrub operations.
