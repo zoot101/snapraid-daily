@@ -1,3 +1,14 @@
+snapraid-daily (1.5.3-1) stable; urgency=medium
+
+  * Improved Cron Documentation and made addition to main script manual
+    page.
+
+  * Removed duplicate systemd example files from systemd-examples docs
+    directory.
+    - Improved examples in sample systemd timer file.
+
+ -- Mark Finnan <mfinnan101@gmail.com>  X,  X 2025 XX:XX:XX +0100
+
 snapraid-daily (1.5.2-1) stable; urgency=medium
 
   * Added ability to specify a different path to the SnapRAID binary
