@@ -104,6 +104,7 @@ Or, to get notifications on services like Telegram, ntfy or others, have a look 
 - [Further Examples](#further-examples)
 - [Creating your own Debian Package](#creating-your-own-debian-package)
 - [Return Codes](#return-codes)
+- [Issues](#issues)
 - [Credits](#credits)
 
 # Scope
