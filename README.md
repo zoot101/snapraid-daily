@@ -103,6 +103,7 @@ Or, to get notifications on services like Telegram, ntfy or others, have a look 
 - [Sample Output](#sample-output)
 - [Further Examples](#further-examples)
 - [Creating your own Debian Package](#creating-your-own-debian-package)
+  - [Removing the Dependency on SnapRAID](#removing-the-dependency-on-snapraid)
 - [Return Codes](#return-codes)
 - [Issues](#issues)
 - [Credits](#credits)
@@ -1318,6 +1319,27 @@ dpkg-buildpackage -uc -us
 ```
 
 A new Debian package should be created in the parent directory that can be installed with **dpkg** or with **apt** as shown above.
+
+## Removing the Dependency on SnapRAID
+
+Normally the author would recommend installing **SnapRAID** itself from the official repos.
+
+However, in the cases where one has installed **SnapRAID** from outside the official Repos, and wants to install this script via the package,
+it may be desirable **NOT** to have the **SnapRAID-DAILY** package depend on **SnapRAID** itself, so one can install **SnapRAID-DAILY** via
+the package without the main **SnapRAID** package from the offical repos being automatically installed.
+
+In that case, to remove the dependency - do the following:
+
+```bash
+# Repeat the above procedure to download and extract the "Source Code" archive
+# Then after extracting, edit the debian/control file
+nano debian/control # Or whichever edit you prefer
+
+# And delete the following line:
+ snapraid (>=11.0),
+
+# Then rebuild the package as above
+```
 
 # Return Codes
 
