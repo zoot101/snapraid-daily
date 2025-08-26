@@ -247,8 +247,32 @@ snapraid_scrub_cmd() {
 # OTHER FUNCTIONS
 ##################################################
 
+# Unset all Config File Variables
+unset_config_vars() {
+  snapraid_config_file_path=
+  muttrc_path=
+  email_address=
+  deletion_threshold=
+  moved_threshold=
+  updated_threshold=
+  sync_pre_hash=
+  scrub_percent=
+  scrub_age=
+  disable_emails_on_success=
+  force_zero=
+  force_empty=
+  force_uuid=
+  snapraid_binary_path=
+  start_hook1=
+  end_hook1=
+  notification_hook1=
+}
+
 # Read Config File parameters in. If it is not present, exit
 read_config_file() {
+  # Unset all Config File Variables
+  unset_config_vars
+
   # Find script directory
   source_directory="$( dirname "$( readlink -f "${0}" )")"
 
