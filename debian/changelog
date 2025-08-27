@@ -7,6 +7,17 @@ snapraid-daily (1.5.3-1) stable; urgency=medium
     directory.
     - Improved examples in sample systemd timer file.
 
+  * Added section to unset all config file variables before the config
+    file is read. This prevents issues in the unlikely event those
+    variables are set via an export command externally before calling
+    then script.
+
+  * Also unset the variables that are set with the input arguments to
+    the script as above.
+
+  * Minor Code Cleanup
+    - Silence which commands, reduce linecount, trim comments
+
  -- Mark Finnan <mfinnan101@gmail.com>  X,  X 2025 XX:XX:XX +0100
 
 snapraid-daily (1.5.2-1) stable; urgency=medium
