@@ -1,24 +1,34 @@
 snapraid-daily (1.5.3-1) stable; urgency=medium
 
-  * Improved Cron Documentation and made addition to main script manual
-    page.
+  * Added a check for an update from the Github page. Now when the
+    script is called, it will do a check to see if curl is installed
+    and if so, it will check the Github page for a newer version
+    and notify the user by way of printing a notice and also adding
+    a line to the email log.
+
+  * Also added a "disable_update_check" parameter to the config file
+    to disable the update check functionality if desired.
+
+  * Updated default config file and example that incorporates multiple
+    hooks.
 
   * Removed duplicate systemd example files from systemd-examples docs
     directory.
     - Improved examples in sample systemd timer file.
 
   * Added section to unset all config file variables before the config
-    file is read. This prevents issues in the unlikely event those
-    variables are set via an export command externally before calling
-    then script.
+    file is read, and also all variables set by arguments to the script.
+    This prevents issues in the unlikely event those exact variables are
+    set via export commands externally before calling then script.
 
-  * Also unset the variables that are set with the input arguments to
-    the script as above.
+  * Improved Cron Documentation.
+
+  * Added recommended package dependency on curl.
 
   * Minor Code Cleanup
-    - Silence which commands, reduce linecount, trim comments
+    - Silence which commands, reduce linecount, trim comments.
 
- -- Mark Finnan <mfinnan101@gmail.com>  X,  X 2025 XX:XX:XX +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  TBD, XX Sept 2025 XX:XX:XX +0100
 
 snapraid-daily (1.5.2-1) stable; urgency=medium
 
