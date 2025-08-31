@@ -20,6 +20,7 @@ Depends:
  gawk (>=5.0),
  ${misc:Depends},
 Recommends:
+ curl (>=7.74),
  mutt (>=2.0),
 Suggests:
  snapraid-daily-hooks (>=0.3.3),
