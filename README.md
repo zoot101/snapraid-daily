@@ -496,6 +496,19 @@ location of the binary if required.
 
 By default if this option is not used, the output of the command **which snapraid** is used to get the path to the **SnapRAID** binary.
 
+### disable\_update\_check
+
+By default, the script will check if curl is installed, and if so will check
+the Github page to see if a new updated version is available. It does this by looking at
+the following file which stores the currently released version number.
+
+* [https://raw.githubusercontent.com/zoot101/snapraid-daily/refs/heads/main/VERSION](https://raw.githubusercontent.com/zoot101/snapraid-daily/refs/heads/main/VERSION) 
+
+If an updated version is found, it will print out a note saying so
+to the email that is sent when the script completes. 
+
+Comment out and set to yes if you wish to disable this feature.
+
 ### start\_hook1-N
 
 Specify the path to a number of hook scripts that are called when the script completes its initial checks and determines the intial status of the
@@ -988,6 +1001,8 @@ Initially the config file **snapraid-daily.conf** is read, and its contents are 
 value is assumed.
 
 If the main config file for SnapRAID itself is not present in the default location or doesn't exist, the script will continue with all defaults.
+
+The script will then check for an updated version on the Github page if the parameter to disable the update check is not used in the config file.
 
 Next checks are carried out for the script dependencies: awk, grep, sed, mktemp, tee and SnapRAID itself. It will exit if any of these
 are not present.
