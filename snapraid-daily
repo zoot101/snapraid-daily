@@ -12,6 +12,8 @@ version="1.5.3"
 # VARIABLES
 ###################################################
 max_hooks=5
+github_page="https://github.com/zoot101/snapraid-daily"
+github_version_file="https://raw.githubusercontent.com/zoot101/snapraid-daily/refs/heads/main/VERSION"
 
 ###################################################
 # RETURN CODES
@@ -29,8 +31,9 @@ main() {
   # Parse Input Arguments
   parse_arguments "$@"
   
-  # Read Config File, check its contents and that dependencies are installed
+  # Read & Check Config File, Check for an Update (if enabled) & Check Dependencies
   read_config_file
+  check_for_update
   check_dependencies
   
   # Generate Logfiles for Analysis
@@ -260,6 +263,7 @@ unset_config_vars() {
   force_empty=
   force_uuid=
   snapraid_binary_path=
+  disable_update_check=
   start_hook1=
   end_hook1=
   notification_hook1=
@@ -377,48 +381,45 @@ read_config_file() {
   # Check for disable_emails_on_success, default to no. Sanity check it's "yes" or "no"
   if [ -z "${disable_emails_on_success}" ]; then
     disable_emails_on_success="no"
-  else
-    if [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]; then
-      error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
-    elif [ "${disable_emails_on_success}" == "yes" ]; then
-      echo "INFO: Notification Emails & Hook(s) disabled on Success"
-    fi
+  elif [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]; then
+    error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
+  elif [ "${disable_emails_on_success}" == "yes" ]; then
+    echo "INFO: Notification Emails & Hook(s) disabled on Success"
   fi
 
   # Check for sync_pre_hash, default to no. Sanity check it's "yes" or "no"
   if [ -z "${sync_pre_hash}" ]; then
     sync_pre_hash="yes"
-  else
-    if [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]; then
-      error "Specified invalid sync_pre_hash in config file - It should be either \"yes\" or \"no\""
-    fi
+  elif [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]; then
+    error "Specified invalid sync_pre_hash in config file - It should be either \"yes\" or \"no\""
   fi
 
   # Check for force_zero. Default to no if undefined - exit if invalid
   if [ -z "${force_zero}" ]; then
     force_zero="no"
-  else
-    if [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]; then
-      error "Specified invalid force_zero in config - It should be either \"yes\" or \"no\""
-    fi
+  elif [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]; then
+    error "Specified invalid force_zero in config - It should be either \"yes\" or \"no\""
   fi
 
   # Check for force_empty. Default to no if undefined - exit if invalid
   if [ -z "${force_empty}" ]; then
     force_empty="no"
-  else
-    if [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]; then
-      error "Specified invalid force_empty in config file - It should be either \"yes\" or \"no\""
-    fi
+  elif [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]; then
+    error "Specified invalid force_empty in config file - It should be either \"yes\" or \"no\""
   fi
 
   # Check for force_uuid. Default to no if undefined - exit if invalid
   if [ -z "${force_uuid}" ]; then
     force_uuid="no"
-  else
-    if [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]; then
-      error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
-    fi
+  elif [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]; then
+    error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for disable_update_check parameter. If undefined - default it to disabled
+  if [ -z "${disable_update_check}" ]; then
+    disable_update_check="no"
+  elif [ "${disable_update_check}" != "yes" ] && [ "${disable_update_check}" != "no" ]; then
+    error "Specified invalid disable_update_check in config file - It should be either \"yes\" or \"no\""
   fi
 
   # Check Start/End/Notfication hooks to see if they are defined
@@ -428,10 +429,31 @@ read_config_file() {
   get_number_of_hooks "notification_hook"
 }
 
+# Check for Update - Check if curl is installed if not disable via the config file
+check_for_update() {
+  update_available="no"
+
+  # Check for update if not disabled in config file
+  # Remove the dots to allow comparing the local and Github versions
+  if [ "${disable_update_check}" == "no" ] && which curl >/dev/null; then
+    local_script_version=$(echo "${version}" | sed 's/\.//g')
+    github_version=$(curl --silent --retry 3 "${github_version_file}")
+    if [ $? != 0 ]; then
+      echo "WARNING: Contacting ${github_page} for an update failed..."
+    else
+      github_script_version=$(echo "${github_version}" | sed 's/\.//g')
+      if is_number "${github_script_version}"; then
+        if [ "${github_script_version}" -gt "${local_script_version}" ]; then
+          update_available="yes"
+        fi
+      fi
+    fi
+  fi
+}
+
 # Sanity Check for Dependencies
 check_dependencies() {
-  # Check for SnapRAID - if a custom binary has been specified
-  # otherwise fall back to $(which snapraid)
+  # Check for a SnapRAID custom binary, otherwise fall back to $(which snapraid)
   if [ -n "${snapraid_binary_path}" ]; then
     if [ ! -x "${snapraid_binary_path}" ]; then
       error "SnapRAID Binary Path: ${snapraid_binary_path} in Config File does not exist or is not Executable"
@@ -439,7 +461,7 @@ check_dependencies() {
       echo "INFO: SnapRAID Binary Path: ${snapraid_binary_path}"
     fi
   else
-    if ! which snapraid >/dev/null; then
+    if ! which snapraid &>/dev/null; then
       error "SnapRAID is not installed or not found in \$PATH"
     else
       snapraid_binary_path=$(which snapraid)
@@ -586,6 +608,7 @@ print_greeting() {
   if [ -n "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
   if [ -n "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
   log_to_email " * SnapRAID Version:" "$snapraid_version"
+  if [ "${update_available}" == "yes" ]; then log_to_email " * Update available at ${github_page}/releases"; fi
   log_to_email "Input Options:"
 
   # Print Out all Sync Related Parameters if Sync is being Ran
