@@ -604,11 +604,14 @@ print_greeting() {
   log_to_email "##############################"
   log_to_email "# SnapRAID-DAILY Version:" "${version}"
   log_to_email "##############################"
+  if [ "${update_available}" == "yes" ]; then
+    log_to_email "# Update Available at ${github_page}/releases"
+    log_to_email "##############################"
+  fi
   log_to_email "Initialized at "$(date +%H:%M:%S)" on "$(date +%d/%m/%Y)
   if [ -n "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
   if [ -n "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
   log_to_email " * SnapRAID Version:" "$snapraid_version"
-  if [ "${update_available}" == "yes" ]; then log_to_email " * Update available at ${github_page}/releases"; fi
   log_to_email "Input Options:"
 
   # Print Out all Sync Related Parameters if Sync is being Ran
