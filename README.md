@@ -1152,12 +1152,13 @@ A sample email notification of the script is shown below, this uses the service 
 
 ```bash
 ##############################
-# SnapRAID-DAILY Version: 1.5.0
+# SnapRAID-DAILY Version: 1.5.3
 ##############################
 Initialized at 06:00:01 on 30/07/2025
  * Hostname: server.example.org
  * Host OS: Debian GNU/Linux 13 (trixie)
  * SnapRAID Version: none
+ * Update available at https://github.com/zoot101/snapraid-daily/releases
 Input Options:
  * Run-Sync: YES
  * Sync Pre-Hash: YES
