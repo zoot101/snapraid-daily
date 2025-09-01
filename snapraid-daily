@@ -282,9 +282,11 @@ read_config_file() {
   # 1 - Custom Config file if specified by the -f or --config options
   # 2 - /etc/snapraid-daily.conf
   # 3 - Same directory as script
+  # Use set -e to catch additional errors in the config file
   config_file0="${custom_config_file}"
   config_file1="/etc/snapraid-daily.conf"
   config_file2="${source_directory}""/snapraid-daily.conf"
+  set -e
   if [ -r "${config_file0}" ]; then
     echo "INFO: Using Config File:" "${config_file0}"
     source "${config_file0}"
@@ -304,6 +306,7 @@ read_config_file() {
     echo "See the manual entry for snapraid-daily.conf(1)"
     echo ""
   fi
+  set +e
 
   # Check Snapraid Config File Path
   if [ -z "${snapraid_config_file_path}" ]; then
@@ -429,19 +432,18 @@ read_config_file() {
   get_number_of_hooks "notification_hook"
 }
 
-# Check for Update - Check if curl is installed if not disable via the config file
+# Check for Update via Github Page if not disabled in the config and if curl is installed
 check_for_update() {
   update_available="no"
 
-  # Check for update if not disabled in config file
-  # Remove the dots to allow comparing the local and Github versions
+  # Extract numbers from version number to allow for direct comparison. Example: 1.5.4~beta3 -> 154
   if [ "${disable_update_check}" == "no" ] && which curl >/dev/null; then
-    local_script_version=$(echo "${version}" | sed 's/\.//g')
+    local_script_version=$(echo "${version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
     github_version=$(curl --silent --retry 3 "${github_version_file}")
     if [ $? != 0 ]; then
       echo "WARNING: Contacting ${github_page} for an update failed..."
     else
-      github_script_version=$(echo "${github_version}" | sed 's/\.//g')
+      github_script_version=$(echo "${github_version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
       if is_number "${github_script_version}"; then
         if [ "${github_script_version}" -gt "${local_script_version}" ]; then
           update_available="yes"
