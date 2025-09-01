@@ -21,6 +21,9 @@ snapraid-daily (1.5.3-1) stable; urgency=medium
     This prevents issues in the unlikely event those exact variables are
     set via export commands externally before calling then script.
 
+  * Made config file error detection more robust. The script will now
+    exit if syntax errors are present in the config file.
+
   * Improved Cron Documentation.
 
   * Added recommended package dependency on curl.
@@ -28,7 +31,7 @@ snapraid-daily (1.5.3-1) stable; urgency=medium
   * Minor Code Cleanup
     - Silence which commands, reduce linecount, trim comments.
 
- -- Mark Finnan <mfinnan101@gmail.com>  TBD, XX Sept 2025 XX:XX:XX +0100
+ -- Mark Finnan <mfinnan101@gmail.com>  Mon, 01 Sep 2025 11:02:44 +0100
 
 snapraid-daily (1.5.2-1) stable; urgency=medium
 
