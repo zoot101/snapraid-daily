@@ -25,7 +25,7 @@ Mozilla Thunderbird (which is widely supported).
 
 This link has useful background information on the Oauth2 protocol and is well worth a read:  
  
-https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README 
+* [https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README](https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README) 
 
 The author has not been able to get app passwords working with Outlook, it may
 be down to the reason that they only seem to list a certain few clients
@@ -33,10 +33,6 @@ like old generation Xbox consoles that are intended for use with app passwords
 on their website. 
 
 To date, only Gmail has proved reliable for the author with the app password feature.
-
-It is the plan to explore alternative methods of notifications via a custom
-notification hook script to **snapraid-daily** in the future. However email notifications
-will continue to remain the main notification method for **snapraid-daily**.
 
 # Sample Configuration 1 - Gmail via App Passwords
 
@@ -470,7 +466,7 @@ Gmail via oauth2 is ready for use with the main script.
 Note that it is possible to start over by simply deleting the token file and calling the hook script
 with \--authorize like above again.
 
-# Creating ones own Client ID
+# Creating ones own Client ID (Gmail or Outlook)
 
 It is possible to create one's own Client ID at both google and microsoft, but
 that is beyond the scope of what's considered here. Masquerading as Thunderbird is much easier,
@@ -481,11 +477,134 @@ for the moment using Thunderbird's credentials works well.
 
 The below links in the references talk about creating an app registration.
 
-# References
+# References (Mutt Config for Gmail and Outlook)
 
-* https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README   
-* https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook   
-* https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html   
-* https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret   
-* https://www.redhat.com/en/blog/mutt-email-oauth2   
+* [https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README](https://gitlab.com/muttmua/mutt/-/blob/master/contrib/mutt_oauth2.py.README)   
+* [https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook](https://people.math.ethz.ch/~mmarcio/mutt-oauth2-outlook)   
+* [https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html](https://www.vanormondt.net/~peter/blog/2021-03-16-mutt-office365-mfa.html)   
+* [https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret](https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret)   
+* [https://www.redhat.com/en/blog/mutt-email-oauth2](https://www.redhat.com/en/blog/mutt-email-oauth2)   
+
+# Sample Configuration 4 - Fastmail.com
+
+[Fastmail.com](https://fastmail.com) is an another email provider that is popular as an alternative to
+Gmail, Outlook etc. It provides a very good user interface and is very easy to configure clients such as
+K-9, Thunderbird, or Mutt with since it supports open standards such as SMTP, IMAP etc.
+
+To get Mutt working with [Fastmail.com](https://fastmail.com) to use with the script, an App-Password is
+required to be set up in the online user interface: 
+
+* **Settings** -> **Account** -> **Privacy & Security** -> **Manage App-Passwords and Access** as of the time of writing.
+
+Some Granular Control can be setup when making an App-Password, and a number of access options are made
+available like Email, SMTP, Calendar, Contacts etc. Only access to SMTP is required as
+Mutt (for the purposes of **SnapRAID-DAILY**) is only going to be sending emails, not receiving them.
+
+Then, the following muttrc configuration can be used:
+
+```
+set realname = "server.home.lan"
+set from = "mylogin@fastmail.com"
+set use_from = yes
+set envelope_from = yes
+
+# Username and Password
+set smtp_url = "smtps://mylogin@fastmail.com@smtp.fastmail.com:465/"
+set smtp_pass = "long-list-of-characters"
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "vim"
+set charset = "utf-8"
+set record = ''
+```
+
+Note the the smtp\_url setting must be of the shape:
+
+* smtps://mylogin@fastmail.com@smtp.fastmail.com:465
+
+The Real Name can be anything, the from should be either the main email address
+(mylogin@fastmail.com in this example), or an alias that can be setup through the WebUI. Its also
+possible to use one's own domain here also, but it requires external DNS records to
+be setup that is outside the scope of this guide here.
+
+See the sample here:
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail)
+  
+Then to test it out, just like the above do:
+
+```bash
+echo "This is a test email!" > email_body.txt
+mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt"
+```
+
+If the above shows no error, that's it.
+
+# Sample Configuration 5 - Self Hosted ntfy
+
+The author really likes [ntfy](https://ntfy.sh) and highly recommends it for totally Self-Hosted
+notifications to platforms like Android.
+
+It's probably better to use **ntfy** with **curl** or something like [Apprise](https://github.com/caronc/apprise),
+which is what the hook scripts provided in the [SnapRAID-DAILY-Hooks](https://github.com/zoot101/snapraid-daily-hooks) repository do.
+
+However, **ntfy** also provides the capability to receive an email and convert it into a notification by including a lightweight
+SMTP server. This is useful for older devices that can only send emails.
+
+In our case here, if one doesn't want to use the main **SnapRAID-DAILY** script
+with a notification hook it is possible to get mutt to send emails to an ntfy server and have it convert them
+into notifications to be served to Android/iOS devices and such. Usually the email body that **SnapRAID-DAILY** will
+generate is considered too large, and it attached as a TXT file to the notification. The email subject will be
+the notification title.
+
+Note that the below is only for a Self-Hosted instance of **ntfy** on the same network as the server running
+**SnapRAID-DAILY**, external setups involving email are more involved as they require DNS records to be setup
+externally which is outside the scope of this guide.
+
+In the **ntfy** server config (usually **/etc/ntfy/server.yml**), the following settings are required to use
+ntfy's inbuilt lightweight smtp server to receive emails.
+
+```
+smtp-server-listen: ":1999"
+smtp-server-domain: "home.lan"
+smtp-server-addr-prefix: "ntfy-"
+```
+
+Then the following muttrc configuration can be used. The realname and from parameters can be
+anything in this case. This is for the setup where the ntfy instance is running on the host
+using **SnapRAID-DAILY**. If its different change **127.0.0.1** below accordingly.
+
+```
+set realname = "server.home.lan"
+set from = "server@home.lan"
+set use_from = yes
+set envelope_from = yes
+set smtp_url = "smtp://127.0.0.1:1999/"
+set ssl_force_tls = no
+```
+
+See the sample here:
+
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail)
+  
+Then to test it out, just like the above do the below. Note the email needs to be sent to prefix-Topic\_Name@domain or
+**ntfy-server_alerts@home.lan** in the below example.
+
+```bash
+echo "This is a test email!" > email_body.txt
+mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts@home.lan < email_body.txt"
+
+# Or if one is using an access token
+mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts+tk_access_token_here@home.lan < email_body.txt"
+```
+
+If the above shows no error, that's it. The notification should pop up on whatever devices are subscribed to that
+topic.
+
+The official ntfy documentation is here:
+
+* [https://docs.ntfy.sh/config/#e-mail-publishing](https://docs.ntfy.sh/config/#e-mail-publishing)
+
 
