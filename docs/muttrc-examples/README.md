@@ -57,6 +57,10 @@ This muttrc configuration works well for the author - change the password and
 email from **server@gmail.com** to the email you want to use and
 app password generated via the google account page. Change the "server.home.lan"
 to whatever name you want the notification emails to be "from".
+
+The imap user and password settings below are not actually required as **mutt** is
+only going to be sending emails and not receiving them for **SnapRAID-DAILY**, however
+is included below for good measure.
  
 ```bash
 set realname = "server.home.lan"
@@ -65,10 +69,10 @@ set use_from = yes
 set envelope_from = yes
 
 set smtp_url = "smtps://${from}@smtp.gmail.com:465/"
-set smtp_pass = "long-list-of-characters"
+set smtp_pass = "app-password-created-above"
 
 set imap_user = "${from}"
-set imap_pass = "long-list-of-characters"
+set imap_pass = "app-password-created-above"
 
 set folder = "imaps://imap.gmail.com:993"
 set spoolfile = "+INBOX"
@@ -264,7 +268,7 @@ Then test out a sample email by using mutt.
 
 ```bash
 echo "This is a test email!" > email_body.txt
-mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt"
+mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt
 ```
 
 If the above completes, mutt is setup to use outlook.com with the oauth2 function. This has a lot of advantages
@@ -457,7 +461,7 @@ Just like with the outlook example, this can be tested out like so:
 
 ```bash
 echo "This is a test email!" > email_body.txt
-mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt"
+mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt
 ```
 
 If no errors are encountered and the email is sent, the mutt configuration with
@@ -510,7 +514,7 @@ set envelope_from = yes
 
 # Username and Password
 set smtp_url = "smtps://mylogin@fastmail.com@smtp.fastmail.com:465/"
-set smtp_pass = "long-list-of-characters"
+set smtp_pass = "app-password-created-above"
 set ssl_force_tls = yes
 
 # G to get mail
@@ -531,13 +535,13 @@ be setup that is outside the scope of this guide here.
 
 See the sample here:
 
-* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail)
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc_fastmail](https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc_fastmail)
   
 Then to test it out, just like the above do:
 
 ```bash
 echo "This is a test email!" > email_body.txt
-mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt"
+mutt -F "/path/to/new/muttrc/created/above" -s Test example@mail.com < email_body.txt
 ```
 
 If the above shows no error, that's it.
@@ -587,17 +591,17 @@ set ssl_force_tls = no
 
 See the sample here:
 
-* [https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail](https://github.com/zoot101/snapraid-daily/blob/main/docs/examples/muttrc_fastmail)
-  
+* [https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc_ntfy](https://github.com/zoot101/snapraid-daily/blob/main/docs/muttrc-examples/muttrc_ntfy)
+ 
 Then to test it out, just like the above do the below. Note the email needs to be sent to prefix-Topic\_Name@domain or
 **ntfy-server_alerts@home.lan** in the below example.
 
 ```bash
 echo "This is a test email!" > email_body.txt
-mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts@home.lan < email_body.txt"
+mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts@home.lan < email_body.txt
 
 # Or if one is using an access token
-mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts+tk_access_token_here@home.lan < email_body.txt"
+mutt -F "/path/to/new/muttrc/created/above" -s Test ntfy-server_alerts+tk_access_token_here@home.lan < email_body.txt
 ```
 
 If the above shows no error, that's it. The notification should pop up on whatever devices are subscribed to that
