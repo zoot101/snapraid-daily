@@ -399,11 +399,13 @@ notifications.
 
 * [https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples](https://github.com/zoot101/snapraid-daily/tree/main/docs/muttrc-examples)
 
-Three sample configs are provided along with instructions on how to set them up.
+The following sample configs are provided along with instructions on how to set them up.
 
-* Gmail via App Passwords
+* Gmail via App Passwords   
 * Outlook via Oauth2
 * Gmail via Oauth2   
+* Fastmail.com   
+* ntfy (Self-Hosted)   
 
 Comment out to disable email notifications. If one wants to use an alternative form of notifcation either instead of emails or in addtion
 to them see the Notification Hooks section below.
@@ -657,11 +659,13 @@ The main notification method the script uses is emails. In the opinion of the au
 
 A valid muttrc configuration is required to send email notifications.
 
-The following 3 sample configurations are provided in the docs directory below.
+The following sample configs are provided along with instructions on how to set them up.
 
 * Gmail via App Passwords
 * Outlook via Oauth2
 * Gmail via Oauth2
+* Fastmail.com   
+* ntfy (Self-Hosted)   
 
 Detailed instructions are provided in the below link on how to set **mutt** up to send emails with the script.
  
