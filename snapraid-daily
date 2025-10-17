@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.5.3"
+version="1.5.4~beta1"
 
 ###################################################
 # VARIABLES
@@ -63,6 +63,10 @@ main() {
   
   # Run End Hook (if given)
   run_end_hooks
+
+  # Generate SMART Report and spin down disks if enabled and running as root or using sudo
+  generate_smart_report
+  spin_down_hdd_disks
 
   # Send Final Notification Email if No Errors were detected, clean up
   # /tmp logfiles and exit with success
@@ -141,6 +145,24 @@ snapraid_status_to_email() {
   log_to_email_time "Current Status of the Array is as below:"
   "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
   log_to_email ""
+}
+
+snapraid_smart_report() {
+  # Call Snapraid smart and pipe the output into the email
+  if [ "${1}" == "non_root" ]; then
+    sudo "${snapraid_binary_path}" -c "${snapraid_config_file_path}" smart | tee -a $main_logfile
+  else
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" smart | tee -a $main_logfile
+  fi
+}
+
+snapraid_spin_down_disks() {
+  # Call Snapraid down to spin down disks
+  if [ "${1}" == "non_root" ]; then
+    sudo "${snapraid_binary_path}" -c "${snapraid_config_file_path}" down | tee -a $main_logfile
+  else
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" down | tee -a $main_logfile
+  fi
 }
 
 snapraid_touch_cmd() {
@@ -264,6 +286,8 @@ unset_config_vars() {
   force_uuid=
   snapraid_binary_path=
   disable_update_check=
+  smart_report=
+  spin_down_disks=
   start_hook1=
   end_hook1=
   notification_hook1=
@@ -425,6 +449,20 @@ read_config_file() {
     error "Specified invalid disable_update_check in config file - It should be either \"yes\" or \"no\""
   fi
 
+  # SMART Report (Off by default)
+  if [ -z "${smart_report}" ]; then
+    smart_report="no"
+  elif [ "${smart_report}" != "yes" ] && [ "${smart_report}" != "no" ]; then
+    error "Specified invalid smart_report in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Spin Down Disks (Off by default)
+  if [ -z "${spin_down_disks}" ]; then
+    spin_down_disks="no"
+  elif [ "${spin_down_disks}" != "yes" ] && [ "${spin_down_disks}" != "no" ]; then
+    error "Specified invalid spin_down_disks in config file - It should be either \"yes\" or \"no\""
+  fi
+  
   # Check Start/End/Notfication hooks to see if they are defined
   # correctly as executable files and how many of them there are
   get_number_of_hooks "start_hook"
@@ -435,7 +473,6 @@ read_config_file() {
 # Check for Update via Github Page if not disabled in the config and if curl is installed
 check_for_update() {
   update_available="no"
-
   # Extract numbers from version number to allow for direct comparison. Example: 1.5.4~beta3 -> 154
   if [ "${disable_update_check}" == "no" ] && which curl >/dev/null; then
     local_script_version=$(echo "${version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
@@ -668,6 +705,18 @@ print_greeting() {
     log_to_email " * Updated Threshold: Disabled"
   else
     log_to_email " * Updated Threshold:" $updated_threshold
+  fi
+
+  # Print SMART Report and Disk Spin Down Options if being used
+  if [ "${smart_report}" == "yes" ]; then
+    log_to_email " * SMART Report: YES"
+  else
+    log_to_email " * SMART Report: NO"
+  fi
+  if [ "${spin_down_disks}" == "yes" ]; then
+    log_to_email " * Spin-Down HDDs: YES"
+  else
+    log_to_email " * Spin-Down HDDs: NO"
   fi
 
   # Print Start and Stop Hooks if Being Used
@@ -1228,6 +1277,50 @@ run_end_hooks() {
   fi
 }
 
+# Generate SMART Report
+generate_smart_report() {
+  if [ "${smart_report}" == "yes" ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: SMART Report"
+    log_to_email "##############################"
+    # Check if the script is running as root, if not see if Sudo is installed...
+    if [ $UID != 0 ]; then
+      if ! which sudo >/dev/null; then
+        log_to_email "ERROR: Script not ran as root and sudo is not installed"
+        log_to_email "sudo is required to generate the SMART report if not running the script"
+        log_to_email "as root."
+      else
+        snapraid_smart_report "non_root"
+      fi
+    else
+      snapraid_smart_report
+    fi    
+    log_to_email ""
+  fi
+}
+
+# Spin Down Disks
+spin_down_hdd_disks() {
+  if [ "${spin_down_disks}" == "yes" ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: HDD Spin-Down"
+    log_to_email "##############################"
+    # Check if the Script is running as root, if not see if Sudo is installed
+    if [ $UID != 0 ]; then
+      if ! which sudo >/dev/null; then
+        log_to_email "ERROR: Script not ran as root and sudo is not installed"
+        log_to_email "sudo is required to spin down the disks if not running the script"
+        log_to_email "as root."
+      else
+        snapraid_spin_down_disks "non_root"
+      fi 
+    else
+      snapraid_spin_down_disks
+    fi
+    log_to_email ""
+  fi
+}
+ 
 # Call Notification Hook(s)
 run_notification_hooks() {
   if [ $N_notification_hooks != 0 ]; then
