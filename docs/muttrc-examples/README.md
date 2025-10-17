@@ -10,7 +10,15 @@ contain all the settings to allow mutt to send emails.
 Note that it is only sending emails that is required here, no consideration is given
 to mutt receiving emails since it is not necessary here.
 
-Three configurations are shown below. The first one is for Gmail which works through
+The following configurations are shown below.
+
+* [Configuration 1 - Gmail](#sample-configuration-1---gmail-via-app-passwords)   
+* [Configuration 2 - Outlook via Oauth2](#sample-configuration-2---outlook-via-oauth2)    
+* [Configuration 3 - Gmail via Oauth2](#sample-configuration-3---gmail-via-oauth2)   
+* [Configuration 4 - Fastmail.com](#sample-configuration-4---fastmail.com)   
+* [Configuration 5 - Self Hosted ntfy](#sample-configuration-5---self-hosted-ntfy)   
+
+The first one is for Gmail which works through
 the use of "App Passwords" which are simple to configure. This is the
 preferred option for its simplicity.
 
@@ -102,7 +110,7 @@ mutt -F "/path/to/muttrc/file" -s "Email Subject" "example@mail.com" < "email-bo
 If the above command is successful at sending the email, then mutt is ready
 to use with the script accordingly.
 
-# Sample Configuration 2 - Outlook.com via oauth2
+# Sample Configuration 2 - Outlook via oauth2
 
 This method is more involved as it uses the more secure Oauth2 protocol, but does have
 certain advantages.
@@ -283,7 +291,7 @@ rm ./.tokens/example.outlook.com.token
 ./mutt_oauth2.py ./.tokens/example.outlook.token --verbose --authorize
 ```
 
-# Sample Configuration 3 - Gmail via oauth2
+# Sample Configuration 3 - Gmail via Oauth2
 
 This procedure is very similiar to that of the outlook one covered above. Repeat all of
 the steps until it comes to editing the python script (mutt\_oauth2.py), then
