@@ -662,6 +662,8 @@ scrub_age=7
 
 # Extra Options
 #disable_emails_on_success="no"
+#smart_report="no"
+#spin_down_disks="no"
 
 # Not Recommended Options (Off by default)
 #force_zero="no"
