@@ -1,7 +1,7 @@
 Source: snapraid-daily
 Section: misc
 Priority: optional
-Maintainer: Mark Finnan <mfinnan101@gmail.com>
+Maintainer: Mark Finnan <mfinnan101@protonmail.com>
 Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
@@ -22,6 +22,7 @@ Depends:
 Recommends:
  curl (>=7.74),
  mutt (>=2.0),
+ sudo (>=1.9.13),
 Suggests:
  snapraid-daily-hooks (>=0.3.3),
 Description: Simple Bash Script to automate all essential SnapRAID functions

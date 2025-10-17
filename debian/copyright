@@ -1,12 +1,12 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Source: https://github.com/zoot101/snapraid-daily
 Upstream-Name: snapraid-daily
-Upstream-Contact: Mark Finnan <mfinnan101@gmail.com>
+Upstream-Contact: Mark Finnan <mfinnan101@protonmail.com>
 
 Files:
  *
 Copyright:
- 2021-2025 Mark Finnan <mfinnan101@gmail.com>
+ 2021-2025 Mark Finnan <mfinnan101@protonmail.com>
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
