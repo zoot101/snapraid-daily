@@ -1,0 +1,170 @@
+##############################
+# SnapRAID-DAILY Version: 1.5.4
+##############################
+Initialized at 15:26:30 on 17/10/2025
+ * Hostname: server.home.lan
+ * Host OS: Debian GNU/Linux 13 (trixie)
+ * SnapRAID Version: none
+Input Options:
+ * Run-Sync: YES
+ * Sync Pre-Hash: YES
+ * Run-Scrub: YES
+ * Scrub-Percent: 5
+ * Scrub-Age: 2 days and older
+ * Override Thresholds: NO
+ * Deletion Threshold: 1000
+ * Moved Threshold: 1000
+ * Updated Threshold: 1000
+ * SMART Report: YES
+ * Spin-Down HDDs: YES
+Hooks:
+ * Start-Hook: YES (1)
+ * End-Hook: YES (1)
+ * Notification Hook: NO
+Run-Log is Below:
+
+##############################
+# SnapRAID-DAILY: Initial Status Check
+##############################
+15:26:30 : Checking current status...
+15:26:40 : No Issues Found in Initial Check
+15:26:40 : Ready to run SnapRAID operations
+15:26:40 : Touch Not Needed...
+
+##############################
+# SnapRAID-DAILY: Start Hook(s)
+##############################
+15:26:40 : Calling Start Hook 1/1...
+15:26:40 : 1 Service(s) defined in config
+15:26:40 : Stopped Service 1/1: smbd
+15:26:40 : Start Hook 1/1 Done
+15:26:40 : All Start Hooks completed successfully
+
+##############################
+# SnapRAID-DAILY: Difference Check
+##############################
+15:26:40 : Checking array for changes...
+15:26:52 : Changes Detected
+ * Equal: 1632997
+ * Added: 8
+ * Removed: 8
+ * Updated: 0
+ * Moved: 0
+ * Copied: 0
+ * Restored: 0
+15:26:52 : Proceeding to sync...
+
+##############################
+# SnapRAID-DAILY: Sync
+##############################
+15:26:52 : Starting Sync on 17/10/2025...
+15:27:56 : Sync Completed on 17/10/2025
+15:27:56 : Duration: 0 hours, 1 minutes, 4 seconds
+15:27:56 : Sync was Successful
+15:27:56 : Array Changes Found & Updated:
+ * Added: 8
+ * Removed: 8
+ * Updated: 0
+ * Moved: 0
+ * Copied: 0
+ * Restored: 0
+
+##############################
+# SnapRAID-DAILY: Scrub
+##############################
+15:27:56 : Checking if Array is still up to date...
+15:28:11 : Array is Up-to-Date - Proceeding
+15:28:11 : Starting Scrub on 17/10/2025
+15:28:11 : Scrubbing 5% older than 2 days...
+15:29:12 : Scrub Completed at 17/10/2025
+15:29:12 : Duration: 0 hours, 1 minutes, 1 seconds
+15:29:12 : Scrub was successful
+15:29:12 : Scrubbed 5% older than 2 days
+
+##############################
+# SnapRAID-DAILY: End Hook(s)
+##############################
+15:29:12 : Calling End Hook 1/1...
+15:29:12 : 1 Service(s) defined in config
+15:29:13 : Started Service 1/1: smbd
+15:29:13 : End Hook 1/1 Done
+
+15:29:13 : All End Hooks completed successfully
+
+##############################
+# SnapRAID-DAILY: SMART Report
+##############################
+SnapRAID SMART report:
+
+   Temp  Power   Error   FP Size
+      C OnDays   Count        TB  Serial           Device    Disk
+ -----------------------------------------------------------------------
+     27   1797       0  15%  2.0  WD-WCC4M6UXJ7AD  /dev/sdc  media1
+     28   1060       0  12%  3.0  WD-WCC4N4NNR3XR  /dev/sdd  media2
+     29   1757       0  14%  2.0  WD-WCC4N0430093  /dev/sdb  media3
+     31    595       0   7%  4.0  ZW623Z5S         /dev/sda  media4
+     25   1430       0   6%  4.0  ZGY9GHA0         /dev/sde  parity
+     35     39       0  SSD  0.5  241801802914     /dev/sdf  -
+
+The FP column is the estimated probability (in percentage) that the disk
+is going to fail in the next year.
+
+Probability that at least one disk is going to fail in the next year is 44%.
+
+##############################
+# SnapRAID-DAILY: HDD Spin-Down
+##############################
+Spindown...
+Spundown device '/dev/sdd' for disk 'media2' in 448 ms.
+Spundown device '/dev/sde' for disk 'parity' in 467 ms.
+Spundown device '/dev/sda' for disk 'media4' in 870 ms.
+Spundown device '/dev/sdb' for disk 'media3' in 1025 ms.
+Spundown device '/dev/sdc' for disk 'media1' in 1033 ms.
+
+##############################
+# SnapRAID-DAILY: Array Status
+##############################
+15:29:14 : Current Status of the Array is as below:
+SnapRAID status report:
+
+   Files Fragmented Excess  Wasted  Used    Free  Use Name
+            Files  Fragments  GB      GB      GB
+  220455     180     653       -    1626     339  82% media1
+  388629     794    2840       -    2163     786  73% media2
+  581566     275     888       -    1533     431  78% media3
+  442349    2035    7323     1.7    3144     787  80% media4
+ --------------------------------------------------------------------------
+ 1632999    3284   11704     1.7    8468    2346  78%
+
+
+ 16%|           *                    o          o          o          o
+    |           *         o          *          *          *          *
+    |           *         *          *          *          *          *
+    |           *         *          *          *          *          *
+    |           *         *          *          *          *          *
+    |           *         *          *          *          *          *
+    |           *         *          *          *          *          *
+  8%|           *         *          *          *          *          *
+    |*          *         *          *          *          *          *
+    |*          *         *          *          *          *          *
+    |*          *         *          *          *          *          *
+    |*          *         *          *          *          *          *
+    |*          *         *          *          *          *          *
+    |*         o*         *          *          *          *          *
+  0%|*_________o*___o_____*__________*__________*__________*__________*___o
+     6                    days ago of the last scrub/sync                 0
+
+The oldest block was scrubbed 6 days ago, the median 3, the newest 0.
+
+No sync is in progress.
+4% of the array is not scrubbed.
+No file has a zero sub-second timestamp.
+No rehash is in progress or needed.
+No error detected.
+
+##############################
+# SnapRAID-DAILY Result: SUCCESS
+##############################
+
+Regards,
+server.home.lan
