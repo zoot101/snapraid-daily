@@ -511,7 +511,7 @@ to the email that is sent when the script completes.
 
 Comment out and set to yes if you wish to disable this feature.
 
-# smart\_report
+### smart\_report
 
 Get SnapRAID to generate its SMART report and add it to the email. This calls "snapraid smart" and records its output in the email
 notification that is sent. This either requires the script to be ran as root or for sudo to be set up to call **snapraid smart** as a 
@@ -535,7 +535,7 @@ usermod -aG sudo username
 Note that no analysis of the output is done, it is just included for the users
 reference. Comment out and set to yes to enable this feature. Off by default.
 
-# spin\_down\_disks
+### spin\_down\_disks
 
 Get SnapRAID to spin down all Hard Disks after the script has completed all operations. As above, this requires the script to
 be ran as root or for sudo to be set up to call "snapraid down" as a non-root user (see above method). Comment out and set to "yes" to enable this
