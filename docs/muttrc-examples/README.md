@@ -15,7 +15,7 @@ The following configurations are shown below.
 * [Configuration 1 - Gmail](#sample-configuration-1---gmail-via-app-passwords)   
 * [Configuration 2 - Outlook via Oauth2](#sample-configuration-2---outlook-via-oauth2)    
 * [Configuration 3 - Gmail via Oauth2](#sample-configuration-3---gmail-via-oauth2)   
-* [Configuration 4 - Fastmail.com](#sample-configuration-4---fastmail.com)   
+* [Configuration 4 - Fastmail](#sample-configuration-4---fastmail)   
 * [Configuration 5 - Self Hosted ntfy](#sample-configuration-5---self-hosted-ntfy)   
 
 The first one is for Gmail which works through
@@ -497,7 +497,7 @@ The below links in the references talk about creating an app registration.
 * [https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret](https://github.com/UvA-FNWI/M365-IMAP?tab=readme-ov-file#step-1-get-a-client-idsecret)   
 * [https://www.redhat.com/en/blog/mutt-email-oauth2](https://www.redhat.com/en/blog/mutt-email-oauth2)   
 
-# Sample Configuration 4 - Fastmail.com
+# Sample Configuration 4 - Fastmail
 
 [Fastmail.com](https://fastmail.com) is an another email provider that is popular as an alternative to
 Gmail, Outlook etc. It provides a very good user interface and is very easy to configure clients such as
