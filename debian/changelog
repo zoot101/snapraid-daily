@@ -1,7 +1,7 @@
-snapraid-daily (1.5.4~beta1-1) stable; urgency=medium
+snapraid-daily (1.5.4-1) stable; urgency=medium
 
   * Updated Mutt Email Config Documentation to add guidelines for
-    using Fastmail.com and an ntfy server.
+    using Fastmail.com and a Self-Hosted ntfy server.
 
   * Added a "smart_report" parameter to the configuration file. This will
     call "snapraid smart" after the script completes if enabled. Note
@@ -14,11 +14,12 @@ snapraid-daily (1.5.4~beta1-1) stable; urgency=medium
     root.
 
   * Updated manual entries and main README to add details about the
-    new configuration file parameters and how to set up sudo.
+    new configuration file parameters and how to set up sudo to use
+    them as a non-root user.
 
   * Added recommended package dependency on sudo.
 
- -- Mark Finnan <mfinnan101@protonmail.com>  Fri, 17 Oct 2025 15:43:31 +0100
+ -- Mark Finnan <mfinnan101@protonmail.com>  Sun, 19 Oct 2025 15:13:55 +0100
 
 snapraid-daily (1.5.3-1) stable; urgency=medium
 
