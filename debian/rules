@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+# SnapRAID-DAILY
+
+# See debhelper(7) (uncomment to enable).
+# Output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+%:
+	dh $@
+
+# Override dh_install_systemd to not start/enable unit files
+# and not do anything on upgrades...
+override_dh_installsystemd:
+	dh_installsystemd --no-enable \
+	                  --no-start \
+	                  --no-stop-on-upgrade \
+	                  --no-restart-after-upgrade
+
