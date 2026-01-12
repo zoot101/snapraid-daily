@@ -1,0 +1,76 @@
+###########################
+# Parity Disks
+###########################
+parity		/Parity1/server.parity
+2-parity	/Parity2/server.parity
+
+###########################
+# Content File Locations
+###########################
+content		/Appdata/snapraid/content-file/server.content
+content		/Media1/.snapraid/server.content
+content		/Media2/.snapraid/server.content
+content		/Media3/.snapraid/server.content
+content         /Media4/.snapraid/server.content
+content         /Media5/.snapraid/server.content
+content         /Media6/.snapraid/server.content
+content		/Media7/.snapraid/server.content
+content		/Media8/.snapraid/server.content
+
+##########################
+# Data Disks
+##########################
+data media1	/Media1
+data media2	/Media2
+data media3	/Media3
+data media4	/Media4
+data media5	/Media5
+data media6	/Media6
+data media7	/Media7
+data media8	/Media8
+
+##########################
+# Blocksize in KiB (1KiB=1024bytes)
+##########################
+# Important for the case where there`s lots of small files. As an
+# approximation from the documentation, about half the block-size
+# is wasted for each file present. This is important when the parity
+# drive is the same size as the data drives. It doesn`t arise if the
+# parity drive is bigger. One can format the parity drive with the
+# -T largefile4 switch for ext4 to get extra space to lessen the impact
+# of this. This gives about 1.5% of extra space.
+# Default Block Size = 256KiB = 262144B
+##########################
+# MY EXAMPLE: 10TB Disks
+# PARITY DISK = 9763194628 1k Blocks = 9.997511*10^12 B
+# DATA DISKs = 9687496532 1k Blocks = 9.919996*10^12 B
+# EXTRA SPACE = 77.515*10^9 B
+# WASTED SPACE ~ 0.5*(Block Size)*Nfiles
+# NFiles(Max) ~ 591393
+##########################
+# Halving the Block Size to 128KiB Gives
+# NFiles(Max) ~ 1182875
+##########################
+blocksize 256
+
+##########################
+# Autosave Amount in GB
+##########################
+# Automatically save the state after this amount of GB processed
+# during a sync. This is useful to avoid having to start from
+# scratch for long sync commands
+##########################
+autosave 500
+
+##########################
+# Exclusions
+##########################
+exclude /lost+found/
+exclude /.snapraid/
+exclude *.unrecoverable
+exclude *.ffs_db
+exclude *.ffs_lock
+exclude /Media7/Storage_Backup/Firewall_Backups/include.user
+exclude /Media7/Storage_Backup/Firewall_Backups/exclude.user
+
+exclude /TV_tmp/
