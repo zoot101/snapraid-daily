@@ -1,0 +1,55 @@
+# If you want to change the times that any of the timers run at, do the following:
+# Rename this file depending on whether you are running seperate sync
+# and scrub operations or not.
+#
+# Default (Sync and then Scrub): snapraid-daily.timer
+# Sync Only: snapraid-sync.timer
+# Scrub Only: snapraid-scrub.timer
+#
+# Edit it using the examples below, and place a copy of it in /etc/systemd/system
+# Then reload systemd with a $ systemctl daemon-reload
+#
+
+[Unit]
+Description=Uses SnapRAID-Daily to Sync and Scrub the SnapRAID Array
+
+[Timer]
+
+# Run Every Day at 6am
+#OnCalendar=*-*-* 06:00:00
+
+# Run Every Dat at 6am and 6pm
+#OnCalendar=*-*-* 06,18:00:00
+
+# Run On Mon Wed and Friday at 21:00
+#OnCalendar=Mon,Wed,Fri *-*-* 21:00:00
+
+#For specific days use the below, it runs a task hourly on Mondays, Tuesdays and Fridays.
+#OnCalendar=Mon,Tues,Fri *:0:0
+
+#To run monthly on a specific day, use the below. This runs the task on the 1st day of every month.
+#OnCalendar=*-*-1 00:00:00
+
+#To restrict the above to only run if the particular day is a Friday or Monday do:
+#OnCalendar=Mon,Fri *-*-1 00:00:00
+
+#To run a service on the 2nd Tuesday of every month use the following. Note that a list of 1 to X can be done by 1..X.
+#OnCalendar=Tue *-*-8..14 00:00:00
+
+#As an example, on every Friday the 13th use the following:
+#OnCalendar=Fri *-*-13 00:*:00
+
+#The general syntax is:
+#<Day of the Week> <Year>-<Month Number>-<Day Number> <Hour>-<Minute>-<Second>
+
+#Task can be triggered to run after startup, but I prefer specific times to do them. To trigger one after boot and repeat
+#there after everyday use this in the timer file:
+#OnBootSec=15m
+#OnUnitActiveSec=1d
+
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+
+
