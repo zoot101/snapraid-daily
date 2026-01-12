@@ -1,0 +1,36 @@
+###################################
+# Muttrc Config to Send Emails via
+# a Self-Hosted ntfy server
+###################################
+# 1. Requires the following in /etc/ntfy/server.yml
+# smtp-server-listen: ":1999"
+# smtp-server-domain: "home.lan"
+# smtp-server-addr-prefix: "ntfy-"
+# 
+# 2. Then open port 1999 on the server
+#
+# 3. Note that the Raw IP is used below, if you want
+#    to use a domain name instead, a local DNS record
+#    is required.
+#
+# 4. Next (Optional to secure the server a bit more),
+#    set up an access token via:
+#    $ ntfy token add <user name>
+#    Is of the shape tk_longlistofchars
+#
+# 5. Then use the below config to send an email to
+#    ntfy-topic_name+tk_longlistofchars@home.lan.org
+#    or, if not using an access token,
+#    ntfy-topic_name@home.lan
+#
+# 6. See official documentation here:
+#    https://docs.ntfy.sh/config/#e-mail-publishing
+
+set realname = "server.home.lan"
+set from = "server@home.lan"
+set use_from = yes
+set envelope_from = yes
+
+set smtp_url = "smtp://127.0.0.1:1999/"
+set ssl_force_tls = no
+
