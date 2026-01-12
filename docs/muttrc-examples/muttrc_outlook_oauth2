@@ -1,0 +1,31 @@
+####################################
+# Example Muttrc File for Outlook (Oauth2)
+####################################
+# See the README.md for more information
+
+# Change the realname and from lines accordingly
+
+set realname = "server.example.org"
+set from = "server-email@outlook.com"
+set use_from = yes
+set envelope_from = yes
+
+set smtp_url = "smtp://${from}@smtp.office365.com:587/"
+set imap_user = "${from}"
+
+set folder = "imaps://outlook.office365.com:993"
+set spoolfile = "+INBOX"
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "vim"
+set charset = "utf-8"
+set record = ''
+
+#set imap_authenticators="oauthbearer:xoauth2"
+set imap_authenticators="xoauth2"
+ set imap_oauth_refresh_command="/path/to/mutt_oauth2.py /path/to/token/file"
+ set smtp_authenticators=${imap_authenticators}
+ set smtp_oauth_refresh_command=${imap_oauth_refresh_command}
+
