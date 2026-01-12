@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -e
+
+# Delete drop-in file if present
+delete_dropin_file() {
+  if [ -f "$dropin_file" ]
+  then
+    rm "$dropin_file"
+  fi
+}
+
+# Unit File Names
+package_name="snapraid-daily"
+extra_unit_file1="snapraid-sync"
+extra_unit_file2="snapraid-scrub"
+
+dropin_dir="/etc/systemd/system/snapraid-.service.d"
+dropin_file="${dropin_dir}/user.conf"
+
+# Determine action
+action="${1}"
+
+# Check if the service/timer are active and stop them, the postrm then
+# will disable them accordingly.
+# No DEBHELPER Snippet added below as dh_installsystemd
+# is called in debian/rules with --no-enable and --no-start
+# ...so need to add this here.
+if [ "${action}" = "remove" ]
+then
+  if [ -z "$DPKG_ROOT" ] && [ -d /run/systemd/system ]
+  then
+    deb-systemd-invoke stop "$package_name"".service" \
+                            "$package_name"".timer" \
+                            "$extra_unit_file1"".service" \
+                            "$extra_unit_file1"".timer" \
+                            "$extra_unit_file2"".service" \
+                            "$extra_unit_file2"".timer" >/dev/null || true 
+  fi
+
+  # Delete Drop-In File if present
+  delete_dropin_file
+fi
+
+#DEBHELPER#
+
+exit 0
+
