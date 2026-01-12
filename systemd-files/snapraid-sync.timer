@@ -1,0 +1,11 @@
+[Unit]
+Description=Uses SnapRAID-Daily to Sync the SnapRAID Array
+
+[Timer]
+OnCalendar=*-*-* 06:00:00
+OnCalendar=*-*-* 18:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+
