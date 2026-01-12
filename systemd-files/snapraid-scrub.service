@@ -1,0 +1,10 @@
+[Unit]
+Description=Uses SnapRAID-DAILY to scrub the SnapRAID Array
+
+[Service]
+Type=oneshot
+UMask=002
+ExecStart=/usr/bin/snapraid-daily -c
+
+[Install]
+WantedBy=multi-user.target
