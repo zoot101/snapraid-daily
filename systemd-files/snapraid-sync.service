@@ -1,0 +1,11 @@
+[Unit]
+Description=Uses SnapRAID-Daily to Sync the SnapRAID Array
+
+[Service]
+Type=oneshot
+UMask=002
+ExecStart=/usr/bin/snapraid-daily -s
+
+[Install]
+WantedBy=multi-user.target
+
