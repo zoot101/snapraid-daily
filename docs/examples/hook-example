@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# Simple bash script example to stop and restart
+# a number of services.
+
+# Specify List of Services here or in a seperate
+# config file
+services=( "smbd" "sonarr" "radarr" "lidarr" "readarr" "bazarr")
+
+# Check for Root
+if [ $UID != 0 ]
+then
+  echo "ERROR: Script should be ran as root - exiting"
+fi
+
+# Get Number of Services specified above
+N_Services=${#services[@]}
+
+# Start Section
+if [ "${1}" == "start" ]
+then
+  for i in $(seq 0 1 $((N_Services-1)))
+  do
+    # Check The Service exists
+    if [ ! -f "/etc/systemd/system/${services[$i]}.service" ] && \
+       [ ! -f "/lib/systemd/system/${services[$i]}.service" ]
+    then
+      echo "WARNING: Service unit files do not exist for" "${services[$i]}"
+      continue
+    fi
+
+    # Stop Service Using systemctl
+    systemctl stop "${services[$i]}"
+
+    # Check Return Code
+    if [ $? != 0 ]
+    then
+      echo "ERROR stopping" "${services[$i]}" "service"
+    else
+      echo "Stopped" "${services[$i]}"
+    fi
+  done
+fi
+
+# End Section
+if [ "${1}" == "end" ]
+then
+  for i in $(seq 0 1 $((N_Services-1)))
+  do
+    # Check The Service exists
+    if [ ! -f "/etc/systemd/system/${services[$i]}.service" ] && \
+       [ ! -f "/lib/systemd/system/${services[$i]}.service" ]
+    then
+      echo "WARNING: Service unit files do not exist for" "${services[$i]}"
+      continue
+    fi
+
+    # Start Service Using systemctl
+    systemctl start "${services[$i]}"
+
+    # Check Return Code
+    if [ $? != 0 ]
+    then
+      echo "ERROR starting" "${services[$i]}" "service"
+    else
+      echo "Started" "${services[$i]}"
+    fi
+  done
+fi
+
