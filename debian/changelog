@@ -1,0 +1,1146 @@
+snapraid-daily (1.5.5-1) stable; urgency=medium
+
+  * Added a printout of the quiet option to the script status
+    print out if being used.
+
+  * Minor documentation improvements.
+
+  * Updated maintainer & copyright details.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 01 Jan 2026 13:12:14 +0100
+
+snapraid-daily (1.5.4-2) stable; urgency=medium
+
+  * Updated author in manpages.
+
+  * Updated debian maintainer.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 05 Nov 2025 11:30:44 +0100
+
+snapraid-daily (1.5.4-1) stable; urgency=medium
+
+  * Updated Mutt Email Config Documentation to add guidelines for
+    using Fastmail.com and a Self-Hosted ntfy server.
+
+  * Added a "smart_report" parameter to the configuration file. This will
+    call "snapraid smart" after the script completes if enabled. Note
+    that this requires sudo to be set up or the script to be ran as
+    root.
+
+  * Added a "spin_down_disks" parameter to the configuration file. This
+    call "snapraid down" after the script completes if enabled. Note
+    that this requires sudo to be setup or the script to be ran as
+    root.
+
+  * Updated manual entries and main README to add details about the
+    new configuration file parameters and how to set up sudo to use
+    them as a non-root user.
+
+  * Added recommended package dependency on sudo.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 19 Oct 2025 15:13:55 +0100
+
+snapraid-daily (1.5.3-1) stable; urgency=medium
+
+  * Added a check for an update from the Github page. Now when the
+    script is called, it will do a check to see if curl is installed
+    and if so, it will check the Github page for a newer version
+    and notify the user by way of printing a notice and also adding
+    a line to the email log.
+
+  * Also added a "disable_update_check" parameter to the config file
+    to disable the update check functionality if desired.
+
+  * Updated default config file and example that incorporates multiple
+    hooks.
+
+  * Removed duplicate systemd example files from systemd-examples docs
+    directory.
+    - Improved examples in sample systemd timer file.
+
+  * Added section to unset all config file variables before the config
+    file is read, and also all variables set by arguments to the script.
+    This prevents issues in the unlikely event those exact variables are
+    set via export commands externally before calling then script.
+
+  * Made config file error detection more robust. The script will now
+    exit if syntax errors are present in the config file.
+
+  * Improved Cron Documentation.
+
+  * Added recommended package dependency on curl.
+
+  * Minor Code Cleanup
+    - Silence which commands, reduce linecount, trim comments.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 01 Sep 2025 11:02:44 +0100
+
+snapraid-daily (1.5.2-1) stable; urgency=medium
+
+  * Added ability to specify a different path to the SnapRAID binary
+    for cases where SnapRAID may have been installed in a non-standard
+    location through the use of an option in the main config
+    file - Closes [#4].
+
+  * Updated default config file to add the above option. Note that no
+    modification to the config file is required for existing users. The
+    script will correctly default to using the output of the which snapraid
+    if no custom SnapRAID binary path is specified in the config file.
+
+  * Updated the config file manual entry - snapraid-daily.conf(1), and
+    the main manual entry - snapraid-daily(1).
+
+  * Updated example config file to add the new option and also show a
+    sample of using the snapraid-daily-commands hook script in the
+    SnapRAID-DAILY-Hooks repository.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 10 Aug 2025 14:27:07 +0100
+
+snapraid-daily (1.5.1-3) stable; urgency=medium
+
+  * Cleaned up debian/control description.
+
+ -- Mark <mark9000@fastmail.org>  Fri, 08 Aug 2025 15:56:11 +0100
+
+snapraid-daily (1.5.1-2) stable; urgency=medium
+
+  * Made the postinst maintainer script more gracefully handle
+    the very unlikely event of an upgrade from a version < 1.5.0
+    where the config file doesn't exist.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 04 Aug 2025 18:31:47 +0100
+
+snapraid-daily (1.5.1-1) stable; urgency=medium
+
+  * Fixed Minor Issue where printouts were incorrectly counting
+    the number of hook scripts called at the end. Closes [#3].
+
+  * Debian Package Related Updates:
+
+    - Configured debian/rules to call dh_installsystemd with the
+      options not to start or enable the systemd service and
+      timer files upon installation, and also not to stop or
+      restart them upon upgrades. Timer files need to manually
+      started. This is of course intended as the config file
+      has to be configured anyway.
+
+    - Switched to using debhelper tokens in postinst and
+      prerm maintainer scripts.
+
+    - Deleted postrm script as its no longer required.
+
+    - Refined check on hook naming in the config file in the
+      postinst script so that the config file hook script
+      naming (start_hook -> start_hook1) is only updated if upgrading
+      from a version < 1.5.0.
+
+    - Also implemented the above check on removing old unmodified
+      systemd unit files from /etc/systemd/system.
+
+    - Changed debian/copyright to cover all files to clear up
+      lintian warning on source package.
+
+    - Modified debian/rules with comments to clear up some lintian
+      warnings.
+
+    - Added debian/po/POTFILES.in and modified templates to enable
+      translations. Unlikely that this will be translated, but good
+      to have!
+
+    - Also added a build dependency on po-debconf.
+
+    - Refined prompt messages.
+
+    - Package is now completely Lintian clean and thus fully in line
+      with Debian standards!
+
+ -- Mark <mark9000@fastmail.org>  Sun, 03 Aug 2025 20:17:39 +0100
+
+snapraid-daily (1.5.0-1) stable; urgency=medium
+
+  * Added support for multiple hooks! The script can now call up to 5
+    start, end and notification hooks. This greatly expands the ability
+    for customisation. Closes [#2].
+
+  * Renamed hook script variables to add numbers to enable this change:
+    - start_hook to start_hook1
+    - end_hook to end_hook1
+    - notification_hook to notification_hook1
+    If installed via the package, the debian/postinst script will make an
+    edit to the config file to update the naming, such that the upgrade
+    should be seamless. If not installed via the package, one will have to
+    manually change the hook naming in the config file.
+
+  * Note however the update of the config file will only work on the default
+    config file location - /etc/snapraid-daily.conf. If one is using a 
+    config file in another location, updating the config file manually is
+    required.
+    - See the updated documentation on the hooks.
+
+  * The User is now prompted to enter a user name and group upon installing
+    the debian package. This is to automate running the service as a user
+    other than root if desired.
+
+  * Script result is now printed as "Warning" if errors are encountered
+    while running the end hook(s). However the script will still run to the
+    end as before.
+
+  * Updates to Manual Entries: snapraid-daily(1) and snapraid-daily.conf(1)
+
+  * Fixed issue where the notification hooks were not called if the script
+    ended in a Warning condition with the disable_emails_on_success parameter
+    enabled.
+
+  * Systemd unit files are now installed in /usr/lib/systemd/system as is
+    now the case with Debian, updated postinst script to handle this.
+    - On older versions, if installed via the package the unit files were
+      installed in /etc/systemd/system. If they still exist there without
+      modification, the postinst script will move them to the new location,
+      otherwise they are left unchanged.
+    - Does not effect manual installations.
+
+  * Debian Package updates:
+    - Fixed dpkg-source warnings while building the package. Package is no
+      longer regarded as a native debian package.
+    - Updated debian/control dependencies, snapraid-daily-hooks (>=0.3.3)
+      is now suggested instead for full compatibility.
+    - Removed unused dependency for findutils. It was originally included
+      for xargs which is no longer used.
+    - Added a Pre-Depends dependency for debconf to implement the prompts
+      during installation.
+    - Updated debian/postinst script to implement the prompts for a user
+      and group, and also to handle checking the config file for new
+      hook naming syntax.
+    - Added a postrm script to purge debconf and also remove config files
+      not already removed through the purge operation.
+    - Removed printouts from prerm script.
+    - Moved sample config to examples folder to fix .conf extension having
+      it converted to a different format on package based installs.
+    - Removed build dependency on dh-exec.
+    - Lintian check completed on package.
+
+  * The pace of updates should now slow down, as most features that were
+    planned to be added have now been added.
+    - Feel free to raise an issue on Github if you have any suggestions! 
+
+ -- Mark <mark9000@fastmail.org>  Tue, 29 Jul 2025 21:12:41 +0100
+
+snapraid-daily (1.4.3-1) stable; urgency=medium
+
+  * In the unlikely case for the default run of a sync followed by a 
+    scrub, the script would report everything is okay if changes in
+    the array were still found directly after the sync operation. Now
+    the script will exit with an error and report this to the user. 
+
+  * Moved default systemd unit files to /lib/systemd/system from 
+    /etc/systemd/system
+
+  * The debian/postinst script has been updated to check for service and
+    timer files in /etc/systemd/system and handle the change in location.
+    - If user modification of those files is found, the old files are
+      left behind untouched.
+    - If on the other hand, user modification is not found, the old files
+      are deleted in favor of the new location.
+    - This should be seemless as by default precedence is given to
+      /etc/systemd/system by systemd.
+
+  * Update manpage to mention the new default location for the service
+    unit files, add details about the default run times for the 
+    bundled timer files, and how to adjust them as this was previously
+    not discussed.
+
+  * Update description in debian/control.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 23 Jul 2025 15:11:09 +0100
+
+snapraid-daily (1.4.2-1) stable; urgency=medium
+
+  * Minor cosmetic improvements to printouts
+
+  * Documentation improvmenents.
+
+  * Added a Result to the End of the Email log/Script print out,
+    script will now explictly print out "Success" or "Warning(s)"
+    as the overall result. Email/Notification Subjects remain
+    unchanged.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 21 Jul 2025 10:07:41 +0100
+
+snapraid-daily (1.4.1-1) stable; urgency=medium
+
+  * Fixed order of email printouts for error conditions when the end
+    hook is called.
+
+  * Code cleanup - remove outdated comments.
+
+  * Script tested on Fedora 42, tweaks to the check for the 1st content
+    file to get it to run smoother.
+
+  * Main manpage improvements, and additional details added about the
+    hooks.
+
+  * Removed unused status logfile generation and updated default
+    config file comments.
+
+  * Minor improvements to error printout messages.
+
+  * Added a Suggests for snapraid-daily-hooks in debian/control.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 07 Jul 2025 11:13:10 +0100
+
+snapraid-daily (1.4.0-1) stable; urgency=medium
+
+  * Added the ability to use custom start and end hooks. The primary
+    intention of these is that the user could stop and restart
+    services at the start and end of the main script to allow SnapRAID
+    to run without the risk of files being modfied while in use, but
+    they could be used for anything else as desired.
+
+  * Start/Stop Hooks are passed a "start" and "end" argument like so:
+     - /path/to/start/hook start
+     - /path/to/end/hook end
+    Using the "start" and "end" arguments allows the same hook script
+    to be used for both operations. It is also possible to use only
+    the start hook or end hook, using both simulataneously is not
+    required.
+
+  * Added the ability to use a custom notification hook. This allows
+    the user to use an alternative form of notification to standard
+    emails if desired. 
+    The notification hook is called like so:
+     -  /path/to/hook "Email-Subject" "Email-Body" "Email-Attachment"
+    (The attachments are only present in the case of an error)
+
+  * Added an Updated Threshold in addition to the Moved and Deletion
+    thresholds already present.
+
+  * disable_emails_on_success parameter will also disable the calls to
+    the custom notification hook upon completing a successful run.
+
+  * Diff command logfile is now attached to the emails when sending
+    a notification email about exceeded thresholds or when scrub only
+    is selected and the array has changes. This allows the user to
+    directly see what files have changed from the email.
+    
+  * Updated man pages to add details about start, end and notification
+    hooks.
+
+  * Updated default config file to add hook parameters and comments
+    providing detailed explanations.
+
+  * Added an example hook script for the start/end functions to the
+    docs directory.
+
+  * Specified the modified mutt_oauth2 python script in the examples
+    in the debian package directory so ".py" is not interpreted as a
+    language.
+
+  * Improvements to "Greeting" included at the start of the email
+    showing the input options.
+
+  * Note that on Debian 12 "Bookworm" or 13 "Trixie"  packaged
+    versions of SnapRAID, the version is reported as "none" instead
+    of "12.2" or "12.4". This is caused by the SnapRAID compliation
+    options used in the Debian packaged version and not due to the
+    script itself.
+
+  * Added a signature of the system hostname to the emails.
+
+  * Made detection of content file from snapraid.conf more robust so
+    spaces or tabs at the end or start of the line or quotes dont 
+    cause issues. 
+
+  * Minor code cleanup - Removed the use of cat and some awk calls.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 02 Jul 2025 11:56:32 +0100
+
+snapraid-daily (1.3.11-2) stable; urgency=medium
+
+  * Package Rev: Fixed typo in main script (no functionality change)
+
+ -- Mark <mark9000@fastmail.org>  Tue, 24 Jun 2025 15:44:19 +0100
+
+snapraid-daily (1.3.11-1) stable; urgency=medium
+
+  * Minor documentation improvements particularly with regards to the
+    email configuration.
+
+  * Added OS Name and Hostname to Greeting printout.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 19 Jun 2025 10:52:11 +0100
+
+snapraid-daily (1.3.10-1) stable; urgency=medium
+
+  * Added additional sample muttrc configurations along with instructions on
+    how to set them up, including using Oauth2 with mutt.
+
+  * Added a folder of notes on SnapRAID usage in the docs.
+
+  * Documentation improvements.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 05 Jun 2025 15:21:43 +0100
+
+snapraid-daily (1.3.9-1) stable; urgency=medium
+
+  * Fixed an issue that if the script was falling back to using a config
+    file in the same directory as the script it would fail to find
+    it if called via a symbolic link.
+
+  * Added folder in the docs for some experimentation with snapraid.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 01 Jun 2025 21:09:53 +0100
+
+snapraid-daily (1.3.8-1) stable; urgency=medium
+
+  * Deletion and Moved thresholds can now be disabled permanently by
+    setting them to zero in the config file.
+
+  * This gives the option of running the script and getting it to sync
+    regardless of deletions or moves each time without using the "-o"
+    option.
+
+  * More strict check on number value config parameters in config file.
+    The script will now exit if they are input as something other than
+    a number.
+
+  * Removed unused logfiles since the switch to inspecting the "-l"
+    logging output of SnapRAID.
+
+  * Minor documentation improvements.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 01 Jun 2025 14:48:34 +0100
+
+snapraid-daily (1.3.7-1) stable; urgency=medium
+
+  * Major improvments to "greeting" printouts. SnapRAID version is now
+    included among other additions.
+
+  * Code cleanup which should make planned future additions easier.
+
+  * Added a config file option "sync_pre_hash", that one can use to disable
+    SnapRAID's additional preliminary hashing step during sync.
+
+  * Removed additional warning from end when emails are disabled since it's
+    displayed at the start anyway in this case.
+
+  * Attached scrub command logfile to emails where scrub is called on
+    an unsynced array. 
+
+ -- Mark <mark9000@fastmail.org>  Fri, 30 May 2025 15:34:01 +0100
+
+snapraid-daily (1.3.6-1) stable; urgency=medium
+
+  * Changed touch error check to look for multiple fatal messages instead
+    to fix an issue where if one is running with the below recommended
+    number of disks, the warning for this causes the script to exit
+    after touch is ran.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 28 May 2025 19:57:59 +0100
+
+snapraid-daily (1.3.5-1) stable; urgency=medium
+
+  * Changed check on initial status to consider the status command
+    logfile from the -l option to snapraid instead of the standard output.
+    This simplifies getting the necessary parameters from the inital
+    status check.
+
+  * The Error check now looks at the "summary:has_bad" line. Not 100%
+    sure about this just yet, the old method may be better, but it is
+    very easy to revert if issues arise. Have not been able to find
+    any thus far though.
+
+  * Command logfile for snapraid status is now attached to any emails
+    sent as a result of errors found in the initial status check.
+
+  * Simplified the check for the number of files requiring touch to
+    also consider the status command log file.
+
+  * Thresholds are now printed out regardless if being overriden or not.
+
+  * Also modified touch error check to look at the touch command logfile
+    from the -l option to snapraid and check for fatal messages.
+
+  * Added some additional systemd timer examples in the docs.
+
+  * Added dependency on gawk for awk.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 28 May 2025 15:17:49 +0100
+
+snapraid-daily (1.3.4-1) stable; urgency=medium
+
+  * Added a check if there was nothing found to sync AND scrub - this
+    will now be reflected in the email subject.
+
+  * Switched to using snapraid's built-in -qqqq option instead of 
+    re-directing all output to /dev/null for -q, --quiet input argument.
+
+  * Fixed spelling of "COPYRIGHT" in man script!
+
+  * Added an error function to handle error messages that exit immediately.
+
+  * Added additional information in the form of an extra readme in each
+    of the docs folder. These are targetting Github, but are still included
+    in the /usr/share/doc/snapraid-daily/ directory for the debian
+    package installations.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 27 May 2025 23:57:49 +0100
+
+snapraid-daily (1.3.3-1) stable; urgency=medium
+
+  * Tidied up comments to bring line count down by +200!
+
+  * Removed a redundant check of /tmp being writable or not.
+
+  * Changed the analysis of snapraid diff to determine array changes to
+    the log from the output of the -l option instead of the standard output.
+    This allows a much simplier method of a simple grep and awk as
+    opposed to the more complex grep, sed then cut approach.
+
+  * Removed check for cut and updated man pages.
+
+  * Moved analysis of the number added/moved/copied etc. into the diff
+    command function and re-used it directly for sync and scrub operations.
+
+  * Simplified check for changes to just look at diff command exit status
+    as reported by the -l log file. This is much simplier as it is just
+    either "diff" or "equal".
+
+  * Refined Email Subjects on Successful Runs to Sync OK, Scrub OK or
+    all OK. All are now prefixed with "SnapRAID DAILY".
+
+  * Added an additional check for both the moved and deletion threshold
+    being exceeded at the same time to make the email output and subject
+    more specific.
+
+  * Added number of equal files found to printouts where the array is
+    checked for changes by "snapraid diff".
+
+  * Minor other improvements to code and printouts.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 27 May 2025 11:24:51 +0100
+
+snapraid-daily (1.3.2-1) stable; urgency=medium
+
+  * Refined new check for errors on sync and scrub commands to directly
+    consider the exit status and the number of io/data/file errors
+    reported by snapraid.
+
+  * Script should now handle unexpected events or interruptions to sync
+    and scrub commands more gracefully.
+
+  * New method re-gained ability to determine if the sync command is ran
+    and doesn't find anything to sync. Although as before the check with
+    snapraid diff will prevent sync being ran if there are no changes.
+
+  * Added a printout of the error counts in the email along with the
+    exit status.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 26 May 2025 20:20:31 +0100
+
+snapraid-daily (1.3.1-1) stable; urgency=medium
+
+  * Using the "-h" option means that it is no longer good enough to
+    just look for "Everything OK" in the output of the sync operation.
+
+  * Switched to looking at the summary messages within the sync output
+    log instead. The script will now report if there are File Errors,
+    I/O Errors or Data Errors to give a better more descriptive output.
+
+  * This unfortunately looses the ability to specifically detect if the
+    sync command runs and finds nothing to sync, but by default the
+    check for changes should ensure that sync is not called if there
+    are no changes, so this probably doesn't matter.
+
+  * Added similar checking of the scrub command log for scrub operations,
+    the same granularity should now be reported if the scrub operation
+    does not run successfully.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 26 May 2025 14:40:10 +0100
+
+snapraid-daily (1.3.0-1) stable; urgency=medium
+
+  * Added support for --force-zero, --force-empty, and --force-uuid
+    options for SnapRAID. These can only be enabled through options
+    in the config file (snapraid-daily.conf), and are all off by
+    default.
+
+  * Added ability to disable emails on success through an option in
+    the config file. Not used by default.
+
+  * Added "-h" option to snapraid sync to serve as another safeguard
+    against errors.
+
+  * Updated man pages and default config file.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 26 May 2025 11:57:23 +0100
+
+snapraid-daily (1.2.7-1) stable; urgency=medium
+
+  * Specified all return codes up at the top instead.
+
+  * Fixed a minor issue whereby if nothing was found to scrub and the
+    scrub only argument (-c, --scrub-only) was being used, the email
+    subject was not changed to reflect this.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 25 May 2025 16:22:17 +0100
+
+snapraid-daily (1.2.6-5) stable; urgency=medium
+
+  * Completed a big cleanup of the changelog.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 25 May 2025 09:51:33 +0100
+
+snapraid-daily (1.2.6-4) stable; urgency=medium
+
+  * Compressed manual entries using gzip to prevent github picking up
+    GNU roff in the code that was used.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 24 May 2025 20:21:19 +0100
+
+snapraid-daily (1.2.6-3) stable; urgency=medium
+
+  * Updated debian/control and debian/copyright to add link to github
+    repository.
+
+  * Re-worded descriptions in debian/control.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 24 May 2025 20:14:11 +0100
+
+snapraid-daily (1.2.6-2) stable; urgency=medium
+
+  * Added build dependency for dh-exec.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 24 May 2025 10:16:41 +0100
+
+snapraid-daily (1.2.6-1) stable; urgency=medium
+
+  * Changed top line to "#!/usr/bin/env bash".
+
+  * Tidied up checks on output of scrub and sync commands into nested
+    if/elif/else statements.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 22 May 2025 22:36:11 +0100
+
+snapraid-daily (1.2.5-1) stable; urgency=medium
+
+  * Fixed man page formatting problems.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 21 May 2025 17:12:09 +0100
+
+snapraid-daily (1.2.4-1) stable; urgency=medium
+
+  * Updates to main manpage. No change in functionality.
+
+  * Added a new return code for the situation where snapraid is
+    already in use.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 20 May 2025 15:48:29 +0100
+
+snapraid-daily (1.2.3-1) stable; urgency=medium
+
+  * Minor change to manpage - mention "cut" is a dependency.
+
+  * Moved all snapraid commands to their own function to allow more
+    graceful adding or tweaking of options in the future.
+
+  * Added a sanity check to see if /tmp is writable.
+
+  * Other minor code improvements - no change in functionality.
+
+  * Improvements to print outs for quiet option.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 20 May 2025 10:40:09 +0100
+
+snapraid-daily (1.2.2-1) stable; urgency=medium
+
+  * Minor changes to finding the 1st content file location by parsing
+    /etc/snapraid.conf - changed the grep statement to the start of the
+    line only.
+
+  * Tidied up initial status check section with an if, elif, else clause.
+    Simplified syntax of checks for error strings in the status logfile.
+
+  * Added some examples for running the script via cron.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 19 May 2025 19:29:53 +0100
+
+snapraid-daily (1.2.1-2) stable; urgency=medium
+
+  * Previously, detail was omitted in the manpage about the array being
+    checked that it is up-to-date before a scrub is carried out, this has
+    been included and is explicity mentioned in the main manpage now.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 14 Apr 2025 17:04:19 +0100
+
+snapraid-daily (1.2.1-1) stable; urgency=medium
+
+  * Added a -q, --quiet option to suppress the output of the touch, diff,
+    sync and scrub operations.
+
+  * Cleaned up print outs when default conditions are being used in the
+    absense of a config file.
+
+  * Added check for mktemp in the script. The script will exit if the mktemp
+    binary can't be found.
+
+  * Update to man page to include the -q option and update the list of
+    dependencies.
+
+  * Added further examples for systemd drop-in files in the docs directory:
+    /usr/share/doc/snapraid-daily/systemd-drop-ins/
+
+ -- Mark <mark9000@fastmail.org>  Mon, 17 Feb 2025 16:21:33 +0100
+
+snapraid-daily (1.2.0-1) stable; urgency=medium
+
+  * Removed /usr/share/doc/snapraid-daily/ from the possible config file
+    locations.
+
+  * Updated manpage to mention the above and also the check for the lockfile
+    added in version 1.1.0
+
+  * Other refinements to man pages to make explanations more clear.
+
+  * Changed check for the snapraid-content file being writable, because
+    previously it would fail if the file path had spaces in its name.
+
+  * This has been fixed and changed to a method using sed only, previously
+    xargs was used.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 10 Feb 2025 10:00:57 +0100
+
+snapraid-daily (1.1.1-1) stable; urgency=medium
+
+  * Added ".txt" to the end of the logfile names so they don't cause
+    problems for any systems downloading them from email logs.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 05 Jan 2025 11:19:03 +0100
+
+snapraid-daily (1.1.0-1) stable; urgency=medium
+
+  * Code improvements in how messages are logged to the email body
+    logfile.
+
+  * Minor changes in banners printed in logs.
+
+  * Added ability to check whether SnapRAID is already in use or not,
+    and to exit and send an email with this in the subject.
+
+  * Fixed incorrect print out of number of files needing touch for newer
+    versions of SnapRAID.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 04 Jan 2025 21:22:10 +0100
+
+snapraid-daily (1.0.9-1) stable; urgency=medium
+
+  * Switched to using mktemp to create logfiles.
+
+  * Changed postinst script to output a message on clean installs.
+
+  * Bundled an elementary config file into the default location, so
+    the script should run out of the box with default settings.
+
+  * Syntax improvements in manpages.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 14 Nov 2024 10:15:19 +0100
+
+snapraid-daily (1.0.8-1) stable; urgency=medium
+
+  * Changed to a while loop in the parse_arguments function, as found
+    this to be a more reliable way of looping through the arguments than
+    the for loop that was previously being used.
+
+  * Added the ability to override the default config by the usage of
+    an argument to the script. (-f or --config) This is mainly intended for
+    the case where one might have multiple snapraid arrays on the same
+    system.
+
+  * Streamlined the picking of the config file using an if-elif-else statement,
+    instead of the messy nested if that was used previously.
+
+  * Also changed the order of preference to look for the config file to
+    the below. Previously the sample config file in the docs folder was
+    looked for directly after the default location.
+    1: Custom Config supplied via -f or --config
+    2: /etc/snapraid-daily.conf
+    3: Same Directory as script
+    4: /usr/share/doc/snapraid-daily/sample-config/snapraid-daily.conf
+
+  * Minor improvements to output messages to make them more readable.
+
+  * Added sample systemd drop-in files and some notes about using them in
+    the docs directory.
+
+  * Updated the manual pages to reflect the ability to specify a custom
+    config file, and mention the included systemd drop-in files.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 07 Nov 2024 10:53:41 +0100
+
+snapraid-daily (1.0.7-2) stable; urgency=medium
+
+  * Corrected prerm maintainer script exit status to 0 instead of 1!
+
+ -- Mark <mark9000@fastmail.org>  Tue, 05 Nov 2024 20:07:17 +0100
+
+snapraid-daily (1.0.7-1) stable; urgency=medium
+
+  * Corrected prerm maintainer script to also interpret "activating" as
+    a valid output to systemctl is-active to correctly stop a service 
+    if it is currently running upon running apt purge or apt remove.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 04 Nov 2024 20:01:07 +0100
+
+snapraid-daily (1.0.6-1) stable; urgency=medium
+
+  * Added template systemd timer and service files into the package,
+    to be installed to /etc/systemd/system but these are not enabled
+    by default.
+
+  * Updated manpages and documentation to reflect this and encourage
+    the user to use overrides through systemctl edit.
+
+  * Added a postinst script to detect a 1st time installation and
+    reload systemd (may prompt the user for a user and group name to
+    run snapraid-daily here on future releases)
+
+  * Added a prerm script to check if the timers/services are either
+    active or enabled and stop/disable them accordingly followed by
+    a reload of systemd. 
+
+ -- Mark <mark9000@fastmail.org>  Thu, 24 Oct 2024 08:05:38 +0100
+
+snapraid-daily (1.0.5-1) stable; urgency=medium
+
+  * Script would exit if mutt was not installed. Changed functionality
+    to run to the end but disable emails if mutt is not installed.
+    This is the expected behaviour as mutt is recommended instead
+    of a standard dependency.
+
+  * Removed version and date from manual pages so changing them is no
+    longer necessary for new revisions.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 16 Oct 2024 11:32:51 +0100
+
+snapraid-daily (1.0.4-1) stable; urgency=medium
+
+  * Added dependency on coreutils for /usr/bin/tee.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 15 Oct 2024 15:01:38 +0100
+
+snapraid-daily (1.0.3-1) stable; urgency=medium
+
+  * Changed default config file location to /etc/snapraid-daily.conf.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 07 Oct 2025 11:27:00 +0100
+
+snapraid-daily (1.0.2-1) stable; urgency=medium
+
+  * Improved manpage documentation, and error output messages.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 07 Oct 2024 11:27:00 +0100
+
+snapraid-daily (1.0.1-1) stable; urgency=medium
+
+  * Fixed missing manpage for snapraid-daily.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 06 Oct 2024 21:37:06 +0100
+
+snapraid-daily (1.0.0) stable; urgency=medium
+
+  * Removed ability to force sync after a certain number of times where
+    the script would exit after the thresholds were found to have been
+    exceeded.
+  * Created man pages - snapraid-daily(1) and snapraid-daily.conf(1)
+  
+  * Added dependencies to debian package.
+  
+  * Changed the script to run in the complete absense of the config file
+    and assume a range of defaults that should be good enough for the
+    vast majority of users.
+
+  * Note that the emails are disabled in this case.
+
+  * Added a -h, --help argument to print out a quick help message.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 06 Oct 2024 15:17:06 +0100
+
+snapraid-daily (0.9.7-1) stable; urgency=medium
+
+  * Added check for dependencies - snapraid, mutt etc.
+ 
+ -- Mark <mark9000@fastmail.org>  Fri, 19 Jan 2023 19:07:49 +0100
+
+snapraid-daily (0.9.7-1) stable; urgency=medium
+
+  * Improved email prints - refined headings and time print outs. Also
+    added a printout of the input options at the start of the email.
+ 
+ -- Mark <mark9000@fastmail.org>  Fri, 15 Sep 2023 19:07:49 +0100
+
+snapraid-daily (0.9.6-1) stable; urgency=medium
+
+  * Added the ability to pass -s, -c, -o arguments into the script
+    for sync, scrub and override thresholds respectively as shorter
+    versions of the previous accepted arguments.
+ 
+ -- Mark <mark9000@fastmail.org>  Sat, 22 Jul 2023 06:39:24 +0100
+
+snapraid-daily (0.9.5-1) stable; urgency=medium
+
+  * Added comments for additional explanation in the config file.
+ 
+ -- Mark <mark9000@fastmail.org>  Sun, 11 Jun 2023 17:31:40 +0100
+
+snapraid-daily (0.9.4-1) stable; urgency=medium
+
+  * Added some hardening configuration in the systemd service files.
+ 
+ -- Mark <mark9000@fastmail.org>  Sun, 11 Jun 2023 07:01:48 +0100
+
+snapraid-daily (0.9.3-1) stable; urgency=medium
+
+  * Refined grep statements in the threshold check to a more reliable version
+    using cut and sed also.
+ 
+ -- Mark <mark9000@fastmail.org>  Fri, 14 Apr 2023 21:01:56 +0100
+
+snapraid-daily (0.9.2-1) stable; urgency=medium
+
+  * Fixed a typo in the delete log files function.
+  
+  * Added a number of long comments at the start of the script to explain
+    operation.
+ 
+ -- Mark <mark9000@fastmail.org>  Mon, 23 Jan 2023 21:01:56 +0100
+
+snapraid-daily (0.9.1-1) stable; urgency=medium
+
+  * Fixed an issue where the script would not continue after detecting the
+    right amount of tries in the file that records the number of failed
+    syncs due to the thresholds being exceed in certain conditions.
+
+  * Reduced deletion of log files to 30 days old.
+ 
+ -- Mark <mark9000@fastmail.org>  Sun, 22 Jan 2023 19:47:43 +0100
+
+snapraid-daily (0.9.0-1) stable; urgency=medium
+
+  * Added the ability to set a number of tries before forcing a sync in the
+    config file. This way a sync will be forced after the thresholds have
+    been found to be exceeded after a certain number of times.
+
+  * This removes the need of the user to have to interact with the system
+    in this case. However this does assume the files deleted/moved are
+    not important.
+
+  * Re-structred parts of the script to operate out of its own directory,
+    for example /opt/snapraid-daily/.
+
+  * Added systemd unit files a .timer file and a .service file for a
+    standalone sync job, a standalone scrub job or a combined default
+    of sync, then scrub.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 07 Jan 2023 12:37:43 +0100
+
+snapraid-daily (0.8.5-1) stable; urgency=medium
+
+  * Changed the name of the config file from config.sh to snapraid-daily.conf.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 06 Nov 2022 09:07:59 +0100
+
+snapraid-daily (0.8.4-1) stable; urgency=medium
+
+  * Added a check on the number of moved files in addition to the deleted
+    files since the last sync.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 11 Oct 2022 10:01:29 +0100
+
+snapraid-daily (0.8.2-1) stable; urgency=medium
+
+  * Added improved headings in email printouts.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 10 Oct 2022 07:41:23 +0100
+
+snapraid-daily (0.8.1-1) stable; urgency=medium
+
+  * Added a check for --scrub-only and --sync-only being specified at the
+    same time - the script will now exit if this is done.
+
+  * Added a warning printout if one specifies --override-thresholds while
+    --scrub-only is active to mention the former has no effect in this
+    case.
+
+  * Fixed a problem in the if-elif-else statement in the function that
+    determines the arguments.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 09 Oct 2022 17:11:34 +0100
+
+snapraid-daily (0.8.0-1) stable; urgency=medium
+
+  * Combined snapraid-sync and snapraid-scrub scripts into one master
+    script.
+
+  * By default the script will now do a check on the initial status
+    via "snapraid status", then move on to running touch if required.
+
+  * After that the script will run sync, finally followed by scrub.
+  
+  * Added the ability to pass arguments to the script: --scrub-only,
+    --sync-only and --override-thresholds.
+
+  * This allows one to run sync only or run scrub only which is useful
+    if somebody wants to seperate the sync and scrub operations.
+
+  * The script will now attach the command log if an error was detected.
+  
+  * This allows the user to know the issue by just looking at the
+    notification emails alone.
+
+  * Changed subject of notification email to "SnapRAID-Scrub" or 
+    "SnapRAID-Sync" from "SnapRAID-Daily" if sync-only or
+    scrub-only arguments are being used.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 08 Oct 2022 11:32:09 +0100
+
+snapraid-daily (0.7.5-1) stable; urgency=medium
+
+  * Corrected issue whereby the touch check would not correctly pick the
+    the number of files needing touch in some occasions.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 09 Apr 2022 12:41:07 +0100
+
+snapraid-daily (0.7.4-1) stable; urgency=medium
+
+  * Added a check on the number of files needing "snapraid touch", and
+    added the number to the email printouts.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 03 Apr 2022 08:43:19 +0100
+
+snapraid-daily (0.7.3-1) stable; urgency=medium
+
+  * Improved checking of errors/omissions in config file.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 13 Feb 2022 05:57:32 +0100
+
+snapraid-daily (0.7.2-1) stable; urgency=medium
+
+  * Improved grep commands on snapraid diff output to more accurately
+    and reliably determine the changes since the last sync.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 05 Feb 2022 17:51:45 +0100
+
+snapraid-daily (0.7.1-1) stable; urgency=medium
+
+  * Completed if/elif/else statement in Diff command to add error
+    reporting ability for the snapraid diff command also.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 27 Jan 2022 06:59:01 +0100
+
+snapraid-daily (0.7.0-1) stable; urgency=medium
+
+  * Moved all user configurable settings out of main scripts and into a
+    dedicated config file (config.sh). Both scripts will now read this
+    config file upon startup.
+
+  * Added detailed checking for errors in this config file.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 18 Jan 2022 09:51:45 +0100
+
+snapraid-daily (0.6.1-1) stable; urgency=medium
+
+  * Refined detection of errors in sync and scrub scripts.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 18 Dec 2021 06:59:01 +0100
+
+snapraid-daily (0.6.0-1) stable; urgency=medium
+
+  * Added ability to pass in an "--override-thresholds" argument to the
+    sync/touch script to override the deletion thresholds and force a sync.
+
+  * Previously a sync had to be ran manually.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 05 Dec 2021 09:14:47 +0100
+
+snapraid-daily (0.5.1-1) stable; urgency=medium
+
+  * Further improvments to email printout/logs. Added headings to Sync
+    and scrub script.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 27 Nov 2021 16:54:37 +0100
+
+snapraid-daily (0.5.0-1) stable; urgency=medium
+
+  * Combined Sync and Touch scripts. Touch will now only be invoked if
+    the output of "snapraid status" says it is required.
+
+ -- Mark <mark9000@fastmail.org>  Fri, 29 Oct 2021 20:13:10 +0100
+
+snapraid-daily (0.4.2-1) stable; urgency=medium
+
+  * Corrected typo in email printouts.
+
+ -- Mark <mark9000@fastmail.org>  Fri, 22 Oct 2021 22:17:47 +0100
+
+snapraid-daily (0.4.1-1) stable; urgency=medium
+
+  * Improved email outputs - added time.
+
+ -- Mark <mark9000@fastmail.org>  Fri, 15 Oct 2021 19:13:10 +0100
+
+snapraid-daily (0.4.0-1) stable; urgency=medium
+
+  * Added output of snapraid status to sync and scrub script email outputs.
+
+ -- Mark <mark9000@fastmail.org>  Thu, 07 Oct 2021 11:52:18 +0100
+  
+snapraid-daily (0.3.1-1) stable; urgency=medium
+
+  * Improved email printout of snapraid-sync and snapraid-scrub scripts.
+  
+  * Duration calculation now runs correctly if the start time and stop
+    time are on different days.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 14 Sep 2021 07:12:09 +0100
+ 
+snapraid-daily (0.3.0-1) stable; urgency=medium
+
+  * Added deletion monitoring to snapraid-sync script, and included in
+    email output.
+
+  * Snapraid-Sync Script will now exit if too many deletions are detected.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 11 Sep 2021 10:37:10 +0100
+ 
+snapraid-daily (0.2.1-1) stable; urgency=medium
+
+  * Added ability to detect errors in touch script.
+  
+  * Added email notifications to touch script.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 05 Sep 2021 17:47:23 +0100
+ 
+snapraid-daily (0.2.0-1) stable; urgency=medium
+
+  * Created seperate snapraid-touch script.
+
+ -- Mark <mark9000@fastmail.org>  Fri, 03 Sep 2021 19:04:19 +0100
+ 
+snapraid-daily (0.1.2-1) stable; urgency=medium
+
+  * Fixed typos in printouts.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 16 Aug 2021 10:30:23 +0100
+ 
+snapraid-daily (0.1.1-1) stable; urgency=medium
+
+  * Improved print out in email messages. Added duration calculation.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 09 Aug 2021 17:37:09 +0100
+ 
+snapraid-daily (0.1.0-1) stable; urgency=medium
+
+  * Initial release.
+  
+  * Creation of snapraid-scrub and snapraid-sync scripts.
+
+ -- Mark <mark9000@fastmail.org>  Sun, 08 Aug 2021 11:20:01 +0100
