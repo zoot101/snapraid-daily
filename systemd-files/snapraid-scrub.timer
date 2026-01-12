@@ -1,0 +1,10 @@
+[Unit]
+Description=Uses SnapRAID-Daily to Scrub the SnapRAID Array
+
+[Timer]
+OnCalendar=Mon,Fri *-*-* 21:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target
+
