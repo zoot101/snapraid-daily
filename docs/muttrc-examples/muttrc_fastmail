@@ -1,0 +1,25 @@
+###################################
+# Muttrc Config for Fastmail (App Passwords)
+###################################
+# See the README.md for more information
+#
+# Change the Realname and from address accordingly
+#
+
+set realname = "server.home.lan"
+set from = "mylogin@fastmail.com"
+set use_from = yes
+set envelope_from = yes
+
+# Username and Password - Username should be mylogin@fastmail.com
+set smtp_url = "smtps://mylogin@fastmail.com@smtp.fastmail.com:465/"
+set smtp_pass = "long-list-of-characters"
+
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "vim"
+set charset = "utf-8"
+set record = ''
+
