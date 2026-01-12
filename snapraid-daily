@@ -1,0 +1,1482 @@
+#!/usr/bin/env bash
+###################################################
+# SnapRAID-DAILY
+###################################################
+# Github Page: https://github.com/zoot101/snapraid-daily
+###################################################
+
+# VERSION
+version="1.5.5"
+
+###################################################
+# VARIABLES
+###################################################
+max_hooks=5
+github_page="https://github.com/zoot101/snapraid-daily"
+github_version_file="https://raw.githubusercontent.com/zoot101/snapraid-daily/refs/heads/main/VERSION"
+
+###################################################
+# RETURN CODES
+###################################################
+success_code=0                      # Success
+error_code=1                        # All Errors
+already_in_use_code=2               # SnapRAID Already in use
+files_modified_during_sync_code=3   # Files Modified During Sync
+thresholds_exceeded_code=5          # Deletion/Moved Thresholds exceeded
+
+###################################################
+# MAIN FUNCTION
+###################################################
+main() {
+  # Parse Input Arguments
+  parse_arguments "$@"
+  
+  # Read & Check Config File, Check for an Update (if enabled) & Check Dependencies
+  read_config_file
+  check_for_update
+  check_dependencies
+  
+  # Generate Logfiles for Analysis
+  generate_logfiles
+  
+  # Start Email log and print greeting
+  print_greeting
+ 
+  # Check the intial status for errors or if touch is needed
+  initial_status_check
+  
+  # Run Start Hook (if given)
+  run_start_hooks
+ 
+  # Run Touch if it is required, check for deletion/moved thresholds
+  # and then sync the array. Only if the --scrub-only is not selected
+  if [ $scrub_only -eq 0 ]; then
+    run_touch_if_needed
+    check_array_for_changes_and_thresholds
+    sync_array
+  fi
+  
+  # Scrub & Check the output for errors if --sync-only is not selected
+  if [ $sync_only -eq 0 ]; then
+    scrub_array
+  fi
+  
+  # Run End Hook (if given)
+  run_end_hooks
+
+  # Generate SMART Report and spin down disks if enabled and running as root or using sudo
+  generate_smart_report
+  spin_down_hdd_disks
+
+  # Send Final Notification Email if No Errors were detected, clean up
+  # /tmp logfiles and exit with success
+  notify_of_success
+  clean_up_logfiles
+  exit $success_code
+}
+
+###################################################
+# FUNCTIONS
+###################################################
+# Error Function for Errors that exit immediately
+error() {
+  echo "ERROR:" "$@"
+  echo ""
+  exit $error_code
+}
+
+# Function to check if a Variable is a number >= 0
+is_number() {
+  local number_regex='^[0-9]+$'
+  if ! [[ "$1" =~ $number_regex ]]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+###################################################
+# LOGGING FUNCTIONS
+###################################################
+# Log to Email with and without time 
+log_to_email() {
+  echo "$@" | tee -a $main_logfile
+}
+log_to_email_time() {
+  echo $(date +%H:%M:%S) ":" "$@" | tee -a $main_logfile
+}
+
+# Generate the necessary logfiles in /tmp using mktemp
+generate_logfiles() {
+  # Do a quick cursory check to see if /tmp is writable
+  if [ ! -w "/tmp/" ]; then
+    error "/tmp directory is not writable - Exiting"
+  fi
+
+  # Tmp file Prefix - ".txt" added at the end for email attachments
+  tmp_file_prefix="snapraid-daily.XXXXX.txt"
+
+  # Generate Logfiles - Export main_logfile to allow hooks to write to it
+  export main_logfile=$( mktemp -t "${tmp_file_prefix}" )
+  status_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
+  scrub_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
+  sync_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
+  touch_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
+  diff_command_logfile=$( mktemp -t "${tmp_file_prefix}" )
+}
+
+##################################################
+# SNAPRAID COMMANDS
+##################################################
+snapraid_status_cmd() {
+  # Call Snapraid Status using the "-l" option
+  if [ $quiet_option == 1 ]; then
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile &> /dev/null
+  else
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -l "${status_command_logfile}" -qq status | tee $status_logfile
+  fi
+}
+
+snapraid_status_to_email() {
+  # Call Snapraid status and pipe the output into the email
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY: Array Status"
+  log_to_email "##############################"
+  log_to_email_time "Current Status of the Array is as below:"
+  "${snapraid_binary_path}" -c "${snapraid_config_file_path}" -qq status | tee -a $main_logfile
+  log_to_email ""
+}
+
+snapraid_smart_report() {
+  # Call Snapraid smart and pipe the output into the email
+  if [ "${1}" == "non_root" ]; then
+    sudo "${snapraid_binary_path}" -c "${snapraid_config_file_path}" smart | tee -a $main_logfile
+  else
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" smart | tee -a $main_logfile
+  fi
+}
+
+snapraid_spin_down_disks() {
+  # Call Snapraid down to spin down disks
+  if [ "${1}" == "non_root" ]; then
+    sudo "${snapraid_binary_path}" -c "${snapraid_config_file_path}" down | tee -a $main_logfile
+  else
+    "${snapraid_binary_path}" -c "${snapraid_config_file_path}" down | tee -a $main_logfile
+  fi
+}
+
+snapraid_touch_cmd() {
+  # Specify SnapRAID Touch arguments
+  snapraid_touch_args=( -c "${snapraid_config_file_path}" -v -l $touch_command_logfile )
+
+  # Call snapraid touch to update timestamps. Suppress all output if --quiet option is set
+  if [ $quiet_option == 1 ]; then
+    snapraid_touch_args=$( "${snapraid_touch_args[@]}" -qqqq )
+  fi
+  "${snapraid_binary_path}" "${snapraid_touch_args[@]}" touch
+}
+
+snapraid_diff_cmd() {
+  # Define snapraid diff arguments
+  snapraid_diff_args=( -c "${snapraid_config_file_path}" -v -l $diff_command_logfile ) 
+
+  # Call snapraid diff - Suppress all output if the -q, --quiet option is set
+  if [ $quiet_option == 1 ]; then
+    snapraid_diff_args=( "${snapraid_diff_args[@]}" -qqqq)
+  fi
+  "${snapraid_binary_path}" "${snapraid_diff_args[@]}" diff
+
+  # Get the numbers and exit status from analyzing the command logfile
+  number_equal=$( grep -w "^summary:equal" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_added=$( grep -w "^summary:added" $diff_command_logfile | awk -F ":" '{print $3}') 
+  number_removed=$( grep -w "^summary:removed" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_updated=$( grep -w "^summary:updated" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_moved=$( grep -w "^summary:moved" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_copied=$( grep -w "^summary:copied" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_restored=$( grep -w "^summary:restored" $diff_command_logfile | awk -F ":" '{print $3}')
+  diff_exit_status=$( grep -w "^summary:exit" $diff_command_logfile | awk -F ":" '{print $3}')
+
+  # Check if any of the above are undefined, or if the exit status is not
+  # "equal" or "diff" as this indicates something unexpected with the diff command
+  if [ -z $number_equal ] || [ -z $number_added ] || [ -z $number_removed ] || \
+     [ -z $number_updated ] || [ -z $number_moved ] || [ -z $number_copied ] || \
+     [ -z $number_copied ] || [ -z $number_restored ] || [ -z "${diff_exit_status}" ]
+  then
+    log_to_email_time "Problem with Diff Command - Stopping"
+    log_to_email_time "Diff Command Logfile Is attached..."
+    log_to_email ""
+    run_end_hooks
+    notify_of_warning "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
+    clean_up_logfiles
+    exit $error_code
+
+  elif [ "${diff_exit_status}" != "diff" ] && [ "${diff_exit_status}" != "equal" ]; then
+    log_to_email_time "Unexpected Exit Status for Diff - Stopping"
+    log_to_email_time "It should be either \"diff\" or \"equal\""
+    log_to_email_time "Diff Command Logfile Is attached..."
+    log_to_email ""
+    run_end_hooks
+    notify_of_warning "SnapRAID-DAILY: Diff Warning(s)" $diff_command_logfile
+    clean_up_logfiles
+    exit $error_code
+  fi    
+}
+
+snapraid_sync_cmd() {
+  # Define snapraid sync arguments - Disable pre-hash if specified in config file
+  snapraid_sync_args=( -c "${snapraid_config_file_path}" -v -l $sync_command_logfile)
+
+  # Add Pre-Hash Step (On by default)
+  if [ "${sync_pre_hash}" == "yes" ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" -h)
+  fi
+
+  # Check for force_zero, force_empty, or force_uuid inputs
+  if [ "${force_zero}" == "yes" ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-zero )
+    log_to_email_time "SYNC WARNING: --force-zero is enabled."
+  fi 
+  if [ "${force_empty}" == "yes" ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-empty )
+    log_to_email_time "SYNC WARNING: --force-empty is enabled."
+  fi
+  if [ "${force_uuid}" == "yes" ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-uuid )
+    log_to_email_time "SYNC WARNING: --force-uuid is enabled."
+  fi
+ 
+  # Suppress all output if the -q, --quiet option is set
+  if [ $quiet_option == 1 ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" -qqqq )
+  fi
+
+  # Call SnapRAID Sync
+  "${snapraid_binary_path}" "${snapraid_sync_args[@]}" sync
+}
+
+snapraid_scrub_cmd() {
+  # Define snapraid scrub arguments
+  snapraid_scrub_args=( -c "${snapraid_config_file_path}" -v -p $scrub_percent -o $scrub_age -l $scrub_command_logfile ) 
+ 
+  # Call Scrub Command with parameters from config file. Suppress all output --quiet option is selected.
+  if [ $quiet_option == 1 ]; then
+    snapraid_scrub_args=( "${snapraid_scrub_args[@]}" -qqqq )
+  fi
+  "${snapraid_binary_path}" "${snapraid_scrub_args[@]}" scrub
+}
+
+##################################################
+# OTHER FUNCTIONS
+##################################################
+
+# Unset all Config File Variables
+unset_config_vars() {
+  snapraid_config_file_path=
+  muttrc_path=
+  email_address=
+  deletion_threshold=
+  moved_threshold=
+  updated_threshold=
+  sync_pre_hash=
+  scrub_percent=
+  scrub_age=
+  disable_emails_on_success=
+  force_zero=
+  force_empty=
+  force_uuid=
+  snapraid_binary_path=
+  disable_update_check=
+  smart_report=
+  spin_down_disks=
+  start_hook1=
+  end_hook1=
+  notification_hook1=
+}
+
+# Read Config File parameters in. If it is not present, exit
+read_config_file() {
+  # Unset all Config File Variables
+  unset_config_vars
+
+  # Find script directory
+  source_directory="$( dirname "$( readlink -f "${0}" )")"
+
+  # Configuration Files are read in the following order of preference
+  # Exit if none of the below are found
+  # 1 - Custom Config file if specified by the -f or --config options
+  # 2 - /etc/snapraid-daily.conf
+  # 3 - Same directory as script
+  # Use set -e to catch additional errors in the config file
+  config_file0="${custom_config_file}"
+  config_file1="/etc/snapraid-daily.conf"
+  config_file2="${source_directory}""/snapraid-daily.conf"
+  set -e
+  if [ -r "${config_file0}" ]; then
+    echo "INFO: Using Config File:" "${config_file0}"
+    source "${config_file0}"
+  elif [ -r "${config_file1}" ]; then
+    echo "INFO: Using Config File:" "${config_file1}"
+    source "${config_file1}"
+  elif [ -r "${config_file2}" ]; then
+    echo "INFO: Using Config File:" "${config_file2}"
+    source "${config_file2}"
+  else
+    echo "WARNING: No config file found/readable in any of the following locations:"
+    echo "1. Specified with the -f or --config option"
+    echo "2: /etc/snapraid-daily.conf"
+    echo "3: snapraid-daily.conf in script directory:" "${source_directory}"
+    echo ""
+    echo "All Defaults will be used"
+    echo "See the manual entry for snapraid-daily.conf(1)"
+    echo ""
+  fi
+  set +e
+
+  # Check Snapraid Config File Path
+  if [ -z "${snapraid_config_file_path}" ]; then
+    if [ ! -r "/etc/snapraid.conf" ]; then
+      error "snapraid_config_file_path missing in config and default of /etc/snapraid.conf not found/readable - Exiting"
+    else 
+      echo "WARNING: snapraid_config_file_path not defined in config - Using /etc/snapraid.conf"
+      snapraid_config_file_path="/etc/snapraid.conf"
+    fi
+  elif [ ! -r "${snapraid_config_file_path}" ]; then
+    error "snapraid_config_file_path:" "${snapraid_config_file_path}" "does not exist or is not readable - Exiting"
+  fi
+
+  # Find the 1st Snapraid Content File Location, and check if it can be accessed
+  content_file=$(grep -m 1 -Ew "^content|^ *content" "${snapraid_config_file_path}" | sed 's/^[^\/]*\//\//;s/"//g;s/ *$//;s/\t*$//' ) 
+  if [ ! -w "${content_file}" ]; then
+    error "1st defined SnapRAID Content File in" "${snapraid_config_file_path}" "not found/writable - Could be a Permissions problem?"
+  fi
+
+  # Check for a Valid muttrc file and email address. If not found, disable the email functionality
+  if [ -z "${muttrc_path}" ] || [ ! -r "${muttrc_path}" ]; then
+    echo "WARNING: muttrc_path missing in config, not readable, or doesn't exist - No Emails will be sent"
+    enable_emails=0
+  elif [ -z "$email_address" ]; then
+    echo "WARNING: email_address missing from snapraid-daily.conf - No Emails will be sent"
+    enable_emails=0
+  else
+    enable_emails=1
+  fi
+
+  # Check for the Deletion Threshold
+  if [ -z "$deletion_threshold" ]; then
+    echo "WARNING: deletion_threshold not defined in snapraid-daily.conf - Using 100 by default"
+    deletion_threshold=100
+  elif ! is_number "$deletion_threshold"; then
+    error "deletion_threshold value" "${deletion_threshold}" "is invalid. It should be a number >=0"
+  fi
+
+  # Check Moved Threshold
+  if [ -z "$moved_threshold" ]; then
+    echo "WARNING: moved_threshold not defined in snapraid-daily.conf - Using 100 by default"
+    moved_threshold=100
+  elif ! is_number "$moved_threshold"; then
+    error "moved_threshold value" "${moved_threshold}" "is invalid. It should be a number >=0"
+  fi
+
+  # Check Updated Threshold
+  if [ -z "$updated_threshold" ]; then
+    echo "WARNING: updated_threshold not defined in snapraid-daily.conf - Using 100 by default"
+    updated_threshold=100
+  elif ! is_number "$updated_threshold"; then
+    error "updated_threshold value" "${updated_threshold}" "is invalid. It should be a number >=0"
+  fi
+
+  # Check for a Scrub Percent. default to 8%, sanity check its between 0 and 100
+  if [ -z "$scrub_percent" ]; then
+    echo "WARNING: scrub_percent is not defined snapraid-daily.conf - Using 8%"
+    scrub_percent=8
+  elif ! is_number "$scrub_percent"; then
+    error "scrub-percent value:" "$scrub_percent" "is invalid - It should be a number >=0"
+  elif [ $scrub_percent -gt 100 ] || [ $scrub_percent -le 0 ]; then
+    error "scrub_percent should be a number greater than 0 & less than 100 - Exiting"
+  fi
+
+  # Check for a Scrub Age, default to 21 days, sanity check its not negative
+  if [ -z "$scrub_age" ]; then
+    echo "WARNING: scrub_age is not defined in snapraid-daily.conf - Using 21 days"
+    scrub_age=21
+  elif ! is_number "$scrub_age"; then
+    error "scrub_age value:" "$scrub_age" "is invalid - It should be a number >=0"
+  elif [ $scrub_age -lt 0 ]; then
+    error "scrub_age cannot be a negative number - Exiting"
+  fi
+
+  # Check for disable_emails_on_success, default to no. Sanity check it's "yes" or "no"
+  if [ -z "${disable_emails_on_success}" ]; then
+    disable_emails_on_success="no"
+  elif [ "${disable_emails_on_success}" != "yes" ] && [ "${disable_emails_on_success}" != "no" ]; then
+    error "Specified invalid disable_emails_on_success in config - It should be either \"yes\" or \"no\""
+  elif [ "${disable_emails_on_success}" == "yes" ]; then
+    echo "INFO: Notification Emails & Hook(s) disabled on Success"
+  fi
+
+  # Check for sync_pre_hash, default to no. Sanity check it's "yes" or "no"
+  if [ -z "${sync_pre_hash}" ]; then
+    sync_pre_hash="yes"
+  elif [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]; then
+    error "Specified invalid sync_pre_hash in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for force_zero. Default to no if undefined - exit if invalid
+  if [ -z "${force_zero}" ]; then
+    force_zero="no"
+  elif [ "${force_zero}" != "yes" ] && [ "${force_zero}" != "no" ]; then
+    error "Specified invalid force_zero in config - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for force_empty. Default to no if undefined - exit if invalid
+  if [ -z "${force_empty}" ]; then
+    force_empty="no"
+  elif [ "${force_empty}" != "yes" ] && [ "${force_empty}" != "no" ]; then
+    error "Specified invalid force_empty in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for force_uuid. Default to no if undefined - exit if invalid
+  if [ -z "${force_uuid}" ]; then
+    force_uuid="no"
+  elif [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]; then
+    error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for disable_update_check parameter. If undefined - default it to disabled
+  if [ -z "${disable_update_check}" ]; then
+    disable_update_check="no"
+  elif [ "${disable_update_check}" != "yes" ] && [ "${disable_update_check}" != "no" ]; then
+    error "Specified invalid disable_update_check in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # SMART Report (Off by default)
+  if [ -z "${smart_report}" ]; then
+    smart_report="no"
+  elif [ "${smart_report}" != "yes" ] && [ "${smart_report}" != "no" ]; then
+    error "Specified invalid smart_report in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Spin Down Disks (Off by default)
+  if [ -z "${spin_down_disks}" ]; then
+    spin_down_disks="no"
+  elif [ "${spin_down_disks}" != "yes" ] && [ "${spin_down_disks}" != "no" ]; then
+    error "Specified invalid spin_down_disks in config file - It should be either \"yes\" or \"no\""
+  fi
+  
+  # Check Start/End/Notfication hooks to see if they are defined
+  # correctly as executable files and how many of them there are
+  get_number_of_hooks "start_hook"
+  get_number_of_hooks "end_hook"
+  get_number_of_hooks "notification_hook"
+}
+
+# Check for Update via Github Page if not disabled in the config and if curl is installed
+check_for_update() {
+  update_available="no"
+  # Extract numbers from version number to allow for direct comparison. Example: 1.5.4~beta3 -> 154
+  if [ "${disable_update_check}" == "no" ] && which curl >/dev/null; then
+    local_script_version=$(echo "${version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
+    github_version=$(curl --silent --retry 3 "${github_version_file}")
+    if [ $? != 0 ]; then
+      echo "WARNING: Contacting ${github_page} for an update failed..."
+    else
+      github_script_version=$(echo "${github_version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
+      if is_number "${github_script_version}"; then
+        if [ "${github_script_version}" -gt "${local_script_version}" ]; then
+          update_available="yes"
+        fi
+      fi
+    fi
+  fi
+}
+
+# Sanity Check for Dependencies
+check_dependencies() {
+  # Check for a SnapRAID custom binary, otherwise fall back to $(which snapraid)
+  if [ -n "${snapraid_binary_path}" ]; then
+    if [ ! -x "${snapraid_binary_path}" ]; then
+      error "SnapRAID Binary Path: ${snapraid_binary_path} in Config File does not exist or is not Executable"
+    else
+      echo "INFO: SnapRAID Binary Path: ${snapraid_binary_path}"
+    fi
+  else
+    if ! which snapraid &>/dev/null; then
+      error "SnapRAID is not installed or not found in \$PATH"
+    else
+      snapraid_binary_path=$(which snapraid)
+    fi
+  fi
+
+  # Check dependencies 
+  if ! which grep &>/dev/null; then error "grep command not found in \$PATH - Exiting..."; fi
+  if ! which tee &>/dev/null; then error "tee command not found in \$PATH - Exiting..."; fi
+  if ! which awk &>/dev/null; then error "awk command not found in \$PATH - Exiting..."; fi
+  if ! which sed &>/dev/null; then error "sed command not found in \$PATH - Exiting..."; fi
+  if ! which mktemp &>/dev/null; then error "mktemp command not found in \$PATH - Exiting..."; fi
+
+  # Check if Mutt is Installed, otherwise disable emails
+  if ! which mutt &>/dev/null; then
+    echo "WARNING: mutt command not found in \$PATH - No emails will be sent"
+    enable_emails=0
+  fi
+  echo ""
+}
+
+# Print a condensed help message for a quick start
+print_help() {
+  echo ""
+  echo "Usage: snapraid-daily         [OPTIONS...]"
+  echo ""
+  echo "  -s, --sync-only             Only Sync the Array - Do not run Scrub"
+  echo "  -c, --scrub-only            Only Scrub the Array - Do not run Sync"
+  echo "                              Note that if both of these options are omitted, the"
+  echo "                              default is to run sync and then scrub. They also can"
+  echo "                              not be specified at the same time"
+  echo "  -o, --override-thresholds   Ignore the deletion/moved thresholds to force a sync"
+  echo "  -f, --config [path-to-conf] Override default config file. Could be useful if one"
+  echo "                              has multiple snapraid arrays to manage on the same system"
+  echo "  -q, --quiet                 Suppress the output of the touch, diff, sync and scrub"
+  echo "                              commands for snapraid. The final status message is still"
+  echo "                              displayed as normal."
+  echo "  -h, --help                  Print help"
+  echo ""
+  echo "Manual Entries:"
+  echo "  Main Script:                snapraid-daily(1)      $ man snapraid-daily"
+  echo "  Config File:                snapraid-daily.conf(1) $ man snapraid-daily.conf"
+  echo ""
+  exit $success_code
+}
+
+# Function to Parse Input Arguments to the Script
+parse_arguments() {
+
+  # Unset Argument Variables
+  sync_only=
+  scrub_only=
+  override_thresholds=
+  quiet_option=
+
+  # Valid arguments are:
+  # -o, --override-thresholds : Ignore Deletion/Moved Thresholds
+  # -s, --sync-only           : Only Run Sync
+  # -c, --scrub-only          : Only Run Scrub
+  # -f, --config              : Override default config file
+  # -q, --quiet               : Suppress output of touch/diff/sync/scrub
+  # -h, --help                : Print Help and Exit
+  while (( ${#} )); do
+    case "${1}" in
+
+      # Check for Sync Only
+      -s|--sync-only)
+      sync_only=1
+      ;;
+
+      # Check for Scrub Only
+      -c|--scrub-only)
+      scrub_only=1
+      ;;
+
+      # Check for Override Thresholds
+      -o|--override-thresholds)
+      override_thresholds=1
+      ;;
+
+      # Check for Quiet Option
+      -q|--quiet)
+      quiet_option=1
+      ;;
+
+      # Check if the default config is overriden
+      -f|--config)
+      shift 1
+      if [ ! -f "${1}" ]; then
+        echo "Specified custom config file, but given file does not exist - Exiting"
+        echo ""
+        print_help
+      else
+        custom_config_file="${1}"
+      fi
+      ;;
+
+      # Check for Help
+      -h|--help)
+      print_help
+      ;;
+
+      # Check for an Unrecognised Argument
+      *)
+      echo "Invalid Input Argument:" "${1}"
+      echo ""
+      print_help
+      ;;
+    esac
+    shift 1
+  done
+
+  # Check if any of the above argument variables were not defined and 
+  # set them to their default values
+  if [ -z $sync_only ]; then sync_only=0; fi
+  if [ -z $scrub_only ]; then scrub_only=0; fi
+  if [ -z $override_thresholds ]; then override_thresholds=0; fi
+  if [ -z $quiet_option ]; then quiet_option=0; fi
+
+  # Check if --sync-only and --scrub-only were specified at the same time - Exit if so
+  if [ $sync_only == 1 ] && [ $scrub_only == 1 ]; then
+    echo "-s|--sync-only & -c|--scrub-only arguments can't both be specified at the same time - Exiting"
+    echo ""
+    print_help
+    exit $error_code
+  fi
+
+  # Check if --override-thresholds and --scrub-only were specified at the same - Warn if so
+  if [ $scrub_only == 1 ] && [ $override_thresholds == 1 ]; then
+    echo "WARNING: -o|--override-thresholds has no effect when using -c|--scrub-only"
+  fi
+}
+
+# Print Greeting in Email Log
+print_greeting() {
+  snapraid_version=$("${snapraid_binary_path}" -V | awk '{print $2}' | sed 's/v//')
+  system_hostname=$(hostname --fqdn) &> "/dev/null"
+  os_name=$(grep -w "^PRETTY_NAME" "/etc/os-release" | sed 's/PRETTY_NAME="//;s/"$//') &> "/dev/null"
+
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Version:" "${version}"
+  log_to_email "##############################"
+  if [ "${update_available}" == "yes" ]; then
+    log_to_email "# Update Available at ${github_page}/releases"
+    log_to_email "##############################"
+  fi
+  log_to_email "Initialized at "$(date +%H:%M:%S)" on "$(date +%d/%m/%Y)
+  if [ -n "${system_hostname}" ]; then log_to_email " * Hostname:" "${system_hostname}"; fi
+  if [ -n "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
+  log_to_email " * SnapRAID Version:" "$snapraid_version"
+  log_to_email "Input Options:"
+
+  # Print Out all Sync Related Parameters if Sync is being Ran
+  if [[ $sync_only == 1 || ( $sync_only == 0 && $scrub_only == 0 ) ]]; then
+    log_to_email " * Run-Sync: YES"
+    if [ "${sync_pre_hash}" == "yes" ]; then
+      log_to_email " * Sync Pre-Hash: YES"
+    else
+      log_to_email " * Sync Pre-Hash: NO"
+    fi
+    if [ "${force_zero}" == "yes" ]; then 
+      log_to_email " * Sync Force-Zero: YES"
+    fi 
+    if [ "${force_empty}" == "yes" ]; then
+      log_to_email " * Sync Force-Empty: YES"
+    fi
+    if [ "${force_uuid}" == "yes" ]; then
+      log_to_email " * Sync Force-UUID: YES"
+    fi 
+  else
+    log_to_email " * Run-Sync: NO"
+  fi
+
+  # Print Out all Scrub Releated Parameters if Scrub is being Ran
+  if [[ $scrub_only == 1 || ( $sync_only == 0 && $scrub_only == 0 ) ]]; then
+    log_to_email " * Run-Scrub: YES"
+    log_to_email " * Scrub-Percent:" $scrub_percent
+    log_to_email " * Scrub-Age:" $scrub_age "days and older"
+  else
+    log_to_email " * Run-Scrub: NO"
+  fi
+
+  # Check if the Override Thresholds has been specified
+  if [ $override_thresholds -eq 1 ]; then
+    log_to_email " * Override Thresholds: YES"
+  else
+    log_to_email " * Override Thresholds: NO"
+  fi
+
+  # Print Thresholds
+  if [ $deletion_threshold == 0 ]; then
+    log_to_email " * Deletion Threshold: Disabled"
+  else
+    log_to_email " * Deletion Threshold:" $deletion_threshold
+  fi
+  if [ $moved_threshold == 0 ]; then
+    log_to_email " * Moved Threshold: Disabled"
+  else
+    log_to_email " * Moved Threshold:" $moved_threshold
+  fi
+  if [ $updated_threshold == 0 ]; then
+    log_to_email " * Updated Threshold: Disabled"
+  else
+    log_to_email " * Updated Threshold:" $updated_threshold
+  fi
+
+  # Print SMART Report and Disk Spin Down Options if being used
+  if [ "${smart_report}" == "yes" ]; then
+    log_to_email " * SMART Report: YES"
+  else
+    log_to_email " * SMART Report: NO"
+  fi
+  if [ "${spin_down_disks}" == "yes" ]; then
+    log_to_email " * Spin-Down HDDs: YES"
+  else
+    log_to_email " * Spin-Down HDDs: NO"
+  fi
+
+  # Print out if the Quiet Option is being used
+  if [ $quiet_option == 1 ]; then
+    log_to_email " * Quiet Output: YES"
+  else
+    log_to_email " * Quiet Output: NO"
+  fi
+  
+  # Print Start and Stop Hooks if Being Used
+  if [ -n "${start_hook1}" ] || [ -n "${end_hook1}" ] || [ -n "${notification_hook1}" ]; then
+    log_to_email "Hooks:"
+    if [ -n "${start_hook1}" ]; then
+      log_to_email " * Start-Hook: YES ($N_start_hooks)"
+    else
+      log_to_email " * Start-Hook: NO"
+    fi
+    if [ -n "${end_hook1}" ]; then
+      log_to_email " * End-Hook: YES ($N_end_hooks)"
+    else
+      log_to_email " * End-Hook: NO"
+    fi
+    if [ -n "${notification_hook1}" ]; then
+      log_to_email " * Notification Hook: YES ($N_notification_hooks)"
+    else
+      log_to_email " * Notification Hook: NO"
+    fi
+  else
+    log_to_email "Hooks: NONE"
+  fi
+  log_to_email "Run-Log is Below:"
+  log_to_email ""
+}
+
+# Inital Check - Do an initial check of the array check for errors/sync in progress etc.
+initial_status_check() {
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY: Initial Status Check"
+  log_to_email "##############################"
+  log_to_email_time "Checking current status..."
+
+  # Call snapraid status
+  snapraid_status_cmd
+
+  # Error Checks
+  bad_check0=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  bad_check1=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $4}')
+  bad_check2=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $5}')
+  rehash_check=$(grep -w "^summary:has_rehash" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  unsynced_check=$(grep -w "^summary:has_unsynced" "${status_command_logfile}" | awk -F ":" '{print $3}')
+
+  # Number of Files requiring touch - if any
+  touch_required_count=$(grep -w "^summary:zerosubsecond_file_count" "${status_command_logfile}" | awk -F ":" '{print $3}')
+
+  # Scenario 1 - Check if Snapraid is Already in Use - Exit if so
+  if grep -qw "SnapRAID is already in use!" "${status_command_logfile}"; then
+    log_to_email_time "SnapRAID is already Use - Exiting..."
+    log_to_email ""
+    notify_of_warning "SnapRAID-DAILY: SnapRAID In Use!"
+    clean_up_logfiles
+    exit $already_in_use_code
+  
+  # Scenario 2 - Check if the important parameters above are not defined
+  elif [ -z $rehash_check ] || [ -z $unsynced_check ] || [ -z $bad_check0 ] || \
+       [ -z $bad_check1 ] || [ -z $bad_check2 ]
+  then
+    log_to_email_time "Unexpected Status Output - Exiting..."
+    log_to_email_time "Status Logfile is attached"
+    log_to_email ""
+    notify_of_warning "SnapRAID-DAILY: Initial Error(s) Present" "${status_command_logfile}" include_status
+    clean_up_logfiles
+    exit $error_code
+
+  # Scenario 3 - Check for errors - Exit if present
+  elif [ $bad_check0 != 0 ] || [ $bad_check1 != 0 ] || [ $bad_check2 != 0 ]; then
+    log_to_email_time "Found error(s) - Exiting..."
+    log_to_email_time "Status Logfile is attached"
+    log_to_email ""
+    notify_of_warning "SnapRAID-DAILY: Initial Error(s) Present" "${status_command_logfile}" include_status
+    clean_up_logfiles
+    exit $error_code
+
+  # Scenario 4 - Check if a ReHash is needed.
+  elif [ $rehash_check != 0 ]; then
+    log_to_email_time "Rehash In-Progress/Required - Exiting..."
+    log_to_email_time "Status Logfile is attached"
+    log_to_email ""
+    notify_of_warning "SnapRAID-DAILY: Re-Hash Warning" "${status_command_logfile}" include_status
+    clean_up_logfiles
+    exit $error_code
+
+  # Scenario 5 - Check if a Sync was previously stopped while in progress
+  elif [ $unsynced_check != 0 ]; then
+    # Don't exit the if a sync is in progress - continue to sync
+    found_unfinished_sync=1
+
+    # Although, if scrub-only is selected, exit and notify the user via email
+    if [ $scrub_only -eq 0 ]; then
+      log_to_email_time "Sync Already in Progress - Continuing..."
+    else
+      log_to_email_time "Sync Already in Progress but Scrub-Only is selected"
+      log_to_email_time "Cannot Scrub unless sync is finished - Exiting..."
+      log_to_email_time "Status Logfile is attached"
+      log_to_email ""
+      notify_of_warning "SnapRAID-DAILY: Sync In Progress" "${status_command_logfile}" include_status
+      clean_up_logfiles
+      exit $error_code
+    fi
+
+  # Scenario 5 - None of the above checks found anything - Continue to Sync/Scrub
+  else
+    found_unfinished_sync=0
+    log_to_email_time "No Issues Found in Initial Check"
+    log_to_email_time "Ready to run SnapRAID operations"
+  fi
+
+  # Check if Touch is Needed and if Scrub Only is Not Selected
+  if [ $scrub_only -eq 0 ] && [ $touch_required_count != 0 ]; then
+    log_to_email_time "Touch Required on" $touch_required_count "files..."
+    touch_required=1
+  else
+    log_to_email_time "Touch Not Needed..."
+    touch_required=0
+  fi
+  log_to_email ""
+}
+
+# Touch Function - Run touch if required (and scrub only is not selected)
+run_touch_if_needed() {
+  if [ $touch_required -eq 1 ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: Touch"
+    log_to_email "##############################"
+    log_to_email_time "Starting Touch..."
+
+    # Call Snapraid touch command
+    snapraid_touch_cmd
+
+    # Check Touch Output for Errors - Do a search for "fatal" messages
+    # Exit if there's 10 or more of them...
+    touch_error_count=$(grep -w "^msg:fatal" "${touch_command_logfile}" | wc -l)
+    if [ $touch_error_count -gt 10 ]; then
+      log_to_email_time "Touch Encountered Issues - Please Investigate..."
+      log_to_email_time "Touch Command Logfile is attached"
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Touch Warning(s)" "${touch_command_logfile}" include_status
+      clean_up_logfiles
+      exit $error_code
+    else
+      log_to_email_time "Touch Completed on" $touch_required_count "files"
+      log_to_email ""
+    fi
+  fi
+}
+
+# Check for Changes, Deletion Threshold & Move Threshold
+check_array_for_changes_and_thresholds() {
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY: Difference Check"
+  log_to_email "##############################"
+  log_to_email_time "Checking array for changes..."
+
+  # Call snapraid diff command
+  snapraid_diff_cmd
+
+  # Check the Exit Status of the Diff Command to see if a sync is required or not
+  if [ "${diff_exit_status}" == "diff" ]; then
+    # Specify a Sync is Required
+    sync_required=1
+    log_to_email_time "Changes Detected"
+    log_to_email " * Equal:" $number_equal
+    log_to_email " * Added:" $number_added
+    log_to_email " * Removed:" $number_removed
+    log_to_email " * Updated:" $number_updated
+    log_to_email " * Moved:" $number_moved
+    log_to_email " * Copied:" $number_copied
+    log_to_email " * Restored:" $number_restored
+
+    # Check For Deletion/Moved Thresholds
+    if [ $override_thresholds -eq 1 ]; then
+      log_to_email_time "Overriding Deletion/Moved/Updated Thresholds"
+      log_to_email_time "Proceeding to sync regardless..."
+
+    # Check For Either Threshold being greater than zero AND exceeded...
+    elif [[ ($number_removed -gt $deletion_threshold && $deletion_threshold -gt 0)  || \
+            ($number_moved -gt $moved_threshold && $moved_threshold -gt 0) || \
+            ($number_updated -gt $updated_threshold && $updated_threshold -gt 0) ]]
+    then 
+      log_to_email ""
+      log_to_email_time "One or more Thresholds Exceeded"
+      log_to_email " * Deleted: "$number_removed
+      log_to_email " * Moved: "$number_moved
+      log_to_email " * Updated: "$number_updated
+
+      # Print Whether Thresholds have been disabled or not
+      if [ $deletion_threshold -gt 0 ]; then
+        log_to_email " * Deletion Threshold:" $deletion_threshold
+      else
+        log_to_email " * Deletion Threshold: Disabled" 
+      fi
+      if [ $moved_threshold -gt 0 ]; then
+      log_to_email " * Moved Threshold:" $moved_threshold
+      else
+        log_to_email " * Moved Threshold: Disabled"
+      fi
+      if [ $updated_threshold -gt 0 ]; then
+       log_to_email " * Updated Threshold:" $updated_threshold
+      else
+        log_to_email " * Updated Threshold: Disabled"
+      fi
+      log_to_email "Maybe a Sync is not a good idea?..."
+      log_to_email_time "Stopping..."
+      log_to_email_time "Diff Command Logfile is attached."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Threshold(s) Exceeded" "${diff_command_logfile}"
+      clean_up_logfiles
+      exit $thresholds_exceeded_code
+    else
+      log_to_email_time "Proceeding to sync..."
+    fi
+    log_to_email ""
+
+  # If the exit status of the diff command is "equal", there are no changes
+  elif [ "${diff_exit_status}" == "equal" ]; then
+    if [ $found_unfinished_sync == 1 ] ; then
+      log_to_email_time "No Changes - Nothing to Sync"
+      log_to_email_time "However a sync is still in progress - Continuing..."
+      log_to_email ""
+      sync_required=1
+    else
+      log_to_email_time "No Changes - Nothing to Sync"
+      log_to_email ""
+      sync_required=0
+    fi
+  fi
+}
+
+# Sync Array Function
+sync_array() {
+  if [ $sync_required -eq 1 ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: Sync"
+    log_to_email "##############################"
+
+    # Find the Current Time to Get the Time the Sync was Started At
+    sync_start_time=`date '+%Y-%m-%d_%H-%M-%S'`
+    sync_start_seconds=$(date +%s)
+    log_to_email_time "Starting Sync on "$(date +%d/%m/%Y)"..."
+
+    # Call snapraid sync command
+    snapraid_sync_cmd
+
+    # Compute the Run-Time of the Sync Command for the Email
+    sync_finish_time=`date '+%Y-%m-%d_%H-%M-%S'`
+    sync_finish_seconds=$(date +%s)
+    sync_runtime=$((sync_finish_seconds-sync_start_seconds))
+    sync_runtime_hours=$((sync_runtime / 3600))
+    sync_runtime_minutes=$(( (sync_runtime % 3600) / 60 ))
+    sync_runtime_seconds=$(( (sync_runtime % 3600) % 60 ))
+    log_to_email_time "Sync Completed on "$(date +%d/%m/%Y)
+    log_to_email_time "Duration: "$sync_runtime_hours" hours, "$sync_runtime_minutes "minutes, "$sync_runtime_seconds" seconds"
+
+    # Get Error counts and Exit status from Sync Command Logfile
+    io_errors=$(grep -w "^summary:error_io" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    data_errors=$(grep -w "^summary:error_data" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    file_errors=$(grep -w "^summary:error_file" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+
+    # For Sync there are two exit statuses printed to the logfile - for the diff and sync operations
+    diff_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 1p | awk -F ":" '{print $3}')
+    sync_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 2p | awk -F ":" '{print $3}')
+
+    # Check to see if Files were modified during the sync - Exit if so
+    if grep -qw "WARNING! You cannot modify files during a sync." $sync_command_logfile ; then 
+      log_to_email_time "Sync - File(s) Modified During Sync"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: File(s) Modified during Sync" $sync_command_logfile include_status
+      clean_up_logfiles
+      exit $files_modified_during_sync_code
+
+    # 1: Check if any of the above error counts the exit statuses are undefined - exit if so
+    elif [ -z "$io_errors" ] || [ -z "$data_errors" ] || [ -z "$file_errors" ] || [ -z "${diff_exit_status}" ] || [ -z "${sync_exit_status}" ]
+    then
+      log_to_email_time "Unexpected Output from Sync - Please Investigate"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile include_status
+      clean_up_logfiles
+      exit $error_code
+
+    # 2: Exit if any of the number of errors above are non-zero or if the exit status is unexpected
+    elif [ $io_errors != 0 ] || [ $data_errors != 0 ] || [ $file_errors != 0 ] || [ "${sync_exit_status}" != "ok" ]
+    then
+      log_to_email_time "Sync Log Reports Error(s) - Please Investigate"
+      log_to_email_time " * I/O Errors:" $io_errors
+      log_to_email_time " * Data Errors:" $data_errors
+      log_to_email_time " * File Errors:" $file_errors
+      log_to_email_time " * Exit Status:" "${sync_exit_status}"
+      log_to_email_time "Sync Output Log is attached..."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Sync Warning(s)" $sync_command_logfile include_status
+      clean_up_logfiles
+      exit $error_code
+
+    # 3: Sync Diff exit status reported no changes. Should be impossible to get to here though
+    # since sync is not called if changes are found
+    elif [ "${diff_exit_status}" == "equal" ]; then
+      log_to_email_time "Found nothing to sync"
+      log_to_email ""
+
+    # Otherwise if none of the above checks found anything - The sync was successful
+    else
+      # Print Out the Changes to Email Output
+      log_to_email_time "Sync was Successful"
+      log_to_email_time "Array Changes Found & Updated:"
+      log_to_email " * Added:" $number_added
+      log_to_email " * Removed:" $number_removed
+      log_to_email " * Updated:" $number_updated
+      log_to_email " * Moved:" $number_moved
+      log_to_email " * Copied:" $number_copied
+      log_to_email " * Restored:" $number_restored
+      log_to_email ""
+    fi
+  fi
+}
+
+# Scrub Array Function
+scrub_array() {
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY: Scrub"
+  log_to_email "##############################"
+
+  # Need to check the array is up to date. More relevant if --scrub-only is selected
+  log_to_email_time "Checking if Array is still up to date..."
+  snapraid_diff_cmd
+
+  # Check if We have no Moved, Removed or Updated Files. Added or Copied are OK for scrubbing
+  if [ $number_removed -eq 0 ] && [ $number_updated -eq 0 ] && [ $number_moved -eq 0 ]; then
+    # Array is still up to date - proceeding to scrub
+    log_to_email_time "Array is Up-to-Date - Proceeding"
+
+    # Find the Current Time to Get the Time the Sync was Started At
+    scrub_start_time=`date '+%Y-%m-%d_%H-%M-%S'`
+    scrub_start_seconds=$(date +%s)
+    log_to_email_time "Starting Scrub on "$(date +%d/%m/%Y)
+    log_to_email_time "Scrubbing" $scrub_percent"% older than" $scrub_age "days..."
+
+    # Call Snapraid Scrub command
+    snapraid_scrub_cmd
+
+    # Compute the Run-Time of the Scrub Command
+    scrub_finish_time=`date '+%Y-%m-%d_%H-%M-%S'`
+    scrub_finish_seconds=$(date +%s)
+    scrub_runtime=$((scrub_finish_seconds-scrub_start_seconds))
+    scrub_runtime_hours=$((scrub_runtime / 3600))
+    scrub_runtime_minutes=$(( (scrub_runtime % 3600) / 60 ))
+    scrub_runtime_seconds=$(( (scrub_runtime % 3600) % 60 ))
+    log_to_email_time "Scrub Completed at "$(date +%d/%m/%Y)
+    log_to_email_time "Duration: "$scrub_runtime_hours" hours, "$scrub_runtime_minutes "minutes, "$scrub_runtime_seconds" seconds"
+
+    # Check Scrub Command Logfile for Errors
+    scrub_io_errors=$(grep -w "^summary:error_io" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_data_errors=$(grep -w "^summary:error_data" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_file_errors=$(grep -w "^summary:error_file" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_exit_status=$(grep -w "^summary:exit" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+
+    # Check if Nothing was found to scrub
+    if grep -qw "Nothing to do" "${scrub_command_logfile}"; then
+      log_to_email_time "Found Nothing to Scrub"
+      log_to_email ""
+      nothing_to_scrub=1
+
+    # 1: Check if any of the above error counts or exit status are undefined
+    elif [ -z $scrub_io_errors ] || [ -z $scrub_data_errors ] || [ -z $scrub_file_errors ] || [ -z "${scrub_exit_status}" ]
+    then
+      log_to_email_time "Unexpected output from Scrub - Please Investigate"
+      log_to_email_time "Scrub Output Log is attached..."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}" include_status
+      clean_up_logfiles
+      exit $error_code
+
+    # 2: Check if any of the number of errors in the counts above are non-zero
+    elif [ $scrub_io_errors != 0 ] || [ $scrub_data_errors != 0 ] || [ $scrub_file_errors != 0 ] || [ "${scrub_exit_status}" != "ok" ]
+    then
+      log_to_email_time "Scrub Log Reports Error(s) - Please Investigate"
+      log_to_email_time " * I/O Errors:" $scrub_io_errors
+      log_to_email_time " * Data Errors:" $scrub_data_errors
+      log_to_email_time " * File Errors:" $scrub_file_errors
+      log_to_email_time " * Exit Status:" "${scrub_exit_status}"
+      log_to_email_time "Scrub Output Log is attached..."
+      log_to_email ""
+      run_end_hooks
+      notify_of_warning "SnapRAID-DAILY: Scrub Warning(s)" "${scrub_command_logfile}" include_status
+      clean_up_logfiles
+      exit $error_code
+
+    # Otherwise the scrub was successful
+    else
+      log_to_email_time "Scrub was successful"
+      log_to_email_time "Scrubbed" $scrub_percent"% older than" $scrub_age "days"
+      log_to_email ""
+      nothing_to_scrub=0
+    fi
+  else
+    # Array is not up to date and can't be scrubbed without the risk of an error
+    # Exit the Script with a warning
+    log_to_email_time "Array not up-to-date - Sync Required"
+    log_to_email_time "Changes detected are:"
+    log_to_email " * Equal:" $number_equal
+    log_to_email " * Added:" $number_added
+    log_to_email " * Removed:" $number_removed
+    log_to_email " * Updated:" $number_updated
+    log_to_email " * Moved:" $number_moved
+    log_to_email " * Copied:" $number_copied
+    log_to_email " * Restored:" $number_restored
+    log_to_email_time "Cannot Proceed with Scrub - Stopping"
+    log_to_email_time "Diff Command Logfile is attached."
+    log_to_email ""
+    run_end_hooks
+    notify_of_warning "SnapRAID-DAILY: Sync Required" "${diff_command_logfile}" include_status
+    clean_up_logfiles
+    exit $error_code
+  fi
+}
+
+# Get the number of start, end and notification hooks defined in
+# the configuration file
+get_number_of_hooks() {
+  local N_hooks=0
+
+  # Loop Through Defined Hooks in Config File
+  # to find out how many are defined
+  for i in $(seq 1 1 $((max_hooks+1))); do
+    local hook="${1}"$i
+
+    # Check the hook script exists and is executable
+    if [ -n "${!hook}" ] && [ -x "${!hook}" ]; then
+      N_hooks=$((N_hooks+1))
+
+      # Check if the max number of suppVorted hooks has been reached
+      if [ $i -gt $max_hooks ]; then
+        echo "WARNING: Only $max_hooks are supported, ignoring above numbered \"${1}\" hooks"
+        if [ "${1}" == "start_hook" ]; then
+          N_start_hooks=$max_hooks
+        elif [ "${1}" == "end_hook" ]; then
+          N_end_hooks=$max_hooks
+        elif [ "${1}" == "notification_hook" ]; then
+          N_notification_hooks=$max_hooks
+        fi
+        # Return 0 to exit the function and avoid the if/elif
+        # setting the number of hooks below
+        return 0
+      fi
+
+      # Print that the Hook was found
+      if [ "${1}" == "start_hook" ]; then
+        echo "INFO: Start Hook $i: ${!hook}"
+      elif [ "${1}" == "end_hook" ]; then
+        echo "INFO: End Hook $i: ${!hook}"
+      elif [ "${1}" == "notification_hook" ]; then
+        echo "INFO: Notification Hook $i: ${!hook}"
+      fi
+
+    # Otherwise exit if it is not executable or doesn't exist
+    elif [ -n "${!hook}" ] && [ ! -x "${!hook}" ]; then
+      error "${1}$i defined in config file: ${!hook} does not exist or is not executable - Exiting"
+    # Otherwise Break
+    else
+      break
+    fi
+  done
+
+  # Set the Hook Number depending on 1st argument
+  if [ "${1}" == "start_hook" ]; then
+    N_start_hooks=$N_hooks
+  elif [ "${1}" == "end_hook" ]; then
+    N_end_hooks=$N_hooks
+  elif [ "${1}" == "notification_hook" ]; then
+    N_notification_hooks=$N_hooks
+  fi
+}
+
+# Call Start Hook(s)
+run_start_hooks() {
+  # Run the Start Hook Directly if it was specified in the config file
+  if [ $N_start_hooks != 0 ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: Start Hook(s)"
+    log_to_email "##############################"
+
+    # Loop through each start hook
+    for i in $(seq 1 1 $N_start_hooks); do
+      local start_hook="start_hook"$i
+      log_to_email_time "Calling Start Hook $i/$N_start_hooks..."
+      "${!start_hook}" "start"
+  
+      # Check Error Code
+      if [ $? != 0 ]; then
+        log_to_email_time "Start Hook $i/$N_start_hooks ended in error"
+        log_to_email ""
+        notify_of_warning "SnapRAID-DAILY: Start Hook Error(s)"
+        clean_up_logfiles
+        exit $error_code
+      else
+        log_to_email_time "Start Hook $i/$N_start_hooks Done"
+        # Check all hooks have been completed
+        if [ $i == $N_start_hooks ]; then
+          log_to_email_time "All Start Hooks completed successfully"
+          log_to_email ""
+        else
+          log_to_email ""
+        fi
+      fi
+    done
+  fi
+}
+
+# Call End Hook
+run_end_hooks() {
+  # Run the End Hook Directly if it was specifed in the config file
+  if [ $N_end_hooks != 0 ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: End Hook(s)"
+    log_to_email "##############################"
+    local error_count=0
+ 
+    # Loop through each end hook
+    for i in $(seq 1 1 $N_end_hooks); do
+      local end_hook="end_hook"$i
+ 
+      log_to_email_time "Calling End Hook $i/$N_end_hooks..."
+      # Run End Hook Directly with "end" argument
+      "${!end_hook}" "end"
+  
+      # Check Error Code - Script Continues if the End Hook Results in an Error
+      if [ $? != 0 ]; then
+        error_count=$((error_count+1))
+        log_to_email_time "End Hook $i/$N_end_hooks ended in error"
+        log_to_email ""
+      else
+        log_to_email_time "End Hook $i/$N_end_hooks Done"
+        log_to_email ""
+      fi
+
+      # Check all hooks have been completed
+      if [ $i == $N_end_hooks ] && [ $error_count == 0 ]; then
+        log_to_email_time "All End Hooks completed successfully"
+        log_to_email ""
+        end_hook_errors="no"
+      elif [ $i == $N_end_hooks ] && [ $error_count != 0 ]; then
+        log_to_email_time "One or more errors running End Hook(s)"
+        log_to_email ""
+        end_hook_errors="yes"
+      fi
+    done
+  else
+    end_hook_errors="no"
+  fi
+}
+
+# Generate SMART Report
+generate_smart_report() {
+  if [ "${smart_report}" == "yes" ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: SMART Report"
+    log_to_email "##############################"
+    # Check if the script is running as root, if not see if Sudo is installed...
+    if [ $UID != 0 ]; then
+      if ! which sudo >/dev/null; then
+        log_to_email "ERROR: Script not ran as root and sudo is not installed"
+        log_to_email "sudo is required to generate the SMART report if not running the script"
+        log_to_email "as root."
+      else
+        snapraid_smart_report "non_root"
+      fi
+    else
+      snapraid_smart_report
+    fi    
+    log_to_email ""
+  fi
+}
+
+# Spin Down Disks
+spin_down_hdd_disks() {
+  if [ "${spin_down_disks}" == "yes" ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY: HDD Spin-Down"
+    log_to_email "##############################"
+    # Check if the Script is running as root, if not see if Sudo is installed
+    if [ $UID != 0 ]; then
+      if ! which sudo >/dev/null; then
+        log_to_email "ERROR: Script not ran as root and sudo is not installed"
+        log_to_email "sudo is required to spin down the disks if not running the script"
+        log_to_email "as root."
+      else
+        snapraid_spin_down_disks "non_root"
+      fi 
+    else
+      snapraid_spin_down_disks
+    fi
+    log_to_email ""
+  fi
+}
+ 
+# Call Notification Hook(s)
+run_notification_hooks() {
+  if [ $N_notification_hooks != 0 ]; then
+    local notification_title="${1}"
+    local notification_body="${2}"
+    local notification_attachment="${3}"
+
+    # Only run the notification hooks if enabled or in the case of a warning
+    if [[ ( "${disable_emails_on_success}" == "no" ) || \
+          ( "${disable_emails_on_success}" == "yes" && -n "${notification_attachment}" ) ]]
+    then
+      echo "##############################"
+      echo "# SnapRAID-DAILY: Notification Hook(s)"
+      echo "##############################"
+
+      # Loop through all defined hooks
+      for i in $(seq 1 1 $N_notification_hooks); do
+        local notification_hook="notification_hook"$i
+
+        # Call the Custom Notification Hook Script if one was given
+        if [ -x "${!notification_hook}" ]; then
+          echo " * Calling Notification Hook $i/$N_notification_hooks :" "${!notification_hook}"
+          "${!notification_hook}" "${notification_title}" "${notification_body}" "${notification_attachment}"
+          echo ""
+        fi
+      done
+    fi
+  fi
+}
+
+# Success Notification
+notify_of_success() {
+  # Print out that the Email will be sent or not
+  if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]; then
+    echo "Sending Final Notification Email to ${email_address}..."
+    echo ""
+  fi
+
+  # Call Snapraid Status to Put the Final Array Status into the Email
+  snapraid_status_to_email
+
+  # Figure out the subject for the Notification(s)
+  if [ $sync_only -eq 1 ]; then
+    if [ $sync_required -eq 1 ]; then
+      success_subject="SnapRAID-DAILY: Sync OK"
+    else
+      success_subject="SnapRAID-DAILY: Nothing to Sync"
+    fi
+  elif [ $scrub_only -eq 1 ]
+  then
+    if [ $nothing_to_scrub == 1 ]; then
+      success_subject="SnapRAID-DAILY: Nothing to Scrub"
+    else
+      success_subject="SnapRAID-DAILY: Scrub OK"
+    fi
+  else
+    if [ $sync_required -eq 0 ] && [ $nothing_to_scrub -eq 1 ]; then
+      success_subject="SnapRAID-DAILY: Nothing to Sync OR Scrub"
+    else
+      success_subject="SnapRAID-DAILY: All OK"
+    fi
+  fi
+
+  # Print Success Banner here
+  if [ "${end_hook_errors}" == "no" ]; then
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY Result: SUCCESS"
+    log_to_email "##############################"
+  else
+    log_to_email "##############################"
+    log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
+    log_to_email "##############################"
+  fi
+
+  # Send the Success Email
+  if [ "${disable_emails_on_success}" == "no" ] && [ $enable_emails == 1 ]; then
+    send_email "${success_subject}"
+  fi
+
+  # Call the Custom Notification Hook Script if one was given
+  run_notification_hooks "${success_subject}" "${main_logfile}"
+}
+
+# Warning Notification
+notify_of_warning() {
+  # Include the output of the status command in the email if required
+  if [ -n "${3}" ]; then
+    snapraid_status_to_email
+  fi
+
+  # Print Warning Banner here
+  log_to_email "##############################"
+  log_to_email "# SnapRAID-DAILY Result: WARNING(S)"
+  log_to_email "##############################"
+
+  # Send Email Notification if Emails are Enabled and include attachment if present
+  if [ $enable_emails == 1 ] && [ -n "${2}" ]; then
+    send_email "${1}" "${2}"
+  elif [ $enable_emails == 1 ]; then
+    send_email "${1}"
+  fi
+
+  # If a Custom Notification Hook is present - Call it here
+  run_notification_hooks "${1}" "${main_logfile}" "${2}"
+}
+
+# Send Emails using mutt 
+send_email() {
+  email_subject="${1}"
+  email_attachment="${2}"
+
+  # Add the Hostname as a Signature to the Emails
+  if [ -n "${system_hostname}" ]; then
+    log_to_email ""
+    log_to_email "Regards,"
+    log_to_email "${system_hostname}"
+    echo ""
+  fi
+
+  # Only attempt to send emails if a muttrc file path and email address are defined
+  if [ -z "${email_attachment}" ]; then
+    mutt -F "${muttrc_path}" -s "${email_subject}" $email_address < $main_logfile
+  else
+    mutt -F "${muttrc_path}" -s "${email_subject}" -a "${email_attachment}" -- $email_address < $main_logfile
+  fi  
+
+  # Check if the email is sent successfully for the systemd logs
+  if [ $? -eq 0 ]; then
+    echo "Email Sent Successfully to ${email_address}..."
+    echo ""
+  else
+    echo "Problem Sending Email to ${email_address}..."
+    echo ""
+  fi
+}
+
+# Clean Up Log-Files Function
+clean_up_logfiles() {
+  echo "Removing /tmp files..."
+  rm $main_logfile &> /dev/null
+  rm $status_command_logfile &> /dev/null
+  rm $scrub_command_logfile &> /dev/null
+  rm $sync_command_logfile &> /dev/null
+  rm $touch_command_logfile &> /dev/null
+  rm $diff_command_logfile &> /dev/null
+}
+
+###################################################
+# CALL MAIN FUNCTION
+###################################################
+main "$@"
+
