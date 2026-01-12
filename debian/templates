@@ -1,0 +1,29 @@
+Template: snapraid-daily/systemd_user
+Type: string
+_Description: SnapRAID-DAILY User:
+ If you want to run SnapRAID-DAILY as a non-root user, enter 
+ a valid username below. If not, leave blank and hit OK to run
+ SnapRAID-DAILY as root.
+ .
+ To change one can run the following command again after the install:
+ .
+ $ dpkg-reconfigure snapraid-daily
+ .
+ If a mistake is made, one can run also run the above command to to be
+ prompted again for a user and group.
+
+Template: snapraid-daily/systemd_group
+Type: string
+_Description: SnapRAID-DAILY Group:
+ As before, if you want to run SnapRAID-DAILY as a non-root user,
+ enter a valid group name below. If a user was entered, leave blank
+ and hit OK to assume the default group for that user. If no user
+ was entered at the previous prompt, root is again used here.
+ .
+ As before, to change one can run the following command again after
+ the install:
+ .
+ $ dpkg-reconfigure snapraid-daily
+ .
+ If a mistake is made, one can run also run the above command to to be
+ prompted again for a user and group.
