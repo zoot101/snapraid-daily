@@ -1,0 +1,47 @@
+Source: snapraid-daily
+Section: misc
+Priority: optional
+Maintainer: Mark <mark9000@fastmail.org>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ po-debconf (>=1.0.21),
+Standards-Version: 4.6.2
+Homepage: https://github.com/zoot101/snapraid-daily
+
+Package: snapraid-daily
+Architecture: any
+Pre-Depends:
+ debconf (>=1.5.77),
+Depends:
+ coreutils (>=8.3),
+ snapraid (>=11.0),
+ bash (>=5.0),
+ gawk (>=5.0),
+ ${misc:Depends},
+Recommends:
+ curl (>=7.74),
+ mutt (>=2.0),
+ sudo (>=1.9.13),
+Suggests:
+ snapraid-daily-hooks (>=0.3.3),
+Description: Simple Bash Script to automate all essential SnapRAID functions
+ Automate the running of SnapRAID. Contains everything one
+ needs to fully automate the sync and scrub process of SnapRAID along
+ with in-built email notifications.
+ .
+  * Runs sync to update the array for changes, then runs scrub 
+    to check the array for silent corruption.
+  * The number of deletions/moved/updated is monitored and if the number exceeds
+    a user defined threshold, then the sync is stopped and the user is notified.
+  * Can also be set to run either sync only or scrub only if one
+    wants to seperate the sync and scrub operations. 
+  * If at any point, errors are encountered, then the user
+    is notified via email.
+  * Mutt is used for sending emails.
+  * Customizable through the use of hooks - see the SnapRAID-DAILY-Hooks
+    package to integrate additional notifications to services like Telegram
+    or ntfy, along with the ability to stop/start services or issue custom
+    commands at the start and end if required.
+ .
+ The github page is https://github.com/zoot101/snapraid-daily
