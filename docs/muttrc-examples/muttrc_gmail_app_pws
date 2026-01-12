@@ -1,0 +1,43 @@
+####################################
+# Example Muttrc File for Gmail
+####################################
+# Note this requires 2FA to be turned
+# and an app password to be generated.
+#
+# To do that, go to https://myaccount.google.com, login
+# and go to Security, Two-Step Verification and select
+# the option to "Generate a Security" key. This will give
+# one a random string of letters as a password to use below.
+# Note the smtp_pass and imap_pass settings are to be set
+# to the same password
+
+# If the app password setting cannot be found, it can be
+# accessed directly here:
+# https://myaccount.google.com/apppasswords
+
+
+# This is the Name on the Email, and the Email
+# address the notifications will come from
+set realname = "server.home.lan"
+set from = "server@gmail.com"
+set use_from = yes
+set envelope_from = yes
+
+# GMAIL SMTP URL and Password
+set smtp_url = "smtps://${from}@smtp.gmail.com:465/"
+set smtp_pass = "long-list-of-characters"
+
+# GMAIL IMAP User and Password
+set imap_user = "${from}"
+set imap_pass = "long-list-of-characters"
+
+set folder = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set ssl_force_tls = yes
+
+# G to get mail
+bind index G imap-fetch-mail
+set editor = "vim"
+set charset = "utf-8"
+set record = ''
+
