@@ -1,3 +1,21 @@
+snapraid-daily (1.5.6-1) stable; urgency=medium
+
+  * Added a -d or --disable-touch option to allow easily disabling
+    the touch operation - Closes #5
+
+  * Can be useful to bypass expected file errors to get the rest of
+    the script to run. Previously the only way to accomplish this
+    would have been to manually run "snapraid sync" outside of the
+    script which was not ideal.
+
+  * Also note that the commit history here has been re-written, so
+    if one has previously cloned the repository, the author recommends
+    deleting the old clone and re-cloning it.
+
+  * Made help printout more readable.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 24 Jan 2026 15:44:55 +0100
+
 snapraid-daily (1.5.5-1) stable; urgency=medium
 
   * Added a printout of the quiet option to the script status
