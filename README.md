@@ -170,6 +170,10 @@ Usage: snapraid-daily         [OPTIONS...]
   -f, --config [path-to-conf] Override default config file. Could be useful if one
                               has multiple snapraid arrays to manage on the same system
 
+  -d, --disable-touch         Disable the touch operation. Can be useful to bypass
+                              expected touch errors, where for example files were
+                              recently removed from the array.
+
   -q, --quiet                 Suppress the output of the touch, diff, sync and scrub
                               commands for snapraid. The final status message is still
                               displayed as normal.
@@ -211,6 +215,11 @@ snapraid-daily -s -o
 To only perform scrub, do:     
 ```bash
 snapraid-daily -c
+```
+
+To only perform sync and disable the touch operation:
+```bash
+snapraid-daily -s -d
 ```
 
 To override the config file to **/path/to/user.conf** do:     
