@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.5.5"
+version="1.5.6"
 
 ###################################################
 # VARIABLES
@@ -528,16 +528,24 @@ print_help() {
   echo "Usage: snapraid-daily         [OPTIONS...]"
   echo ""
   echo "  -s, --sync-only             Only Sync the Array - Do not run Scrub"
+  echo ""
   echo "  -c, --scrub-only            Only Scrub the Array - Do not run Sync"
   echo "                              Note that if both of these options are omitted, the"
   echo "                              default is to run sync and then scrub. They also can"
   echo "                              not be specified at the same time"
   echo "  -o, --override-thresholds   Ignore the deletion/moved thresholds to force a sync"
+  echo ""
   echo "  -f, --config [path-to-conf] Override default config file. Could be useful if one"
   echo "                              has multiple snapraid arrays to manage on the same system"
+  echo ""
+  echo "  -d, --disable-touch         Disable the touch operation. Can be useful to bypass"
+  echo "                              expected touch errors. Where for example files were"
+  echo "                              recently removed from the array."
+  echo ""
   echo "  -q, --quiet                 Suppress the output of the touch, diff, sync and scrub"
   echo "                              commands for snapraid. The final status message is still"
   echo "                              displayed as normal."
+  echo ""
   echo "  -h, --help                  Print help"
   echo ""
   echo "Manual Entries:"
@@ -555,6 +563,7 @@ parse_arguments() {
   scrub_only=
   override_thresholds=
   quiet_option=
+  disable_touch=
 
   # Valid arguments are:
   # -o, --override-thresholds : Ignore Deletion/Moved Thresholds
@@ -598,6 +607,11 @@ parse_arguments() {
       fi
       ;;
 
+      # Disable Touch
+      -d|--disable-touch)
+      disable_touch=1
+      ;;
+
       # Check for Help
       -h|--help)
       print_help
@@ -619,6 +633,7 @@ parse_arguments() {
   if [ -z $scrub_only ]; then scrub_only=0; fi
   if [ -z $override_thresholds ]; then override_thresholds=0; fi
   if [ -z $quiet_option ]; then quiet_option=0; fi
+  if [ -z $disable_touch ]; then disable_touch=0; fi
 
   # Check if --sync-only and --scrub-only were specified at the same time - Exit if so
   if [ $sync_only == 1 ] && [ $scrub_only == 1 ]; then
@@ -652,6 +667,11 @@ print_greeting() {
   if [ -n "${os_name}" ]; then log_to_email " * Host OS:" "${os_name}"; fi
   log_to_email " * SnapRAID Version:" "$snapraid_version"
   log_to_email "Input Options:"
+
+  # Print out if the user has disabled the Touch Operation
+  if [ $disable_touch == 1 ]; then
+    log_to_email " * Disable Touch: YES"
+  fi
 
   # Print Out all Sync Related Parameters if Sync is being Ran
   if [[ $sync_only == 1 || ( $sync_only == 0 && $scrub_only == 0 ) ]]; then
@@ -846,7 +866,7 @@ initial_status_check() {
 
 # Touch Function - Run touch if required (and scrub only is not selected)
 run_touch_if_needed() {
-  if [ $touch_required -eq 1 ]; then
+  if [ $touch_required -eq 1 ] && [ $disable_touch -eq 0 ]; then
     log_to_email "##############################"
     log_to_email "# SnapRAID-DAILY: Touch"
     log_to_email "##############################"
@@ -861,6 +881,7 @@ run_touch_if_needed() {
     if [ $touch_error_count -gt 10 ]; then
       log_to_email_time "Touch Encountered Issues - Please Investigate..."
       log_to_email_time "Touch Command Logfile is attached"
+      log_to_email_time "If expected, re-run the script with the -d/--disable-touch option to continue."
       log_to_email ""
       run_end_hooks
       notify_of_warning "SnapRAID-DAILY: Touch Warning(s)" "${touch_command_logfile}" include_status
