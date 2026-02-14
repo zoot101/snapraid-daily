@@ -1,3 +1,14 @@
+snapraid-daily (1.5.7-1) stable; urgency=medium
+
+  * Fixed an issue whereby if the script was called with the "-q"
+    or "--quiet" option, and if a number of files were found to
+    require the touch operation, it was not performed.
+
+  * Touch is now correctly performed regardless if one is using
+    the quiet option or not.
+
+ -- Mark <mark9000@fastmail.org>  Sat, 14 Feb 2026 23:11:39 +0100
+
 snapraid-daily (1.5.6-1) stable; urgency=medium
 
   * Added a -d or --disable-touch option to allow easily disabling
