@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.5.6"
+version="1.5.7"
 
 ###################################################
 # VARIABLES
@@ -171,7 +171,7 @@ snapraid_touch_cmd() {
 
   # Call snapraid touch to update timestamps. Suppress all output if --quiet option is set
   if [ $quiet_option == 1 ]; then
-    snapraid_touch_args=$( "${snapraid_touch_args[@]}" -qqqq )
+    snapraid_touch_args=( "${snapraid_touch_args[@]}" -qqqq )
   fi
   "${snapraid_binary_path}" "${snapraid_touch_args[@]}" touch
 }
