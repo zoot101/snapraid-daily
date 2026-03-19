@@ -414,7 +414,7 @@ read_config_file() {
     echo "INFO: Notification Emails & Hook(s) disabled on Success"
   fi
 
-  # Check for sync_pre_hash, default to no. Sanity check it's "yes" or "no"
+  # Check for sync_pre_hash, default to yes. Sanity check it's "yes" or "no"
   if [ -z "${sync_pre_hash}" ]; then
     sync_pre_hash="yes"
   elif [ "${sync_pre_hash}" != "yes" ] && [ "${sync_pre_hash}" != "no" ]; then
