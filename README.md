@@ -59,7 +59,7 @@ To install the script on a non-Debian based distro, install the script manually 
   - `sudo cp ./systemd-files/snapraid-daily.timer ./systemd-files/snapraid-daily.service /etc/systemd/system` 
   - Then, see the section below [Running as a Non-Root User with Systemd](#running-as-a-standard-user-with-systemd) if you want to run the script as a different user than root. If you are okay with running it as root, this is not required. 
 * Reload systemd and start the timer like so
-  - `sudo systemctl daemon-reload && sudo start snapraid-daily.timer`
+  - `sudo systemctl daemon-reload && sudo systemctl start snapraid-daily.timer`
 
 For detailed instructions on each step of the way or to use the more advanced features like the start/end/notification hooks, read on below.
 
@@ -300,9 +300,9 @@ sudo cp ./systemd-files/snapraid-*.timer /etc/systemd/system/
 # a non-root user. Can be skipped if one is happy to run the
 # script as root
 sudo mkdir /etc/systemd/system/snapraid-.service.d/
-sudo echo "[Service]" > /etc/systemd/system/snapraid-.service.d/user.conf
-sudo echo "User=your_username" >> /etc/systemd/system/snapraid-.service.d/user.conf
-sudo echo "Group=your_group" >> /etc/systemd/system/snapraid-.service.d/user.conf
+sudo echo "[Service]" | sudo tee /etc/systemd/system/snapraid-.service.d/user.conf
+sudo echo "User=your_username" | sudo tee --append /etc/systemd/system/snapraid-.service.d/user.conf
+sudo echo "Group=your_group" | sudo tee --append /etc/systemd/system/snapraid-.service.d/user.conf
 
 # Lastly - Reload Systemd
 sudo systemctl daemon-reload
