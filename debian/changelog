@@ -11,6 +11,9 @@ snapraid-daily (1.6.0~beta1-1) stable; urgency=medium
   * Fixed Display of Version as the output of snapraid --version
     has also changed in Version 14.0.
 
+  * Fixed detection of an unsynced array and also the forcing of
+    a sync afterwards.
+
   * Note that this version of the script REQUIRES SnapRAID Version
     14.0 and above to work. For older versions of SnapRAID, up to
     version 1.5.8 can be used.
