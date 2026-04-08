@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.5.8"
+version="1.6.0~beta1"
 
 ###################################################
 # VARIABLES
@@ -193,12 +193,13 @@ snapraid_diff_cmd() {
   number_updated=$( grep -w "^summary:updated" $diff_command_logfile | awk -F ":" '{print $3}')
   number_moved=$( grep -w "^summary:moved" $diff_command_logfile | awk -F ":" '{print $3}')
   number_copied=$( grep -w "^summary:copied" $diff_command_logfile | awk -F ":" '{print $3}')
+  number_relocated=$( grep -w "^summary:relocated" $diff_command_logfile | awk -F ":" '{print $3}')
   number_restored=$( grep -w "^summary:restored" $diff_command_logfile | awk -F ":" '{print $3}')
   diff_exit_status=$( grep -w "^summary:exit" $diff_command_logfile | awk -F ":" '{print $3}')
 
   # Check if any of the above are undefined, or if the exit status is not
   # "equal" or "diff" as this indicates something unexpected with the diff command
-  if [ -z $number_equal ] || [ -z $number_added ] || [ -z $number_removed ] || \
+  if [ -z $number_equal ] || [ -z $number_added ] || [ -z $number_removed ] || [ -z $number_relocated ] || \
      [ -z $number_updated ] || [ -z $number_moved ] || [ -z $number_copied ] || \
      [ -z $number_copied ] || [ -z $number_restored ] || [ -z "${diff_exit_status}" ]
   then
@@ -667,7 +668,7 @@ parse_arguments() {
 
 # Print Greeting in Email Log
 print_greeting() {
-  snapraid_version=$("${snapraid_binary_path}" -V | awk '{print $2}' | sed 's/v//')
+  snapraid_version=$("${snapraid_binary_path}" -V | awk '{print $3}' | sed 's/v//')
   system_hostname=$(hostname --fqdn) &> "/dev/null"
   os_name=$(grep -w "^PRETTY_NAME" "/etc/os-release" | sed 's/PRETTY_NAME="//;s/"$//') &> "/dev/null"
 
@@ -801,11 +802,9 @@ initial_status_check() {
   snapraid_status_cmd
 
   # Error Checks
-  bad_check0=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $3}')
-  bad_check1=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $4}')
-  bad_check2=$(grep -w "^summary:has_bad" "${status_command_logfile}" | awk -F ":" '{print $5}')
-  rehash_check=$(grep -w "^summary:has_rehash" "${status_command_logfile}" | awk -F ":" '{print $3}')
-  unsynced_check=$(grep -w "^summary:has_unsynced" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  bad_check=$(grep -w "^content_info:block_bad" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  rehash_check=$(grep -w "^content_info:block_rehash" "${status_command_logfile}" | awk -F ":" '{print $3}')
+  unsynced_check=$(grep -w "^content_info:block_unsynced" "${status_command_logfile}" | awk -F ":" '{print $3}')
 
   # Number of Files requiring touch - if any
   touch_required_count=$(grep -w "^summary:zerosubsecond_file_count" "${status_command_logfile}" | awk -F ":" '{print $3}')
@@ -819,8 +818,7 @@ initial_status_check() {
     exit $already_in_use_code
   
   # Scenario 2 - Check if the important parameters above are not defined
-  elif [ -z $rehash_check ] || [ -z $unsynced_check ] || [ -z $bad_check0 ] || \
-       [ -z $bad_check1 ] || [ -z $bad_check2 ]
+  elif [ -z $rehash_check ] || [ -z $unsynced_check ] || [ -z $bad_check ] || [ -z $touch_required_count ]
   then
     log_to_email_time "Unexpected Status Output - Exiting..."
     log_to_email_time "Status Logfile is attached"
@@ -830,7 +828,7 @@ initial_status_check() {
     exit $error_code
 
   # Scenario 3 - Check for errors - Exit if present
-  elif [ $bad_check0 != 0 ] || [ $bad_check1 != 0 ] || [ $bad_check2 != 0 ]; then
+  elif [ $bad_check != 0 ]; then
     log_to_email_time "Found error(s) - Exiting..."
     log_to_email_time "Status Logfile is attached"
     log_to_email ""
@@ -934,6 +932,7 @@ check_array_for_changes_and_thresholds() {
     log_to_email " * Updated:" $number_updated
     log_to_email " * Moved:" $number_moved
     log_to_email " * Copied:" $number_copied
+    log_to_email " * Relocated:" $number_relocated
     log_to_email " * Restored:" $number_restored
 
     # Check For Deletion/Moved Thresholds
@@ -1024,11 +1023,13 @@ sync_array() {
     # Get Error counts and Exit status from Sync Command Logfile
     io_errors=$(grep -w "^summary:error_io" "${sync_command_logfile}" | awk -F ":" '{print $3}')
     data_errors=$(grep -w "^summary:error_data" "${sync_command_logfile}" | awk -F ":" '{print $3}')
-    file_errors=$(grep -w "^summary:error_file" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    soft_errors=$(grep -w "^summary:error_soft" "${sync_command_logfile}" | awk -F ":" '{print $3}')
+    sync_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}"  | awk -F ":" '{print $3}')
 
-    # For Sync there are two exit statuses printed to the logfile - for the diff and sync operations
-    diff_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 1p | awk -F ":" '{print $3}')
-    sync_exit_status=$(grep -w "^summary:exit" "${sync_command_logfile}" | sed -n 2p | awk -F ":" '{print $3}')
+    # In Versions 14.0+, easiest way is to compare the total number of files with those that are equal
+    # The File number is referenced multiple times throughout the log - pick the 1st one
+    total_file_number=$(grep -w "^content_info:file" "${sync_command_logfile}" | sed -n 1p | awk -F ":" '{print $3}')
+    equal_file_number=$(grep -w "^summary:equal" "${sync_command_logfile}" | awk -F ":" '{print $3}')
 
     # Check to see if Files were modified during the sync - Exit if so
     if grep -qw "WARNING! You cannot modify files during a sync." $sync_command_logfile ; then 
@@ -1041,7 +1042,7 @@ sync_array() {
       exit $files_modified_during_sync_code
 
     # 1: Check if any of the above error counts the exit statuses are undefined - exit if so
-    elif [ -z "$io_errors" ] || [ -z "$data_errors" ] || [ -z "$file_errors" ] || [ -z "${diff_exit_status}" ] || [ -z "${sync_exit_status}" ]
+    elif [ -z "$io_errors" ] || [ -z "$data_errors" ] || [ -z "$soft_errors" ] || [ -z "${diff_exit_status}" ] || [ -z "${sync_exit_status}" ] || [ -z "${total_file_number}" ] || [ -z "${equal_file_number}" ]
     then
       log_to_email_time "Unexpected Output from Sync - Please Investigate"
       log_to_email_time "Sync Output Log is attached..."
@@ -1052,12 +1053,12 @@ sync_array() {
       exit $error_code
 
     # 2: Exit if any of the number of errors above are non-zero or if the exit status is unexpected
-    elif [ $io_errors != 0 ] || [ $data_errors != 0 ] || [ $file_errors != 0 ] || [ "${sync_exit_status}" != "ok" ]
+    elif [ $io_errors != 0 ] || [ $data_errors != 0 ] || [ $soft_errors != 0 ] || [ "${sync_exit_status}" != "ok" ]
     then
       log_to_email_time "Sync Log Reports Error(s) - Please Investigate"
       log_to_email_time " * I/O Errors:" $io_errors
       log_to_email_time " * Data Errors:" $data_errors
-      log_to_email_time " * File Errors:" $file_errors
+      log_to_email_time " * Soft Errors:" $soft_errors
       log_to_email_time " * Exit Status:" "${sync_exit_status}"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email ""
@@ -1068,7 +1069,7 @@ sync_array() {
 
     # 3: Sync Diff exit status reported no changes. Should be impossible to get to here though
     # since sync is not called if changes are found
-    elif [ "${diff_exit_status}" == "equal" ]; then
+    elif [ "${total_file_number}" == "${equal_file_number}" ]; then
       log_to_email_time "Found nothing to sync"
       log_to_email ""
 
@@ -1082,6 +1083,7 @@ sync_array() {
       log_to_email " * Updated:" $number_updated
       log_to_email " * Moved:" $number_moved
       log_to_email " * Copied:" $number_copied
+      log_to_email " * Relocated:" $number_copied
       log_to_email " * Restored:" $number_restored
       log_to_email ""
     fi
@@ -1125,7 +1127,7 @@ scrub_array() {
     # Check Scrub Command Logfile for Errors
     scrub_io_errors=$(grep -w "^summary:error_io" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
     scrub_data_errors=$(grep -w "^summary:error_data" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
-    scrub_file_errors=$(grep -w "^summary:error_file" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
+    scrub_soft_errors=$(grep -w "^summary:error_soft" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
     scrub_exit_status=$(grep -w "^summary:exit" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
 
     # Check if Nothing was found to scrub
@@ -1135,7 +1137,7 @@ scrub_array() {
       nothing_to_scrub=1
 
     # 1: Check if any of the above error counts or exit status are undefined
-    elif [ -z $scrub_io_errors ] || [ -z $scrub_data_errors ] || [ -z $scrub_file_errors ] || [ -z "${scrub_exit_status}" ]
+    elif [ -z $scrub_io_errors ] || [ -z $scrub_data_errors ] || [ -z $scrub_soft_errors ] || [ -z "${scrub_exit_status}" ]
     then
       log_to_email_time "Unexpected output from Scrub - Please Investigate"
       log_to_email_time "Scrub Output Log is attached..."
@@ -1146,12 +1148,12 @@ scrub_array() {
       exit $error_code
 
     # 2: Check if any of the number of errors in the counts above are non-zero
-    elif [ $scrub_io_errors != 0 ] || [ $scrub_data_errors != 0 ] || [ $scrub_file_errors != 0 ] || [ "${scrub_exit_status}" != "ok" ]
+    elif [ $scrub_io_errors != 0 ] || [ $scrub_data_errors != 0 ] || [ $scrub_soft_errors != 0 ] || [ "${scrub_exit_status}" != "ok" ]
     then
       log_to_email_time "Scrub Log Reports Error(s) - Please Investigate"
       log_to_email_time " * I/O Errors:" $scrub_io_errors
       log_to_email_time " * Data Errors:" $scrub_data_errors
-      log_to_email_time " * File Errors:" $scrub_file_errors
+      log_to_email_time " * Soft Errors:" $scrub_soft_errors
       log_to_email_time " * Exit Status:" "${scrub_exit_status}"
       log_to_email_time "Scrub Output Log is attached..."
       log_to_email ""
