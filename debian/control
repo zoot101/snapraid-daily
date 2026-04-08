@@ -15,7 +15,7 @@ Pre-Depends:
  debconf (>=1.5.77),
 Depends:
  coreutils (>=8.3),
- snapraid (>=11.0),
+ snapraid (>=14.0),
  bash (>=5.0),
  gawk (>=5.0),
  ${misc:Depends},
