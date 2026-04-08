@@ -226,12 +226,16 @@ snapraid_sync_cmd() {
   # Define snapraid sync arguments - Disable pre-hash if specified in config file
   snapraid_sync_args=( -c "${snapraid_config_file_path}" -v -l $sync_command_logfile)
 
-  # Add Pre-Hash Step (On by default)
+  # Add Pre-Hash Step (On by default), however disable if the force_nocopy is enabled
   if [ "${sync_pre_hash}" == "yes" ]; then
-    snapraid_sync_args=( "${snapraid_sync_args[@]}" -h)
+    if [ "${force_nocopy}" == "no" ]; then
+      snapraid_sync_args=( "${snapraid_sync_args[@]}" -h)
+    else
+      log_to_email_time "SYNC WARNING: Disabling Pre-Hash as force_nocopy is enabled."
+    fi
   fi
 
-  # Check for force_zero, force_empty, or force_uuid inputs
+  # Check for force_zero, force_empty, force_uuid, or force_nocopy inputs
   if [ "${force_zero}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-zero )
     log_to_email_time "SYNC WARNING: --force-zero is enabled."
@@ -243,6 +247,10 @@ snapraid_sync_cmd() {
   if [ "${force_uuid}" == "yes" ]; then
     snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-uuid )
     log_to_email_time "SYNC WARNING: --force-uuid is enabled."
+  fi
+  if [ "${force_nocopy}" == "yes" ]; then
+    snapraid_sync_args=( "${snapraid_sync_args[@]}" --force-nocopy )
+    log_to_email_time "SYNC WARNING: --force-nocopy is enabled."
   fi
  
   # Suppress all output if the -q, --quiet option is set
@@ -284,6 +292,7 @@ unset_config_vars() {
   force_zero=
   force_empty=
   force_uuid=
+  force_nocopy=
   snapraid_binary_path=
   disable_update_check=
   smart_report=
@@ -440,6 +449,13 @@ read_config_file() {
     force_uuid="no"
   elif [ "${force_uuid}" != "yes" ] && [ "${force_uuid}" != "no" ]; then
     error "Specified invalid force_uuid in config file - It should be either \"yes\" or \"no\""
+  fi
+
+  # Check for force_nocopy. Default to no if undefined - exit if invalid
+  if [ -z "${force_nocopy}" ]; then
+    force_nocopy="no"
+  elif [ "${force_nocopy}" != "yes" ] && [ "${force_nocopy}" != "no" ]; then
+    error "Specified invalid force_nocopy in config file - It should be either \"yes\" or \"no\""
   fi
 
   # Check for disable_update_check parameter. If undefined - default it to disabled
@@ -689,6 +705,9 @@ print_greeting() {
     fi
     if [ "${force_uuid}" == "yes" ]; then
       log_to_email " * Sync Force-UUID: YES"
+    fi 
+    if [ "${force_nocopy}" == "yes" ]; then
+      log_to_email " * Sync Force-No-Copy: YES"
     fi 
   else
     log_to_email " * Run-Sync: NO"
