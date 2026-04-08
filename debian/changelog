@@ -1,3 +1,24 @@
+snapraid-daily (1.6.0~beta1-1) stable; urgency=medium
+
+  * Updated checks on SnapRAID log files to be compatible with
+    Version 14.0+. Changes required in:
+    - Initial Status Check on the Arry
+    - Syncs of the Array
+    - Scrubs of the Array
+
+  * Fixed Display of Version as the output of snapraid --version
+    has also changed in Version 14.0.
+
+  * Note that this version of the script REQUIRES SnapRAID Version
+    14.0 and above to work. For older versions of SnapRAID, up to
+    version 1.5.8 can be used.
+    - Changed dependency on SnapRAID to >=14.0
+
+  * TO-DO:
+    - Support Percentages like 12.5% for the Scrub Operations.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 08 Apr 2026 22:02:25 +0100
+
 snapraid-daily (1.5.8-1) stable; urgency=medium
 
   * Added an option to the configuration file (force_nocopy) to make
