@@ -498,6 +498,17 @@ that may require it.
 Set to \"yes\" to use, leave commented out or set to \"no\" to
 disable.
 
+## force\_nocopy
+
+Force Sync with the Copy Detection disabled. Some edge cases can cause issues on syncs where files detected as being copied are not true copies.
+This option disables this copy detection. This is also **NOT RECOMMENDED** to use, but is again included for certain edge conditions
+that may require it.
+
+Note also that using this option will automatically disable the Sync Pre-Hash if one is using it.
+
+Set to \"yes\" to use, leave commented out or set to \"no\" to
+disable.
+
 ### snapraid\_binary\_path
 
 This option is for cases where the **SnapRAID** binary is installed in a different location than the default. The vast majority of users should
