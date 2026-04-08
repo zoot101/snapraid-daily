@@ -1131,7 +1131,7 @@ scrub_array() {
     scrub_exit_status=$(grep -w "^summary:exit" "${scrub_command_logfile}" | awk -F ":" '{print $3}')
 
     # Check if Nothing was found to scrub
-    if grep -qw "Nothing to do" "${scrub_command_logfile}"; then
+    if grep -qw "Nothing to scrub" "${scrub_command_logfile}"; then
       log_to_email_time "Found Nothing to Scrub"
       log_to_email ""
       nothing_to_scrub=1
