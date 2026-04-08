@@ -1,5 +1,19 @@
 snapraid-daily (1.5.8-1) stable; urgency=medium
 
+  * Added an option to the configuration file (force_nocopy) to make
+    use of the --force-nocopy option for SnapRAID.
+
+  * Previously if one ran into issues with the script that required
+    the nocopy option, one had to run "snapraid sync" outside the
+    script which was not ideal.
+
+  * Using this option automatically disables the sync pre-hash (which
+    is on by default) as SnapRAID does not support enabling both at
+    the same time.
+
+  * Update Default Configuration File and Manual Pages to add details
+    about the force_nocopy option.
+
   * Merge pull request #8 from La-Li-Lu-Le-Lo/patch-1
     - Fixed commands in readme
 
@@ -7,7 +21,7 @@ snapraid-daily (1.5.8-1) stable; urgency=medium
     - Looks like sync_pre_hash should default to yes.
     - Comment changed to match code.
 
- -- Mark <mark9000@fastmail.org>  Tue, 24 Mar 2026 14:00:13 +0100
+ -- Mark <mark9000@fastmail.org>  Wed, 08 Apr 2026 15:52:22 +0100
 
 snapraid-daily (1.5.7-1) stable; urgency=medium
 
