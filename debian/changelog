@@ -6,6 +6,8 @@ snapraid-daily (1.6.0~beta1-1) stable; urgency=medium
     - Syncs of the Array
     - Scrubs of the Array
 
+  * Updated method of determining if nothing was found to scrub.
+
   * Fixed Display of Version as the output of snapraid --version
     has also changed in Version 14.0.
 
