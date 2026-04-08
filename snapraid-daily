@@ -211,9 +211,10 @@ snapraid_diff_cmd() {
     clean_up_logfiles
     exit $error_code
 
-  elif [ "${diff_exit_status}" != "diff" ] && [ "${diff_exit_status}" != "equal" ]; then
+  elif [ "${diff_exit_status}" != "diff" ] && [ "${diff_exit_status}" != "equal" ] && \
+       [ "${diff_exit_status}" != "unsynced" ]; then
     log_to_email_time "Unexpected Exit Status for Diff - Stopping"
-    log_to_email_time "It should be either \"diff\" or \"equal\""
+    log_to_email_time "It should be either \"diff\", \"equal\" or \"unsynced\""
     log_to_email_time "Diff Command Logfile Is attached..."
     log_to_email ""
     run_end_hooks
@@ -980,18 +981,17 @@ check_array_for_changes_and_thresholds() {
     fi
     log_to_email ""
 
+  # Sync Regardless if an Unfinished Sync was Found
+  elif [ "${diff_exit_status}" == "unsynced" ]; then
+    log_to_email_time "Sync still in progress - Continuing to Sync..."
+    log_to_email ""
+    sync_required=1
+
   # If the exit status of the diff command is "equal", there are no changes
   elif [ "${diff_exit_status}" == "equal" ]; then
-    if [ $found_unfinished_sync == 1 ] ; then
-      log_to_email_time "No Changes - Nothing to Sync"
-      log_to_email_time "However a sync is still in progress - Continuing..."
-      log_to_email ""
-      sync_required=1
-    else
-      log_to_email_time "No Changes - Nothing to Sync"
-      log_to_email ""
-      sync_required=0
-    fi
+    log_to_email_time "No Changes - Nothing to Sync"
+    log_to_email ""
+    sync_required=0
   fi
 }
 
