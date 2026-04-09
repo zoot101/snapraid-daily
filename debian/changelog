@@ -1,4 +1,4 @@
-snapraid-daily (1.6.0~beta1-1) stable; urgency=medium
+snapraid-daily (1.6.0~beta2-1) stable; urgency=medium
 
   * Updated checks on SnapRAID log files to be compatible with
     Version 14.0+. Changes required in:
@@ -22,7 +22,7 @@ snapraid-daily (1.6.0~beta1-1) stable; urgency=medium
   * TO-DO:
     - Support Percentages like 12.5% for the Scrub Operations.
 
- -- Mark <mark9000@fastmail.org>  Wed, 08 Apr 2026 22:02:25 +0100
+ -- Mark <mark9000@fastmail.org>  Thu, 09 Apr 2026 09:51:41 +0100
 
 snapraid-daily (1.5.8-1) stable; urgency=medium
 
