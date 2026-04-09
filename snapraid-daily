@@ -6,7 +6,7 @@
 ###################################################
 
 # VERSION
-version="1.6.0~beta1"
+version="1.6.0~beta2"
 
 ###################################################
 # VARIABLES
@@ -923,7 +923,9 @@ check_array_for_changes_and_thresholds() {
   snapraid_diff_cmd
 
   # Check the Exit Status of the Diff Command to see if a sync is required or not
-  if [ "${diff_exit_status}" == "diff" ]; then
+  # Since Version 14.0, also need to consider the "unsynced" status
+  if [ "${diff_exit_status}" == "diff" ] || [ "${diff_exit_status}" == "unsynced" ]; then
+
     # Specify a Sync is Required
     sync_required=1
     log_to_email_time "Changes Detected"
@@ -976,16 +978,16 @@ check_array_for_changes_and_thresholds() {
       notify_of_warning "SnapRAID-DAILY: Threshold(s) Exceeded" "${diff_command_logfile}"
       clean_up_logfiles
       exit $thresholds_exceeded_code
+
+    # Sync Regardless if an Unfinished Sync was Found
+    elif [ "${diff_exit_status}" == "unsynced" ]; then
+      log_to_email_time "Sync still in progress - Continuing to Sync..."
+
+    # Otherwise Thresholds were not exceeded and no sync was in progress
     else
       log_to_email_time "Proceeding to sync..."
     fi
     log_to_email ""
-
-  # Sync Regardless if an Unfinished Sync was Found
-  elif [ "${diff_exit_status}" == "unsynced" ]; then
-    log_to_email_time "Sync still in progress - Continuing to Sync..."
-    log_to_email ""
-    sync_required=1
 
   # If the exit status of the diff command is "equal", there are no changes
   elif [ "${diff_exit_status}" == "equal" ]; then
@@ -1032,7 +1034,7 @@ sync_array() {
     equal_file_number=$(grep -w "^summary:equal" "${sync_command_logfile}" | awk -F ":" '{print $3}')
 
     # Check to see if Files were modified during the sync - Exit if so
-    if grep -qw "WARNING! You cannot modify files during a sync." $sync_command_logfile ; then 
+    if grep -qw "WARNING! You cannot modify files" $sync_command_logfile ; then 
       log_to_email_time "Sync - File(s) Modified During Sync"
       log_to_email_time "Sync Output Log is attached..."
       log_to_email ""
