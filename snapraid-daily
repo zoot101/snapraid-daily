@@ -95,6 +95,11 @@ is_number() {
   fi
 }
 
+# Check if a command is available
+is_installed() {
+  command -v "${1}" &>"/dev/null"
+}
+
 ###################################################
 # LOGGING FUNCTIONS
 ###################################################
@@ -492,7 +497,7 @@ read_config_file() {
 check_for_update() {
   update_available="no"
   # Extract numbers from version number to allow for direct comparison. Example: 1.5.4~beta3 -> 154
-  if [ "${disable_update_check}" == "no" ] && which curl >/dev/null; then
+  if [ "${disable_update_check}" == "no" ] && is_installed curl; then
     local_script_version=$(echo "${version}" | sed 's/\.//g;s/~//;s/beta[0-9]*//')
     github_version=$(curl --silent --retry 3 "${github_version_file}")
     if [ $? != 0 ]; then
@@ -510,7 +515,7 @@ check_for_update() {
 
 # Sanity Check for Dependencies
 check_dependencies() {
-  # Check for a SnapRAID custom binary, otherwise fall back to $(which snapraid)
+  # Check for a SnapRAID custom binary, otherwise fall back to $(command -v snapraid)
   if [ -n "${snapraid_binary_path}" ]; then
     if [ ! -x "${snapraid_binary_path}" ]; then
       error "SnapRAID Binary Path: ${snapraid_binary_path} in Config File does not exist or is not Executable"
@@ -518,22 +523,22 @@ check_dependencies() {
       echo "INFO: SnapRAID Binary Path: ${snapraid_binary_path}"
     fi
   else
-    if ! which snapraid &>/dev/null; then
+    if ! is_installed snapraid; then
       error "SnapRAID is not installed or not found in \$PATH"
     else
-      snapraid_binary_path=$(which snapraid)
+      snapraid_binary_path=$(command -v snapraid)
     fi
   fi
 
   # Check dependencies 
-  if ! which grep &>/dev/null; then error "grep command not found in \$PATH - Exiting..."; fi
-  if ! which tee &>/dev/null; then error "tee command not found in \$PATH - Exiting..."; fi
-  if ! which awk &>/dev/null; then error "awk command not found in \$PATH - Exiting..."; fi
-  if ! which sed &>/dev/null; then error "sed command not found in \$PATH - Exiting..."; fi
-  if ! which mktemp &>/dev/null; then error "mktemp command not found in \$PATH - Exiting..."; fi
+  if ! is_installed grep; then error "grep command not found in \$PATH - Exiting..."; fi
+  if ! is_installed tee; then error "tee command not found in \$PATH - Exiting..."; fi
+  if ! is_installed awk; then error "awk command not found in \$PATH - Exiting..."; fi
+  if ! is_installed sed; then error "sed command not found in \$PATH - Exiting..."; fi
+  if ! is_installed mktemp; then error "mktemp command not found in \$PATH - Exiting..."; fi
 
   # Check if Mutt is Installed, otherwise disable emails
-  if ! which mutt &>/dev/null; then
+  if ! is_installed mutt &>/dev/null; then
     echo "WARNING: mutt command not found in \$PATH - No emails will be sent"
     enable_emails=0
   fi
@@ -1336,7 +1341,7 @@ generate_smart_report() {
     log_to_email "##############################"
     # Check if the script is running as root, if not see if Sudo is installed...
     if [ $UID != 0 ]; then
-      if ! which sudo >/dev/null; then
+      if ! is_installed sudo >/dev/null; then
         log_to_email "ERROR: Script not ran as root and sudo is not installed"
         log_to_email "sudo is required to generate the SMART report if not running the script"
         log_to_email "as root."
@@ -1358,7 +1363,7 @@ spin_down_hdd_disks() {
     log_to_email "##############################"
     # Check if the Script is running as root, if not see if Sudo is installed
     if [ $UID != 0 ]; then
-      if ! which sudo >/dev/null; then
+      if ! is_installed sudo >/dev/null; then
         log_to_email "ERROR: Script not ran as root and sudo is not installed"
         log_to_email "sudo is required to spin down the disks if not running the script"
         log_to_email "as root."
