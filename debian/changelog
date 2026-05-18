@@ -1,3 +1,66 @@
+snapraid-daily (1.7.0-1) stable; urgency=medium
+
+  * Version 1.6.0 was mainly to get the script working with the
+    newest Version 14.0 of SnapRAID. Version 1.7.0 is considered
+    by the author to be a more full featured and mature version
+    to better go along with SnapRAID Versions 14.0+.
+
+  * Changed the Touch error detection to look at the return code
+    instead, as the old method was not really reliable. Would
+    use the log tags, but the log tags are limited for the touch
+    command.
+
+  * Previously the script would throw an error if it could not
+    determine the OS Name or System Hostname. Now it will quietly
+    continue and set either to "Unknown" if it cannot determine
+    them.
+
+  * Added printout of all parameters to the Main Greeting
+    regardless of their status to make things more clear.
+
+  * Improved dependency check - all major commands used are now
+    checked for.
+
+  * Added error counts for status/sync/scrub for all conditions
+    to email report to aid in quick debugging if there is an
+    issue for any reason.
+
+  * Simplified initial check to use the summary:exit log tag
+    from the SnapRAID status command. Removed check for rehash.
+
+  * Made it clear in Email Printout that the Moved threshold
+    represents both the sum of moves & relocated - from [#13].
+
+  * Broadened check on content files to check if they are owned
+    by the same user that is running the script, if not the
+    script will now exit.
+    - Serves as an additional guard when running the script
+      accidentally as a different user.
+    - Added a new "-i, --ignore-user" option to bypass this.
+    - Added a printout of the user running the script.
+
+  * Minor improvements to email report, and also made it
+    clear when the email was being sent when running the script
+    directly.
+
+  * Updated script to use systemd provided TMPDIR if available
+    to better work with the PrivateTmp hardening setting.
+
+  * Manual Page Updates to add new parameter.
+
+  * Updated hook example and sample email in docs.
+
+  * Code Improvements:
+    - Now using "set -euo pipefail" to modernize the script
+      for error handling. Lots of changes required to achieve
+      this, but should add to robustness going forward.
+    - Unset all configuration variables up front for better
+      error handling.
+    - Change from using 0 & 1 for Boolean type variables to
+      "yes" and "no" for better clarity.
+
+ -- Mark <mark9000@fastmail.org>  Mon, 18 May 2026 09:30:04 +0100
+
 snapraid-daily (1.6.4-1) stable; urgency=medium
 
   * Consider both moved & relocated when computing the number
@@ -56,7 +119,7 @@ snapraid-daily (1.6.3-1) stable; urgency=medium
 
 snapraid-daily (1.6.2-1) stable; urgency=medium
 
-  * Added a check for ALL content files - @talltent7105 [#11]
+  * Added a check for ALL content files - @Horus99x [#11]
     - Previously only the 1st content file was checked for
     - Seems a good idea to check for all of them
     - This should handle leading, trailing spaces, & spaces in
@@ -88,7 +151,7 @@ snapraid-daily (1.6.1-1) stable; urgency=medium
     since SnapRAID v14.0 and above supports them.
     - Example: 12.5 or 7.8
 
-  * Merge Pull-Request #10 from fullpail9353/main
+  * Merge Pull-Request #10 from MichZ9353/main
     - Replace "which" with command -v instead as "which" can
       behave differently on certain other distros. Should improve
       compatibility on Distros other than Debian.
