@@ -1,160 +1,180 @@
 ##############################
-# SnapRAID-DAILY Version: 1.5.4
+# SnapRAID-DAILY Version: 1.7.0
 ##############################
-Initialized at 15:26:30 on 17/10/2025
- * Hostname: server.home.lan
+Initialized at 14:33:02 on 15/05/2026
+ * Hostname: nas.example.org
  * Host OS: Debian GNU/Linux 13 (trixie)
- * SnapRAID Version: none
+ * SnapRAID Version: 14.4
 Input Options:
+ * Disable Touch: NO
  * Run-Sync: YES
  * Sync Pre-Hash: YES
  * Run-Scrub: YES
- * Scrub-Percent: 5
+ * Scrub-Percent: 14.3
  * Scrub-Age: 2 days and older
  * Override Thresholds: NO
  * Deletion Threshold: 1000
- * Moved Threshold: 1000
+ * Moved/Relocated Threshold: 1000
  * Updated Threshold: 1000
  * SMART Report: YES
  * Spin-Down HDDs: YES
+ * Quiet Output: NO
+ * Check for Updates: NO
+ * Emails Enabled: YES
+ * Include Differences in Email: YES
+ * Emails/Notification Hook(s) on Success: YES
 Hooks:
  * Start-Hook: YES (1)
  * End-Hook: YES (1)
- * Notification Hook: NO
+ * Notification Hook: YES (1)
 Run-Log is Below:
 
 ##############################
 # SnapRAID-DAILY: Initial Status Check
 ##############################
-15:26:30 : Checking current status...
-15:26:40 : No Issues Found in Initial Check
-15:26:40 : Ready to run SnapRAID operations
-15:26:40 : Touch Not Needed...
+14:33:02 : Script User: joeuser
+14:33:02 : All Content Files found
+14:33:02 : Checking current status...
+14:33:13 : No Issues Found in Initial Check
+ * Status Exit Code: ok
+14:33:13 : Ready to run SnapRAID operations
+14:33:13 : Touch Not Needed...
 
 ##############################
 # SnapRAID-DAILY: Start Hook(s)
 ##############################
-15:26:40 : Calling Start Hook 1/1...
-15:26:40 : 1 Service(s) defined in config
-15:26:40 : Stopped Service 1/1: smbd
-15:26:40 : Start Hook 1/1 Done
-15:26:40 : All Start Hooks completed successfully
+14:33:13 : Calling Start Hook 1/1...
+14:33:13 : 1 Valid Service(s) defined in config
+14:33:13 : Stopped Service 1/1: smbd
+14:33:13 : Start Hook 1/1 Done
+14:33:13 : All Start Hooks completed successfully
 
 ##############################
 # SnapRAID-DAILY: Difference Check
 ##############################
-15:26:40 : Checking array for changes...
-15:26:52 : Changes Detected
- * Equal: 1632997
- * Added: 8
- * Removed: 8
- * Updated: 0
+14:33:13 : Checking array for changes...
+14:34:05 : Changes Detected
+ * Equal: 2045228
+ * Added: 10
+ * Removed: 1
+ * Updated: 3
  * Moved: 0
  * Copied: 0
+ * Relocated: 0
  * Restored: 0
-15:26:52 : Proceeding to sync...
+14:34:05 : No Threshold(s) Exceeded
+14:34:05 : Proceeding to sync...
 
 ##############################
 # SnapRAID-DAILY: Sync
 ##############################
-15:26:52 : Starting Sync on 17/10/2025...
-15:27:56 : Sync Completed on 17/10/2025
-15:27:56 : Duration: 0 hours, 1 minutes, 4 seconds
-15:27:56 : Sync was Successful
-15:27:56 : Array Changes Found & Updated:
- * Added: 8
- * Removed: 8
- * Updated: 0
+14:34:05 : Starting Sync on 15/05/2026...
+14:37:05 : Sync Completed on 15/05/2026
+14:37:05 : Duration: 0 hours, 3 minutes, 0 seconds
+14:37:05 : Sync was Successful
+ * I/O Errors: 0
+ * Data Errors: 0
+ * Soft Errors: 0
+ * Hash Errors: 0
+ * Exit Status: ok
+14:37:05 : Array Changes Found & Updated:
+ * Added: 10
+ * Removed: 1
+ * Updated: 3
  * Moved: 0
  * Copied: 0
+ * Relocated: 0
  * Restored: 0
 
 ##############################
 # SnapRAID-DAILY: Scrub
 ##############################
-15:27:56 : Checking if Array is still up to date...
-15:28:11 : Array is Up-to-Date - Proceeding
-15:28:11 : Starting Scrub on 17/10/2025
-15:28:11 : Scrubbing 5% older than 2 days...
-15:29:12 : Scrub Completed at 17/10/2025
-15:29:12 : Duration: 0 hours, 1 minutes, 1 seconds
-15:29:12 : Scrub was successful
-15:29:12 : Scrubbed 5% older than 2 days
+14:37:05 : Checking if Array is still up to date...
+14:38:08 : Array is Up-to-Date - Proceeding
+14:38:08 : Starting Scrub on 15/05/2026
+14:38:08 : Scrubbing 14.3% older than 2 days...
+15:51:08 : Scrub Completed at 15/05/2026
+15:51:08 : Duration: 1 hours, 13 minutes, 0 seconds
+15:51:08 : Scrub was successful
+ * I/O Errors: 0
+ * Data Errors: 0
+ * Soft Errors: 0
+ * Exit Status: ok
+15:51:08 : Scrubbed 14.3% older than 2 days
 
 ##############################
 # SnapRAID-DAILY: End Hook(s)
 ##############################
-15:29:12 : Calling End Hook 1/1...
-15:29:12 : 1 Service(s) defined in config
-15:29:13 : Started Service 1/1: smbd
-15:29:13 : End Hook 1/1 Done
+15:51:08 : Calling End Hook 1/1...
+15:51:08 : 1 Valid Service(s) defined in config
+15:51:09 : Started Service 1/1: smbd
+15:51:09 : End Hook 1/1 Done
 
-15:29:13 : All End Hooks completed successfully
+15:51:09 : All End Hooks completed successfully
 
 ##############################
 # SnapRAID-DAILY: SMART Report
 ##############################
 SnapRAID SMART report:
 
-   Temp  Power   Error   FP Size
-      C OnDays   Count        TB  Serial           Device    Disk
+   Temp  Power   Error   FP Wear Size
+      C OnDays   Count     Level   TB  Serial           Device    Disk
  -----------------------------------------------------------------------
-     27   1797       0  15%  2.0  WD-WCC4M6UXJ7AD  /dev/sdc  media1
-     28   1060       0  12%  3.0  WD-WCC4N4NNR3XR  /dev/sdd  media2
-     29   1757       0  14%  2.0  WD-WCC4N0430093  /dev/sdb  media3
-     31    595       0   7%  4.0  ZW623Z5S         /dev/sda  media4
-     25   1430       0   6%  4.0  ZGY9GHA0         /dev/sde  parity
-     35     39       0  SSD  0.5  241801802914     /dev/sdf  -
+     44     34       -   4%    -  4.0  WD-WCC7K7JABH19  /dev/sdc  media1
+     44   1105       -   4%    -  3.0  WD-WCC1N9NNR3AR  /dev/sdd  media2
+     44   1966       -   4%    -  2.0  WD-WCC3N9931190  /dev/sdb  media3
+     45    804       -   5%    -  4.0  Z1373Z0S         /dev/sda  media4
+     40   1640       -   5%    -  4.0  Z4Y1GHZ0         /dev/sdf  parity
 
 The FP column is the estimated probability (in percentage) that the disk
 is going to fail in the next year.
 
-Probability that at least one disk is going to fail in the next year is 44%.
+Probability that at least one disk is going to fail in the next year is 18%.
 
 ##############################
 # SnapRAID-DAILY: HDD Spin-Down
 ##############################
 Spindown...
-Spundown device '/dev/sdd' for disk 'media2' in 448 ms.
-Spundown device '/dev/sde' for disk 'parity' in 467 ms.
-Spundown device '/dev/sda' for disk 'media4' in 870 ms.
-Spundown device '/dev/sdb' for disk 'media3' in 1025 ms.
-Spundown device '/dev/sdc' for disk 'media1' in 1033 ms.
+Spundown device '/dev/sdf' for disk 'parity' in 421 ms.
+Spundown device '/dev/sdd' for disk 'media2' in 451 ms.
+Spundown device '/dev/sdc' for disk 'media1' in 768 ms.
+Spundown device '/dev/sda' for disk 'media4' in 839 ms.
+Spundown device '/dev/sdb' for disk 'media3' in 1078 ms.
 
 ##############################
 # SnapRAID-DAILY: Array Status
 ##############################
-15:29:14 : Current Status of the Array is as below:
+15:51:10 : Current Status of the Array is as below:
 SnapRAID status report:
 
    Files Fragmented Excess  Wasted  Used    Free  Use Name
             Files  Fragments  GB      GB      GB
-  220455     180     653       -    1626     339  82% media1
-  388629     794    2840       -    2163     786  73% media2
-  581566     275     888       -    1533     431  78% media3
-  442349    2035    7323     1.7    3144     787  80% media4
+  843695     588    2237    48.0    2513    1373  65% media1
+  371881     958    3066       -    2101     848  71% media2
+  379206     243     835       -    1410     554  72% media3
+  450496    2622    8430     2.8    2888    1043  73% media4
  --------------------------------------------------------------------------
- 1632999    3284   11704     1.7    8468    2346  78%
+ 2045278    4411   14568    50.8    8913    3819  70%
 
 
- 16%|           *                    o          o          o          o
-    |           *         o          *          *          *          *
-    |           *         *          *          *          *          *
-    |           *         *          *          *          *          *
-    |           *         *          *          *          *          *
-    |           *         *          *          *          *          *
-    |           *         *          *          *          *          *
-  8%|           *         *          *          *          *          *
-    |*          *         *          *          *          *          *
-    |*          *         *          *          *          *          *
-    |*          *         *          *          *          *          *
-    |*          *         *          *          *          *          *
-    |*          *         *          *          *          *          *
-    |*         o*         *          *          *          *          *
-  0%|*_________o*___o_____*__________*__________*__________*__________*___o
-     6                    days ago of the last scrub/sync                 0
+ 15%|             o            o            o            o            o   o
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+  7%|             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |             *            *            *            *            *   *
+    |*            *            *            *            *       o    *   *
+    |*            *            *            *            *       *    *  **
+  0%|*_________o__*_________o__*_________o__*__________o_*___o_o_*__o_*_***
+     5                    days ago of the last scrub/sync                 0
 
-The oldest block was scrubbed 6 days ago, the median 3, the newest 0.
+The oldest block was scrubbed 5 days ago, the median 1, the newest 0.
 
 No sync is in progress.
 4% of the array is not scrubbed.
@@ -166,5 +186,38 @@ No error detected.
 # SnapRAID-DAILY Result: SUCCESS
 ##############################
 
+##############################
+# SnapRAID-DAILY: File Differences
+##############################
+15:51:11 : These are the file differences since the last sync.
+
+Added Files: 10
+add:disk3:/path/to/file1.txt
+add:disk3:/path/to/file2.txt
+add:disk3:/path/to/file3.txt
+add:disk3:/path/to/file4.txt
+add:disk3:/path/to/file5.txt
+add:disk3:/path/to/file6.txt
+add:disk3:/path/to/file7.txt
+add:disk3:/path/to/file8.txt
+add:disk3:/path/to/file9.txt
+add:disk3:/path/to/file10.txt
+
+Removed Files: 1
+remove:disk5:/path/to/file11.txt
+
+Updated Files: 3
+update:disk3:/path/to/file12.txt: 7723 1776027517.223118319 -> 8210 1776540763.451154064
+update:disk3:/path/to/file13.txt: 7723 1776027517.223118319 -> 8210 1776540763.451154064
+update:disk3:/path/to/file14.txt: 7723 1776027517.223118319 -> 8210 1776540763.451154064
+
+Moved Files: 0
+
+Copied Files: 0
+
+Relocated Files: 0
+
+Restored Files: 0
+
 Regards,
-server.home.lan
+nas.example.org
