@@ -1232,7 +1232,7 @@ Run-Log is Below:
 14:33:02 : All Content Files found
 14:33:02 : Checking current status...
 14:33:13 : No Issues Found in Initial Check
- * Status Exit Code: ok
+14:33:13 : Status Exit Code: ok
 14:33:13 : Ready to run SnapRAID operations
 14:33:13 : Touch Not Needed...
 
