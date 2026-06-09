@@ -1,3 +1,15 @@
+snapraid-daily (1.7.1-1) stable; urgency=medium
+
+  * Fixed some printouts in the sync of the array where errors
+    are detected to be more consistent. Added sync exit status
+    also.
+
+  * Code Improvements:
+    - Removed usage of echo in favor of printf.
+    - Improved detection of SnapRAID version.
+
+ -- Mark <mark9000@fastmail.org>  Tue, 09 Jun 2026 12:00:47 +0100
+
 snapraid-daily (1.7.0-1) stable; urgency=medium
 
   * Version 1.6.0 was mainly to get the script working with the
