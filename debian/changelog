@@ -1,3 +1,13 @@
+snapraid-daily (1.7.2-1) stable; urgency=medium
+
+  * Fixed the case if the script was called with the -f or
+    --config options and no file was given. Now the script
+    correctly exits and displays the help function as desired.
+
+  * Ran shellcheck on script and cleared up all warnings.
+
+ -- Mark <mark9000@fastmail.org>  Wed, 08 Jul 2026 14:05:01 +0100
+
 snapraid-daily (1.7.1-1) stable; urgency=medium
 
   * Fixed some printouts in the sync of the array where errors
